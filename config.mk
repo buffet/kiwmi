@@ -10,6 +10,6 @@ SRCPREFIX = .
 CC  = gcc
 LIT = lit
 
-CFLAGS   = -std=c99 -Wall -Wextra -pedantic -Os
+CFLAGS   = -std=c99 -Wall -Wextra -pedantic -Os -D_POSIX_C_SOURCE=2
 LDFLAGS  =
 CPPFLAGS = -MD -MP

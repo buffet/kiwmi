@@ -5,19 +5,29 @@
 
 @s Introduction
 
-Simple placeholder.
+This is the source code for wmaffle.
+It parses it's arguments and prints either help / info text, or runs the window manager.
 
-Overview:
+Here's an overview:
 
 --- wmaffle.c
 @{copyright notice}
-@{includes}
+@{c headers}
+@{posix headers}
+@{defines}
 
 int
-main(void)
+main(int argc, char *argv[])
 {
-    @{say hi}
+	@{variables local to main}
+	@{parse arguments}
 }
+---
+
+Note that this is version NaV (not a version).
+
+--- defines
+#define VERSION_STRING "NaV"
 ---
 
 @s Copyright
@@ -33,16 +43,83 @@ This project is licensed under the Mozilla Public License Version 2.0. Please re
  */
 ---
 
-@s Greeting people
+@s Parse arguments
 
-Since I'm a nice guy, I'm going to greet everyone.
+There are only two arguments and two of them are rather straight forward.
+I use getopt for this, since it's quite good and allows us to extract the config argument easily.
 
---- say hi
-printf("Hello, everyone!\n");
+This requires `getopt.h`.
+
+--- posix headers
+#include <getopt.h>
+#include <limits.h>
 ---
 
-This needs the `stdio.h` header though.
+That one we save in a local variable in main.
 
---- includes
+--- variables local to main
+char config_path[PATH_MAX];
+int option;
+---
+
+--- parse arguments
+config_path[0] = '\0'; // Used to check if config was already set
+
+while ((option = getopt(argc, argv, "hvc:")) != -1) {
+	switch (option) {
+	case 'h':
+		printf("Usage: %s [-h|-v|-c <config_path>]\n", argv[0]);
+		exit(EXIT_SUCCESS);
+		break;
+	case 'v':
+		printf("v" VERSION_STRING "\n");
+		exit(EXIT_SUCCESS);
+		break;
+	case 'c':
+		strncpy(config_path, optarg, sizeof(config_path));
+		break;
+	}
+}
+
+if (!config_path[0]) {
+	@{get default config path}
+}
+---
+
+We also need `string.h`, `stdio.h`, and `stdlib.h`.
+
+--- c headers
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+---
+
+@s Config default path
+
+I can clearly see how a user doesn't specify a config path.
+
+This was a design decision to make, whether to load a default config. I decided to go with it.
+
+It loads `"${XDG_CONFIG_HOME:-$HOME/.config}/wmaffle/wmafflerc"`.
+
+---get default config path
+char *config_home = getenv("XDG_CONFIG_HOME");
+
+if (config_home) {
+	snprintf(
+		config_path,
+		sizeof(config_path),
+		"%s/%s",
+		config_home,
+		"wmafflw/wmafflerc"
+	);
+} else {
+	snprintf(
+		config_path,
+		sizeof(config_path),
+		"%s/%s",
+		getenv("HOME"),
+		".config/wmaffle/wmafflerc"
+	);
+}
 ---
