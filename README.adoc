@@ -11,7 +11,7 @@ There's not enough so called "manual" tiling window managers and none of the exi
 When a new window opens, without having space assigned, I don't want my WM to suddenly be dynamic and just put it _somewhere_ or even on top something that's already existing.
 
 Where's the source at?
---------------------
+----------------------
 
 In `lit/`.
 
