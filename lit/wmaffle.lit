@@ -1,0 +1,48 @@
+@code_type c .c
+@comment_type /* %s */
+
+@title wmaffle
+
+@s Introduction
+
+Simple placeholder.
+
+Overview:
+
+--- wmaffle.c
+@{copyright notice}
+@{includes}
+
+int
+main(void)
+{
+    @{say hi}
+}
+---
+
+@s Copyright
+
+This project is licensed under the Mozilla Public License Version 2.0. Please read LICENSE for more details.
+
+--- copyright notice
+/* Copyright (c), Niclas Meyer <niclas@countingsort.com>
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+---
+
+@s Greeting people
+
+Since I'm a nice guy, I'm going to greet everyone.
+
+--- say hi
+printf("Hello, everyone!\n");
+---
+
+This needs the `stdio.h` header though.
+
+--- includes
+#include <stdio.h>
+---
