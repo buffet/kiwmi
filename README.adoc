@@ -1,0 +1,49 @@
+wmaffle
+=======
+
+A fully manual tiling window manager for the X window system.
+
+Why?
+----
+
+There's not enough so called "manual" tiling window managers and none of the existing ones is *fully* manual.
+
+When a new window opens, without having space assigned, I don't want my WM to suddenly be dynamic and just put it _somewhere_ or even on top something that's already existing.
+
+Where's the source at?
+--------------------
+
+In `lit/`.
+
+wmaffle is a literate program. It's a cool thing by Knuth. I'm not going to explain this, since https://en.wikipedia.org/wiki/Literate_programming[this] does it better anyways.
+I'm using the https://github.com/zyedidia/Literate[Literate] utility for this, since it gets the job done, while keeping a light syntax for me.
+
+Why? Literate programming is awesome. This allows people to learn from my stuff while making it easy to contribute.
+Also it's easier to write documentation like this. Who does comments anyway?
+
+Concepts
+--------
+
+I don't know what you expect to find here.
+
+It's a window manager: there's tags (workspaces), windows and they get arranged.
+
+So what happens when a window is created when there's no space yet?
+It's put in a queue, from where it can be popped into available space (which is also getting a cool name soon).
+This also solves the problem of creating a window and moving the focus before it spawns, since you can assign future queue positions to available space.
+
+I plan on having available space behave like a window, so that you don't have to think about stuff, but we'll see about that.
+
+Configuration
+-------------
+
+Configuration languages suck and they add a lot of complexity to a program.
+`wmaffle` listens to a socket and offers a basic client (called `syrup`) to communicate with the WM.
+
+This allows you to write your configuration in any language you want, while also removing the task of listening to keybinds for me, since you can use tools like https://github.com/baskerville/sxhkd[sxhkd] to do that.
+
+Contribution
+------------
+
+I'll add contribution guidelines later, when it's clear where the project is going.
+For now feel free to open issues.
