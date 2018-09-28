@@ -42,6 +42,28 @@ Configuration languages suck and they add a lot of complexity to a program.
 
 This allows you to write your configuration in any language you want, while also removing the task of listening to keybinds for me, since you can use tools like https://github.com/baskerville/sxhkd[sxhkd] to do that.
 
+Building
+--------
+
+Configuration can be done mostly in link:config.mk[config.mk].
+
+In-source
+~~~~~~~~~
+
+. Be sure to have the dependencies installed (https://en.wikipedia.org/wiki/Literate_programming[Literate]).
+. `make`
+. `sudo make install`
+
+Out-of-source
+~~~~~~~~~~~~~
+
+. Have the dependencies (see above) installed
+. `mkdir $builddir`
+. `cp config.mk Makefile $builddir`
+. `cd $builddir`
+. `make SRCPREFIX=..`
+. `sudo make install`
+
 Contribution
 ------------
 
