@@ -45,5 +45,8 @@ This allows you to write your configuration in any language you want, while also
 Contribution
 ------------
 
-I'll add contribution guidelines later, when it's clear where the project is going.
-For now feel free to open issues.
+You want to contribute? Great!
+
+Future requests, bug reports and PRs are welcome. Be sure to read the link:CONTRIBUTING.adoc[CONTRIBUTING.adoc]. Note that pull requests without an issue they reference are ignored, to de decrease the amount of duplicated work.
+
+If anything is unclear, feel free to reach out to me.
