@@ -66,8 +66,6 @@ This requires including the following headers.
 
 --- posix headers
 #include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <sys/un.h>
 ---
 
