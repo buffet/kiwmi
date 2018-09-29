@@ -42,8 +42,18 @@ $(SYSRC): $(SYLIT)
 	@echo "  [LIT] $@..."
 	$(HIDE) $(LIT) -t "$<"
 
-doc:
+doc: books
 
+books: syrup.html wmaffle.html
+
+wmaffle.html: $(WFLIT)
+	@echo "  [LIT] $@..."
+	$(HIDE) $(LIT) -w "$<"
+	
+syrup.html: $(SYLIT)
+	@echo "  [LIT] $@..."
+	$(HIDE) $(LIT) -w "$<"
+	
 install:
 	install -d "$(DESTDIR)$(BINPREFIX)"
 	install -m 755 "$(WFTARGET)" "$(DESTDIR)$(BINPREFIX)"
@@ -62,5 +72,7 @@ clean:
 	$(HIDE) $(RM) $(SRC)
 	@echo "  [RM]  $(TARGETS)..."
 	$(HIDE) $(RM) $(TARGETS)
+	@echo "  [RM]  wmaffle.html syrup.html..."
+	$(HIDE) $(RM) wmaffle.html syrup.html
 
 -include $(DEPS)
