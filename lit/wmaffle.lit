@@ -32,6 +32,8 @@ main(int argc, char *argv[])
 	@{setup signal handlers}
 
 	@{execute config}
+
+	@{cleanup}
 }
 ---
 
@@ -217,6 +219,14 @@ if (sock_path) {
 } else {
 	strncpy(sock_addr.sun_path, "/tmp/wmaffle.sock", sizeof(sock_addr.sun_path));
 }
+---
+
+@s Close socket
+
+Important part of our tear down process: closing the IPC socket again. Let's do it.
+
+--- cleanup
+close(sock_fd);
 ---
 
 @s Setup signal handlers
