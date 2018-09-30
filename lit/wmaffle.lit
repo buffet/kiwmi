@@ -30,6 +30,8 @@ main(int argc, char *argv[])
 
 	@{open ipc connection}
 	@{setup signal handlers}
+
+	@{execute config}
 }
 ---
 
@@ -253,4 +255,30 @@ Which of course requires this.
 --- posix headers +=
 #include <signal.h>
 #include <sys/wait.h>
+---
+
+@s Execute config
+
+We'll do this in a function, so we can execute later on, when the user requests it.
+
+--- function definitions +=
+static void
+exec_config(const char *path)
+{
+	switch (fork()) {
+	case -1:
+		fprintf(stderr, "%s: failed to execute config\n", argv0);
+		break;
+	case 0:
+		execl(path, path, NULL);
+		die("%s: failed to execute config\n", argv0);
+		break;
+	}
+}
+---
+
+We need to invoke this once all the connections are open
+
+--- execute config
+exec_config(config_path);
 ---
