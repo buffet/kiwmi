@@ -16,11 +16,19 @@ Here's an overview:
 @{posix headers}
 @{defines}
 
+char *argv0;
+
+@{function definitions}
+
 int
 main(int argc, char *argv[])
 {
+	argv0 = argv[0];
+
 	@{variables local to main}
 	@{parse arguments}
+
+	@{open ipc connection}
 }
 ---
 
@@ -41,6 +49,28 @@ This project is licensed under the Mozilla Public License Version 2.0. Please re
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+---
+
+@s Helper function
+
+`die` prints an error message and then exist unsuccessfully.
+
+--- function definitions
+static void
+die(char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+	vfprintf(stderr, fmt, ap);
+	va_end(ap);
+	exit(EXIT_FAILURE);
+}
+---
+
+Note that this requires the `stdarg.h` header.
+
+--- c headers
+#include <stdarg.h>
 ---
 
 @s Parse arguments
@@ -68,7 +98,7 @@ config_path[0] = '\0'; // Used to check if config was already set
 while ((option = getopt(argc, argv, "hvc:")) != -1) {
 	switch (option) {
 	case 'h':
-		printf("Usage: %s [-h|-v|-c <config_path>]\n", argv[0]);
+		printf("Usage: %s [-h|-v|-c <config_path>]\n", argv0);
 		exit(EXIT_SUCCESS);
 		break;
 	case 'v':
@@ -88,7 +118,7 @@ if (!config_path[0]) {
 
 We also need `string.h`, `stdio.h`, and `stdlib.h`.
 
---- c headers
+--- c headers +=
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -121,5 +151,67 @@ if (config_home) {
 		getenv("HOME"),
 		".config/wmaffle/wmafflerc"
 	);
+}
+---
+
+@s Open IPC connection
+
+Pretty straight forward, we open a `AF_UNIX` socket and that's it.
+
+We need both a sockaddr and a file descriptor.
+
+--- variables local to main +=
+struct sockaddr_un sock_addr;
+int sock_fd;
+char *sock_path;
+---
+
+This requires the following headers.
+
+--- posix headers +=
+#include <sys/socket.h>
+#include <sys/un.h>
+---
+
+Opening the server is pretty straight forward.
+
+--- open ipc connection
+memset(&sock_addr, 0, sizeof(sock_addr));
+
+@{get socket path}
+
+unlink(sock_addr.sun_path);
+sock_addr.sun_family = AF_UNIX;
+
+if ((sock_fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+	die("%s: failed to create socket\n", argv0);
+}
+
+if (bind(sock_fd, (struct sockaddr *)&sock_addr, sizeof(sock_addr)) < 0) {
+	die("%s: failed to bind socket\n", argv0);
+}
+
+if (listen(sock_fd, 1) < 0) {
+	die("%s: failed to listen to socket\n", argv0);
+}
+---
+
+This requires this header file.
+
+--- posix headers +=
+#include <unistd.h>
+---
+
+@s Get socket path
+
+We default to `/tmp/wmaffle.sock` if `WMAFFLE_SOCKET` isn't set.
+
+--- get socket path
+sock_path = getenv("WMAFFLE_SOCKET");
+
+if (sock_path) {
+	strncpy(sock_addr.sun_path, sock_path, sizeof(sock_addr.sun_path));
+} else {
+	strncpy(sock_addr.sun_path, "/tmp/wmaffle.sock", sizeof(sock_addr.sun_path));
 }
 ---
