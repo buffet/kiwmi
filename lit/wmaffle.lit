@@ -29,6 +29,7 @@ main(int argc, char *argv[])
 	@{parse arguments}
 
 	@{open ipc connection}
+	@{setup signal handlers}
 }
 ---
 
@@ -214,4 +215,42 @@ if (sock_path) {
 } else {
 	strncpy(sock_addr.sun_path, "/tmp/wmaffle.sock", sizeof(sock_addr.sun_path));
 }
+---
+
+@s Setup signal handlers
+
+We don't want out window manager to just exit on us, so we need to setup signal handler.
+
+Here is it:
+
+--- function definitions +=
+static void
+sig_handler(int sig)
+{
+	if (sig == SIGCHLD) {
+		signal(sig, sig_handler);
+		while (waitpid(-1, 0, WNOHANG) > 0) {
+			// EMPTY
+		}
+	} else if (sig == SIGINT || sig == SIGHUP || sig == SIGTERM) {
+		// TODO: Set about to quit to 1
+	}
+}
+---
+
+Now we only need to register it.
+
+--- setup signal handlers
+signal(SIGINT, sig_handler);
+signal(SIGHUP, sig_handler);
+signal(SIGTERM, sig_handler);
+signal(SIGCHLD, sig_handler);
+signal(SIGPIPE, SIG_IGN);
+---
+
+Which of course requires this.
+
+--- posix headers +=
+#include <signal.h>
+#include <sys/wait.h>
 ---
