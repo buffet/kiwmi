@@ -125,7 +125,7 @@ This actually consists of two steps.
 
 @s Generate message
 
-Pretty straight forward. We need a buffer and then we just append all arguments, beginning with `argv[1]`, seperated by spaces.
+Pretty straight forward. We need a buffer and then we just append all arguments, beginning with `argv[1]`, separated by spaces.
 
 --- variables local to main +=
 char msg[BUFSIZ];
