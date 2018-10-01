@@ -347,5 +347,7 @@ if (!(client_fd < 0) && (msg_len = read(client_fd, msg, sizeof(msg))) > 0) {
 	msg[msg_len] = '\0';
 	printf("Client sent: %s\n", msg);
 	close(client_fd);
+} else {
+	fprintf(stderr, "%s: unable to accept connection\n", argv[0]);
 }
 ---
