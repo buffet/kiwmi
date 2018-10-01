@@ -69,6 +69,6 @@ Contribution
 
 You want to contribute? Great!
 
-Future requests, bug reports and PRs are welcome. Be sure to read the link:CONTRIBUTING.adoc[CONTRIBUTING.adoc]. Note that pull requests without an valid issue they reference are ignored, to decrease the amount of duplicate work.
+Future requests, bug reports and PRs are welcome. Be sure to read the link:CONTRIBUTING.adoc[CONTRIBUTING.adoc]. Note that pull requests without a valid issue they reference are ignored, to decrease the amount of duplicate work.
 
 If anything is unclear, feel free to reach out to me.
