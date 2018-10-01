@@ -18,6 +18,8 @@ Here's an overview:
 
 char *argv0;
 
+int g_about_to_quit = 0;
+
 @{function definitions}
 
 int
@@ -32,6 +34,8 @@ main(int argc, char *argv[])
 	@{setup signal handlers}
 
 	@{execute config}
+
+	@{main loop}
 
 	@{cleanup}
 }
@@ -291,4 +295,57 @@ We need to invoke this once all the connections are open
 
 --- execute config
 exec_config(config_path);
+---
+
+@s Main loop
+
+This is the heart of wmaffle.
+
+A pretty basic loop: fetch event, decide if it's from X or the client, handle it.
+`select` is used for the first two steps.
+
+--- posix headers +=
+#include <sys/select.h>
+---
+
+--- variables local to main +=
+int max_fd;
+fd_set file_descriptors;
+---
+
+--- main loop
+max_fd = sock_fd + 1;
+
+while (!g_about_to_quit) {
+	FD_ZERO(&file_descriptors);
+	FD_SET(sock_fd, &file_descriptors);
+
+	select(max_fd, &file_descriptors, NULL, NULL, NULL);
+
+	if (FD_ISSET(sock_fd, &file_descriptors)) {
+		@{handle client event}
+	}
+}
+---
+
+@s Handle client event
+
+Until there's an actual WM, I'm just going to read messages and then print them out, so we have some sort of feedback.
+
+--- variables local to main +=
+int client_fd;
+---
+
+--- handle client event
+char msg[BUFSIZ];
+int msg_len;
+
+client_fd = accept(sock_fd, NULL, 0);
+
+if (!(client_fd < 0) && (msg_len = read(client_fd, msg, sizeof(msg))) > 0) {
+	// Client sent something
+	msg[msg_len] = '\0';
+	printf("Client sent: %s\n", msg);
+	close(client_fd);
+}
 ---
