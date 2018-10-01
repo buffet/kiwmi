@@ -16,7 +16,7 @@ Here's an overview:
 @{posix headers}
 @{defines}
 
-char *argv0;
+const char *argv0;
 
 int g_about_to_quit = 0;
 
@@ -66,7 +66,7 @@ This project is licensed under the Mozilla Public License Version 2.0. Please re
 
 --- function definitions
 static void
-die(char *fmt, ...)
+die(const char *fmt, ...)
 {
 	va_list ap;
 	va_start(ap, fmt);
@@ -142,7 +142,7 @@ This was a design decision to make, whether to load a default config. I decided 
 It loads `"${XDG_CONFIG_HOME:-$HOME/.config}/wmaffle/wmafflerc"`.
 
 ---get default config path
-char *config_home = getenv("XDG_CONFIG_HOME");
+const char *config_home = getenv("XDG_CONFIG_HOME");
 
 if (config_home) {
 	snprintf(
@@ -172,7 +172,7 @@ We need both a sockaddr and a file descriptor.
 --- variables local to main +=
 struct sockaddr_un sock_addr;
 int sock_fd;
-char *sock_path;
+const char *sock_path;
 ---
 
 This requires the following headers.
