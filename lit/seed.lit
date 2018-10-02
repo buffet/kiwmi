@@ -1,14 +1,14 @@
 @code_type c .c
 @comment_type /* %s */
 
-@title syrup
+@title seed
 
 @s Introduction
-Using syrup is rather straight forward. The syntax is as follows: `syrup COMMAND`.
+Using seed is rather straight forward. The syntax is as follows: `seed COMMAND`.
 
 The program is also simple. Here is an outline.
 
---- syrup.c
+--- seed.c
 @{copyright notice}
 @{c headers}
 @{posix headers}
@@ -96,15 +96,15 @@ We're going to store the path in `sock_path`, local to main.
 const char *sock_path;
 ---
 
-We check if `WMAFFLE_SOCKET` is set, and use it, or default to `/tmp/wmaffle.sock`.
+We check if `KIWMI_SOCKET` is set, and use it, or default to `/tmp/kiwmi.sock`.
 
 --- get socket path
-sock_path = getenv("WMAFFLE_SOCKET");
+sock_path = getenv("KIWMI_SOCKET");
 
 if (sock_path) {
 	strncpy(sock_addr.sun_path, sock_path, sizeof(sock_addr.sun_path));
 } else {
-	strncpy(sock_addr.sun_path, "/tmp/wmaffle.sock", sizeof(sock_addr.sun_path));
+	strncpy(sock_addr.sun_path, "/tmp/kiwmi.sock", sizeof(sock_addr.sun_path));
 }
 ---
 

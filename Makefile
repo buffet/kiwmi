@@ -1,16 +1,16 @@
 include config.mk
 
-WFLIT    = wmaffle.lit
-WFSRC    = wmaffle.c
-WFTARGET = wmaffle
+KWLIT    = kiwmi.lit
+KWSRC    = kiwmi.c
+KWTARGET = kiwmi
 
-SYLIT    = syrup.lit
-SYSRC    = syrup.c
-SYTARGET = syrup
+SELIT    = seed.lit
+SESRC    = seed.c
+SETARGET = seed
 
-SRC     = $(WFSRC) $(SYSRC)
+SRC     = $(KWSRC) $(SESRC)
 DEPS    = $(SRC:.c=.d)
-TARGETS = $(WFTARGET) $(SYTARGET)
+TARGETS = $(KWTARGET) $(SETARGET)
 
 VPATH = $(SRCPREFIX)/lit
 
@@ -26,44 +26,44 @@ all: all-nodoc doc
 
 all-nodoc: $(TARGETS)
 
-$(WFTARGET): $(WFSRC)
+$(KWTARGET): $(KWSRC)
 	@echo "  [CC]  $@..."
 	$(HIDE) $(CC) -o "$@" "$<" $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)
 
-$(SYTARGET): $(SYSRC)
+$(SETARGET): $(SESRC)
 	@echo "  [CC]  $@..."
 	$(HIDE) $(CC) -o "$@" "$<" $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)
 
-$(WFSRC): $(WFLIT)
+$(KWSRC): $(KWLIT)
 	@echo "  [LIT] $@..."
 	$(HIDE) $(LIT) -t "$<"
 
-$(SYSRC): $(SYLIT)
+$(SESRC): $(SELIT)
 	@echo "  [LIT] $@..."
 	$(HIDE) $(LIT) -t "$<"
 
 doc: books
 
-books: syrup.html wmaffle.html
+books: seed.html kiwmi.html
 
-wmaffle.html: $(WFLIT)
+kiwmi.html: $(KWLIT)
 	@echo "  [LIT] $@..."
 	$(HIDE) $(LIT) -w "$<"
 	
-syrup.html: $(SYLIT)
+seed.html: $(SELIT)
 	@echo "  [LIT] $@..."
 	$(HIDE) $(LIT) -w "$<"
 	
 install:
 	install -d "$(DESTDIR)$(BINPREFIX)"
-	install -m 755 "$(WFTARGET)" "$(DESTDIR)$(BINPREFIX)"
-	install -m 755 "$(SYTARGET)" "$(DESTDIR)$(BINPREFIX)"
+	install -m 755 "$(KWTARGET)" "$(DESTDIR)$(BINPREFIX)"
+	install -m 755 "$(SETARGET)" "$(DESTDIR)$(BINPREFIX)"
 
 uninstall:
-	@echo "  [RM]  $(WFTARGET)..."
-	$(HIDE) $(RM) "$(DESTDIR)$(BINPREFIX)/$(WFTARGET)"
-	@echo "  [RM]  $(SYTARGET)..."
-	$(HIDE) $(RM) "$(DESTDIR)$(BINPREFIX)/$(SYTARGET)""
+	@echo "  [RM]  $(KWTARGET)..."
+	$(HIDE) $(RM) "$(DESTDIR)$(BINPREFIX)/$(KWTARGET)"
+	@echo "  [RM]  $(SETARGET)..."
+	$(HIDE) $(RM) "$(DESTDIR)$(BINPREFIX)/$(SETARGET)""
 
 clean:
 	@echo "  [RM]  $(DEPS)..."
@@ -72,7 +72,7 @@ clean:
 	$(HIDE) $(RM) $(SRC)
 	@echo "  [RM]  $(TARGETS)..."
 	$(HIDE) $(RM) $(TARGETS)
-	@echo "  [RM]  wmaffle.html syrup.html..."
-	$(HIDE) $(RM) wmaffle.html syrup.html
+	@echo "  [RM]  kiwmi.html seed.html..."
+	$(HIDE) $(RM) kiwmi.html seed.html
 
 -include $(DEPS)

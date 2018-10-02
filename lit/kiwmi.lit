@@ -1,16 +1,16 @@
 @code_type c .c
 @comment_type /* %s */
 
-@title wmaffle
+@title kiwmi
 
 @s Introduction
 
-This is the source code for wmaffle.
+This is the source code for kiwmi.
 It parses it's arguments and prints either help / info text, or runs the window manager.
 
 Here's an overview:
 
---- wmaffle.c
+--- kiwmi.c
 @{copyright notice}
 
 @{c headers}
@@ -142,7 +142,7 @@ I can clearly see how a user doesn't specify a config path.
 
 This was a design decision to make, whether to load a default config. I decided to go with it.
 
-It loads `"${XDG_CONFIG_HOME:-$HOME/.config}/wmaffle/wmafflerc"`.
+It loads `"${XDG_CONFIG_HOME:-$HOME/.config}/kiwmi/kiwmirc"`.
 
 ---get default config path
 const char *config_home = getenv("XDG_CONFIG_HOME");
@@ -153,7 +153,7 @@ if (config_home) {
 		sizeof(config_path),
 		"%s/%s",
 		config_home,
-		"wmafflw/wmafflerc"
+		"kiwmi/kiwmirc"
 	);
 } else {
 	snprintf(
@@ -161,7 +161,7 @@ if (config_home) {
 		sizeof(config_path),
 		"%s/%s",
 		getenv("HOME"),
-		".config/wmaffle/wmafflerc"
+		".config/kiwmi/kiwmi"
 	);
 }
 ---
@@ -216,15 +216,15 @@ This requires this header file.
 
 @s Get socket path
 
-We default to `/tmp/wmaffle.sock` if `WMAFFLE_SOCKET` isn't set.
+We default to `/tmp/kiwmi.sock` if `KIWMI_SOCKET` isn't set.
 
 --- get socket path
-sock_path = getenv("WMAFFLE_SOCKET");
+sock_path = getenv("KIWMI_SOCKET");
 
 if (sock_path) {
 	strncpy(sock_addr.sun_path, sock_path, sizeof(sock_addr.sun_path));
 } else {
-	strncpy(sock_addr.sun_path, "/tmp/wmaffle.sock", sizeof(sock_addr.sun_path));
+	strncpy(sock_addr.sun_path, "/tmp/kiwmi.sock", sizeof(sock_addr.sun_path));
 }
 ---
 
@@ -302,7 +302,7 @@ exec_config(config_path);
 
 @s Main loop
 
-This is the heart of wmaffle.
+This is the heart of kiwmi.
 
 A pretty basic loop: fetch event, decide if it's from X or the client, handle it.
 `select` is used for the first two steps.

@@ -1,5 +1,5 @@
-wmaffle
-=======
+kiwmi
+=====
 
 A fully manual tiling window manager for the X window system.
 
@@ -15,7 +15,7 @@ Where's the source at?
 
 In `lit/`.
 
-wmaffle is a literate program. It's a cool thing by Knuth. I'm not going to explain this, since https://en.wikipedia.org/wiki/Literate_programming[this] does it better anyways.
+kiwmi is a literate program. It's a cool thing by Knuth. I'm not going to explain this, since https://en.wikipedia.org/wiki/Literate_programming[this] does it better anyways.
 I'm using the https://github.com/zyedidia/Literate[Literate] utility for this, since it gets the job done, while keeping a light syntax for me.
 
 Why? Literate programming is awesome. This allows people to learn from my stuff while making it easy to contribute.
@@ -38,7 +38,7 @@ Configuration
 -------------
 
 Configuration languages suck and they add a lot of complexity to a program.
-`wmaffle` listens to a socket and offers a basic client (called `syrup`) to communicate with the WM.
+`kiwmi` listens to a socket and offers a basic client (called `seed`) to communicate with the WM.
 
 This allows you to write your configuration in any language you want, while also removing the task of listening to keybinds for me, since you can use tools like https://github.com/baskerville/sxhkd[sxhkd] to do that.
 
