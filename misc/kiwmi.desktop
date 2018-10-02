@@ -1,0 +1,5 @@
+[Desktop Entry]
+Name=kiwmi
+Comment=Fully manual tiling window manager
+Exec=kiwmi
+Type=Application
