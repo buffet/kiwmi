@@ -54,7 +54,7 @@ seed.html: $(SELIT)
 	@echo "  [LIT] $@..."
 	$(HIDE) $(LIT) -w "$<"
 	
-install:
+install: all
 	install -d "$(DESTDIR)$(BINPREFIX)"
 	install -m 755 "$(KWTARGET)" "$(DESTDIR)$(BINPREFIX)"
 	install -m 755 "$(SETARGET)" "$(DESTDIR)$(BINPREFIX)"
