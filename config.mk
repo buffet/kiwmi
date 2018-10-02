@@ -11,5 +11,5 @@ CC  = gcc
 LIT = lit
 
 CFLAGS   = -std=c99 -Wall -Wextra -pedantic -Os -D_POSIX_C_SOURCE=2
-LDFLAGS  =
+LDFLAGS  = -lxcb
 CPPFLAGS = -MD -MP

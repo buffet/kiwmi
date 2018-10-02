@@ -14,6 +14,7 @@ Here's an overview:
 @{copyright notice}
 @{c headers}
 @{posix headers}
+@{xcb headers}
 @{defines}
 
 const char *argv0;
@@ -31,6 +32,7 @@ main(int argc, char *argv[])
 	@{parse arguments}
 
 	@{open ipc connection}
+	@{open xcb connection}
 	@{setup signal handlers}
 
 	@{execute config}
@@ -348,6 +350,83 @@ if (!(client_fd < 0) && (msg_len = read(client_fd, msg, sizeof(msg))) > 0) {
 	printf("Client sent: %s\n", msg);
 	close(client_fd);
 } else {
-	fprintf(stderr, "%s: unable to accept connection\n", argv[0]);
+	fprintf(stderr, "%s: unable to accept connection\n", argv0);
+}
+---
+
+@s XCB connection
+
+Not a big surprise, but to talk to X we need to connect to it. XCB is the library of my choice for this.
+
+So we need this.
+
+--- xcb headers
+#include <xcb/xcb.h>
+---
+
+To inititalize the XCB connection, we open it, and then do some stuff like subscribing to the substructure events. If that fails, we also know that another WM is already running.
+
+--- open xcb connection
+@{open connection}
+@{open default screen}
+@{register wm}
+
+dpy_fd = xcb_get_file_descriptor(dpy);
+---
+
+This requires us a few variables to store the stuff.
+
+--- variables local to main +=
+int dpy_fd;
+int default_screen;
+xcb_connection_t *dpy;
+xcb_screen_t *screen;
+xcb_window_t root_window;
+xcb_generic_error_t *xcb_error;
+uint32_t event_values[] = { ROOT_EVENT_MASK };
+---
+
+And we need to define what events we want to listen to.
+
+--- defines +=
+#define ROOT_EVENT_MASK (XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY)
+---
+
+After we open the connection we check if it has an error.
+
+--- open connection
+dpy = xcb_connect(NULL, &default_screen);
+
+if (xcb_connection_has_error(dpy)) {
+	die("%s: failed to open XCB connection\n", argv0);
+}
+---
+
+Opening the default screen is a little more complicated, since XCB gives us a little more information at once.
+
+--- open default screen
+if (!(screen = xcb_setup_roots_iterator(xcb_get_setup(dpy)).data)) {
+	die("%s: failed to open default screen\n", argv0);
+}
+
+root_window = screen->root;
+---
+
+Now to register the WM. A WM is the program listening to the substructure events.
+If this errors, we know another WM is already running, in which case we just terminate.
+
+--- register wm
+xcb_error = xcb_request_check(
+	dpy,
+	xcb_change_window_attributes_checked(
+		dpy,
+		root_window,
+		XCB_CW_EVENT_MASK,
+		event_values
+	)
+);
+
+if (xcb_error) {
+	die("%s: another window manager is already running\n", argv0);
 }
 ---
