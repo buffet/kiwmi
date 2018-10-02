@@ -12,6 +12,7 @@ Here's an overview:
 
 --- wmaffle.c
 @{copyright notice}
+
 @{c headers}
 @{posix headers}
 @{xcb headers}
