@@ -249,7 +249,7 @@ sig_handler(int sig)
 			// EMPTY
 		}
 	} else if (sig == SIGINT || sig == SIGHUP || sig == SIGTERM) {
-		// TODO: Set about to quit to 1
+		g_about_to_quit = 1;
 	}
 }
 ---
