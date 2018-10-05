@@ -55,15 +55,14 @@ seed.html: $(SELIT)
 	$(HIDE) $(LIT) -w "$<"
 	
 install: all
-	install -d "$(DESTDIR)$(BINPREFIX)"
-	install -m 755 "$(KWTARGET)" "$(DESTDIR)$(BINPREFIX)"
-	install -m 755 "$(SETARGET)" "$(DESTDIR)$(BINPREFIX)"
+	install -Dm755 "$(KWTARGET)" "$(DESTDIR)$(BINPREFIX)/$(KWTARGET)"
+	install -Dm755 "$(SETARGET)" "$(DESTDIR)$(BINPREFIX)/$(SETARGET)"
 
 uninstall:
 	@echo "  [RM]  $(KWTARGET)..."
 	$(HIDE) $(RM) "$(DESTDIR)$(BINPREFIX)/$(KWTARGET)"
 	@echo "  [RM]  $(SETARGET)..."
-	$(HIDE) $(RM) "$(DESTDIR)$(BINPREFIX)/$(SETARGET)""
+	$(HIDE) $(RM) "$(DESTDIR)$(BINPREFIX)/$(SETARGET)"
 
 clean:
 	@echo "  [RM]  $(DEPS)..."
