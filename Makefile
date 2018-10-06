@@ -54,15 +54,18 @@ seed.html: $(SELIT)
 	@echo "  [LIT] $@..."
 	$(HIDE) $(LIT) -w "$<"
 	
-install: all
+install: all misc/kiwmi.desktop
 	install -Dm755 "$(KWTARGET)" "$(DESTDIR)$(BINPREFIX)/$(KWTARGET)"
 	install -Dm755 "$(SETARGET)" "$(DESTDIR)$(BINPREFIX)/$(SETARGET)"
+	install -Dm644 misc/kiwmi.desktop "$(DESTDIR)$(XSESSIONS)/kiwmi.desktop"
 
 uninstall:
 	@echo "  [RM]  $(KWTARGET)..."
 	$(HIDE) $(RM) "$(DESTDIR)$(BINPREFIX)/$(KWTARGET)"
 	@echo "  [RM]  $(SETARGET)..."
 	$(HIDE) $(RM) "$(DESTDIR)$(BINPREFIX)/$(SETARGET)"
+	@echo "  [RM]  kiwmi.desktop..."
+	$(HIDE) $(RM) "$(DESTDIR)$(XSESSIONS)/kiwmi.desktop"
 
 clean:
 	@echo "  [RM]  $(DEPS)..."
