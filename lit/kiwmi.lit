@@ -348,6 +348,7 @@ client_fd = accept(sock_fd, NULL, 0);
 if (!(client_fd < 0) && (msg_len = read(client_fd, msg, sizeof(msg))) > 0) {
 	// Client sent something
 	msg[msg_len] = '\0';
+	// TODO: Actually handle
 	printf("Client sent: %s\n", msg);
 	close(client_fd);
 } else {
