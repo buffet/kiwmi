@@ -5,11 +5,11 @@ BINPREFIX = $(PREFIX)/bin
 MANPREFIX = $(PREFIX)/share/man
 XSESSIONS = $(PREFIX)/share/xsessions
 
-SRCPREFIX = .
+CC = gcc
+LD = $(CC)
 
-CC  = gcc
-LIT = lit
+INCS = -Isrc/
 
-CFLAGS   = -std=c99 -Wall -Wextra -pedantic -Os -D_POSIX_C_SOURCE=2
+CFLAGS   = -std=c99 -Wall -Wextra -pedantic -Os -D_POSIX_C_SOURCE=2 $(INCS)
 LDFLAGS  = -lxcb
 CPPFLAGS = -MD -MP
