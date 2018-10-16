@@ -10,17 +10,6 @@ There's not enough so called "manual" tiling window managers and none of the exi
 
 When a new window opens, without having space assigned, I don't want my WM to suddenly be dynamic and just put it _somewhere_ or even on top something that's already existing.
 
-Where's the source at?
-----------------------
-
-In `lit/`.
-
-kiwmi is a literate program. It's a cool thing by Knuth. I'm not going to explain this, since https://en.wikipedia.org/wiki/Literate_programming[this] does it better anyways.
-I'm using the https://github.com/zyedidia/Literate[Literate] utility for this, since it gets the job done, while keeping a light syntax for me.
-
-Why? Literate programming is awesome. This allows people to learn from my stuff while making it easy to contribute.
-Also it's easier to write documentation like this. Who does comments anyway?
-
 Concepts
 --------
 
@@ -47,21 +36,8 @@ Building
 
 Configuration can be done mostly in link:config.mk[config.mk].
 
-In-source
-~~~~~~~~~
-
-. Be sure to have the dependencies installed (https://en.wikipedia.org/wiki/Literate_programming[Literate]).
+. Be sure to have the dependencies installed (libxcb).
 . `make`
-. `sudo make install`
-
-Out-of-source
-~~~~~~~~~~~~~
-
-. Have the dependencies (see above) installed
-. `mkdir $builddir`
-. `cp config.mk Makefile $builddir`
-. `cd $builddir`
-. `make SRCPREFIX=..`
 . `sudo make install`
 
 Contribution
