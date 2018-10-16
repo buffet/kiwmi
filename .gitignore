@@ -1,5 +1,4 @@
 /kiwmi
 /seed
-/*.c
-/*.d
-/*.html
+*.o
+*.d
