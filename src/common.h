@@ -7,6 +7,7 @@
 #define CONFIG_FILE "kiwmi/kiwmirc"
 
 void die(char *fmt, ...);
+void warn(char *fmt, ...);
 
 extern const char *argv0;
 
