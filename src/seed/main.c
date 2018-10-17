@@ -55,7 +55,7 @@ main(int argc, const char *argv[])
 
 	msg_len -= 1; // remove trailing space
 
-	if (send(sock_fd, msg, msg_len, 0) < 0) {
+	if (write(sock_fd, msg, msg_len) < 0) {
 		die("failed to send message\n");
 	}
 
@@ -70,7 +70,7 @@ main(int argc, const char *argv[])
 		}
 
 		if (fds[0].revents & POLLIN) {
-			if ((msg_len = recv(sock_fd, msg, sizeof(msg) - 1, 0)) > 0) {
+			if ((msg_len = read(sock_fd, msg, sizeof(msg) - 1)) > 0) {
 				msg[msg_len] = '\0';
 				if (msg_len == 1) {
 					break;
