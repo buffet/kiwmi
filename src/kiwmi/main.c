@@ -4,8 +4,14 @@
 
 #include <getopt.h>
 #include <limits.h>
+#include <signal.h>
+#include <sys/wait.h>
 
 #include "common.h"
+
+static void sig_handler(int sig);
+
+int g_is_about_to_quit = 0;
 
 int
 main(int argc, char *argv[])
@@ -50,5 +56,24 @@ main(int argc, char *argv[])
 				".config/" CONFIG_FILE
 			);
 		}
+	}
+
+	signal(SIGINT, sig_handler);
+	signal(SIGHUP, sig_handler);
+	signal(SIGTERM, sig_handler);
+	signal(SIGCHLD, sig_handler);
+	signal(SIGPIPE, SIG_IGN);
+}
+
+static void
+sig_handler(int sig)
+{
+	if (sig == SIGCHLD) {
+		signal(sig, sig_handler);
+		while (waitpid(-1, 0, WNOHANG) > 0) {
+			// EMPTY
+		}
+	} else if (sig == SIGINT || sig == SIGHUP || sig == SIGTERM) {
+		g_is_about_to_quit = 1;
 	}
 }
