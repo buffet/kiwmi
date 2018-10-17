@@ -6,9 +6,11 @@
 #include <limits.h>
 #include <signal.h>
 #include <sys/wait.h>
+#include <unistd.h>
 
 #include "common.h"
 
+static void exec_config(const char *path);
 static void sig_handler(int sig);
 
 int g_is_about_to_quit = 0;
@@ -18,6 +20,8 @@ main(int argc, char *argv[])
 {
 	char config_path[PATH_MAX];
 	int option;
+
+	argv0 = argv[0];
 
 	config_path[0] = '\0';
 
@@ -63,6 +67,21 @@ main(int argc, char *argv[])
 	signal(SIGTERM, sig_handler);
 	signal(SIGCHLD, sig_handler);
 	signal(SIGPIPE, SIG_IGN);
+
+	exec_config(config_path);
+}
+
+static void
+exec_config(const char *path)
+{
+	switch(fork()) {
+	case -1:
+		warn("failed to execute config\n");
+		break;
+	case 0:
+		execl(path, path, NULL);
+		die("failed to execute config\n");
+	}
 }
 
 static void
