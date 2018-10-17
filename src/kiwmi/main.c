@@ -20,11 +20,9 @@ main(int argc, char *argv[])
 			case 'h':
 				printf("Usage: %s [-h|-v|-c <config_path>]\n", argv0);
 				exit(EXIT_SUCCESS);
-				break;
 			case 'v':
 				printf("v" VERSION_STRING "\n");
 				exit(EXIT_SUCCESS);
-				break;
 			case 'c':
 				strncpy(config_path, optarg, sizeof(config_path));
 				break;
