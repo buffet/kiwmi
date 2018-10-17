@@ -1,0 +1,433 @@
+@code_type c .c
+@comment_type /* %s */
+
+@title kiwmi
+
+@s Introduction
+
+This is the source code for kiwmi.
+It parses it's arguments and prints either help / info text, or runs the window manager.
+
+Here's an overview:
+
+--- kiwmi.c
+@{copyright notice}
+
+@{c headers}
+@{posix headers}
+@{xcb headers}
+@{defines}
+
+const char *argv0;
+
+int g_about_to_quit = 0;
+
+@{function definitions}
+
+int
+main(int argc, char *argv[])
+{
+	argv0 = argv[0];
+
+	@{variables local to main}
+	@{parse arguments}
+
+	@{open ipc connection}
+	@{open xcb connection}
+	@{setup signal handlers}
+
+	@{execute config}
+
+	@{main loop}
+
+	@{cleanup}
+}
+---
+
+Note that this is version NaV (not a version).
+
+--- defines
+#define VERSION_STRING "NaV"
+---
+
+@s Copyright
+
+This project is licensed under the Mozilla Public License Version 2.0. Please read LICENSE for more details.
+
+--- copyright notice
+/* Copyright (c), Niclas Meyer <niclas@countingsort.com>
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+---
+
+@s Helper function
+
+`die` prints an error message and then exist unsuccessfully.
+
+--- function definitions
+static void
+die(const char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+	vfprintf(stderr, fmt, ap);
+	va_end(ap);
+	exit(EXIT_FAILURE);
+}
+---
+
+Note that this requires the `stdarg.h` header.
+
+--- c headers
+#include <stdarg.h>
+---
+
+@s Parse arguments
+
+There are only two arguments and two of them are rather straight forward.
+I use getopt for this, since it's quite good and allows us to extract the config argument easily.
+
+This requires `getopt.h`.
+
+--- posix headers
+#include <getopt.h>
+#include <limits.h>
+---
+
+That one we save in a local variable in main.
+
+--- variables local to main
+char config_path[PATH_MAX];
+int option;
+---
+
+--- parse arguments
+config_path[0] = '\0'; // Used to check if config was already set
+
+while ((option = getopt(argc, argv, "hvc:")) != -1) {
+	switch (option) {
+	case 'h':
+		printf("Usage: %s [-h|-v|-c <config_path>]\n", argv0);
+		exit(EXIT_SUCCESS);
+		break;
+	case 'v':
+		printf("v" VERSION_STRING "\n");
+		exit(EXIT_SUCCESS);
+		break;
+	case 'c':
+		strncpy(config_path, optarg, sizeof(config_path));
+		break;
+	}
+}
+
+if (!config_path[0]) {
+	@{get default config path}
+}
+---
+
+We also need `string.h`, `stdio.h`, and `stdlib.h`.
+
+--- c headers +=
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+---
+
+@s Config default path
+
+I can clearly see how a user doesn't specify a config path.
+
+This was a design decision to make, whether to load a default config. I decided to go with it.
+
+It loads `"${XDG_CONFIG_HOME:-$HOME/.config}/kiwmi/kiwmirc"`.
+
+---get default config path
+const char *config_home = getenv("XDG_CONFIG_HOME");
+
+if (config_home) {
+	snprintf(
+		config_path,
+		sizeof(config_path),
+		"%s/%s",
+		config_home,
+		"kiwmi/kiwmirc"
+	);
+} else {
+	snprintf(
+		config_path,
+		sizeof(config_path),
+		"%s/%s",
+		getenv("HOME"),
+		".config/kiwmi/kiwmi"
+	);
+}
+---
+
+@s Open IPC connection
+
+Pretty straight forward, we open a `AF_UNIX` socket and that's it.
+
+We need both a sockaddr and a file descriptor.
+
+--- variables local to main +=
+struct sockaddr_un sock_addr;
+int sock_fd;
+const char *sock_path;
+---
+
+This requires the following headers.
+
+--- posix headers +=
+#include <sys/socket.h>
+#include <sys/un.h>
+---
+
+Opening the server is pretty straight forward.
+
+--- open ipc connection
+memset(&sock_addr, 0, sizeof(sock_addr));
+
+@{get socket path}
+
+unlink(sock_addr.sun_path);
+sock_addr.sun_family = AF_UNIX;
+
+if ((sock_fd = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
+	die("%s: failed to create socket\n", argv0);
+}
+
+if (bind(sock_fd, (struct sockaddr *)&sock_addr, sizeof(sock_addr)) < 0) {
+	die("%s: failed to bind socket\n", argv0);
+}
+
+if (listen(sock_fd, 1) < 0) {
+	die("%s: failed to listen to socket\n", argv0);
+}
+---
+
+This requires this header file.
+
+--- posix headers +=
+#include <unistd.h>
+---
+
+@s Get socket path
+
+We default to `/tmp/kiwmi.sock` if `KIWMI_SOCKET` isn't set.
+
+--- get socket path
+sock_path = getenv("KIWMI_SOCKET");
+
+if (sock_path) {
+	strncpy(sock_addr.sun_path, sock_path, sizeof(sock_addr.sun_path));
+} else {
+	strncpy(sock_addr.sun_path, "/tmp/kiwmi.sock", sizeof(sock_addr.sun_path));
+}
+---
+
+@s Close socket
+
+Important part of our tear down process: closing the IPC socket again. Let's do it.
+
+--- cleanup
+close(sock_fd);
+---
+
+@s Setup signal handlers
+
+We don't want out window manager to just exit on us, so we need to setup signal handler.
+
+Here is it:
+
+--- function definitions +=
+static void
+sig_handler(int sig)
+{
+	if (sig == SIGCHLD) {
+		signal(sig, sig_handler);
+		while (waitpid(-1, 0, WNOHANG) > 0) {
+			// EMPTY
+		}
+	} else if (sig == SIGINT || sig == SIGHUP || sig == SIGTERM) {
+		g_about_to_quit = 1;
+	}
+}
+---
+
+Now we only need to register it.
+
+--- setup signal handlers
+signal(SIGINT, sig_handler);
+signal(SIGHUP, sig_handler);
+signal(SIGTERM, sig_handler);
+signal(SIGCHLD, sig_handler);
+signal(SIGPIPE, SIG_IGN);
+---
+
+Which of course requires this.
+
+--- posix headers +=
+#include <signal.h>
+#include <sys/wait.h>
+---
+
+@s Execute config
+
+We'll do this in a function, so we can execute later on, when the user requests it.
+
+--- function definitions +=
+static void
+exec_config(const char *path)
+{
+	switch (fork()) {
+	case -1:
+		fprintf(stderr, "%s: failed to execute config\n", argv0);
+		break;
+	case 0:
+		execl(path, path, NULL);
+		die("%s: failed to execute config\n", argv0);
+		break;
+	}
+}
+---
+
+We need to invoke this once all the connections are open
+
+--- execute config
+exec_config(config_path);
+---
+
+@s Main loop
+
+This is the heart of kiwmi.
+
+A pretty basic loop: fetch event, decide if it's from X or the client, handle it.
+`select` is used for the first two steps.
+
+--- posix headers +=
+#include <sys/select.h>
+---
+
+--- variables local to main +=
+int max_fd;
+fd_set file_descriptors;
+---
+
+--- main loop
+max_fd = sock_fd + 1;
+
+while (!g_about_to_quit) {
+	FD_ZERO(&file_descriptors);
+	FD_SET(sock_fd, &file_descriptors);
+
+	select(max_fd, &file_descriptors, NULL, NULL, NULL);
+
+	if (FD_ISSET(sock_fd, &file_descriptors)) {
+		@{handle client event}
+	}
+}
+---
+
+@s Handle client event
+
+Until there's an actual WM, I'm just going to read messages and then print them out, so we have some sort of feedback.
+
+--- variables local to main +=
+int client_fd;
+---
+
+--- handle client event
+char msg[BUFSIZ];
+int msg_len;
+
+client_fd = accept(sock_fd, NULL, 0);
+
+if (!(client_fd < 0) && (msg_len = read(client_fd, msg, sizeof(msg))) > 0) {
+	// Client sent something
+	msg[msg_len] = '\0';
+	printf("Client sent: %s\n", msg);
+	close(client_fd);
+} else {
+	fprintf(stderr, "%s: unable to accept connection\n", argv0);
+}
+---
+
+@s XCB connection
+
+Not a big surprise, but to talk to X we need to connect to it. XCB is the library of my choice for this.
+
+So we need this.
+
+--- xcb headers
+#include <xcb/xcb.h>
+---
+
+To inititalize the XCB connection, we open it, and then do some stuff like subscribing to the substructure events. If that fails, we also know that another WM is already running.
+
+--- open xcb connection
+@{open connection}
+@{open default screen}
+@{register wm}
+
+dpy_fd = xcb_get_file_descriptor(dpy);
+---
+
+This requires us a few variables to store the stuff.
+
+--- variables local to main +=
+int dpy_fd;
+int default_screen;
+xcb_connection_t *dpy;
+xcb_screen_t *screen;
+xcb_window_t root_window;
+xcb_generic_error_t *xcb_error;
+uint32_t event_values[] = { ROOT_EVENT_MASK };
+---
+
+And we need to define what events we want to listen to.
+
+--- defines +=
+#define ROOT_EVENT_MASK (XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY)
+---
+
+After we open the connection we check if it has an error.
+
+--- open connection
+dpy = xcb_connect(NULL, &default_screen);
+
+if (xcb_connection_has_error(dpy)) {
+	die("%s: failed to open XCB connection\n", argv0);
+}
+---
+
+Opening the default screen is a little more complicated, since XCB gives us a little more information at once.
+
+--- open default screen
+if (!(screen = xcb_setup_roots_iterator(xcb_get_setup(dpy)).data)) {
+	die("%s: failed to open default screen\n", argv0);
+}
+
+root_window = screen->root;
+---
+
+Now to register the WM. A WM is the program listening to the substructure events.
+If this errors, we know another WM is already running, in which case we just terminate.
+
+--- register wm
+xcb_error = xcb_request_check(
+	dpy,
+	xcb_change_window_attributes_checked(
+		dpy,
+		root_window,
+		XCB_CW_EVENT_MASK,
+		event_values
+	)
+);
+
+if (xcb_error) {
+	die("%s: another window manager is already running\n", argv0);
+}
+---
