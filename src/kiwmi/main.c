@@ -28,4 +28,27 @@ main(int argc, char *argv[])
 				break;
 		}
 	}
+
+	// default config path
+	if (!config_path[0]) {
+		char *config_home = getenv("XDG_CONFIG_HOME");
+		if (config_home) {
+			snprintf(
+				config_path,
+				sizeof(config_path),
+				"%s/%s",
+				config_home,
+				CONFIG_FILE
+			);
+		} else {
+			// ${HOME}/.config as fallback
+			snprintf(
+				config_path,
+				sizeof(config_path),
+				"%s/%s",
+				getenv("HOME"),
+				".config/" CONFIG_FILE
+			);
+		}
+	}
 }
