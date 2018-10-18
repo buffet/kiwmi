@@ -10,10 +10,10 @@ SESRC   := $(wildcard $(SRCPREFIX)/seed/*.c) $(SRCPREFIX)/common.c
 SEOBJ   := $(SESRC:.c=.o)
 SETARGET = seed
 
-SRC     = $(KWSRC) $(SESRC)
-OBJ     = $(KWOBJ) $(SEOBJ)
-DEPS    = $(OBJ:.o=.d)
-TARGETS = $(KWTARGET) $(SETARGET)
+SRC      = $(KWSRC) $(SESRC)
+OBJ      = $(KWOBJ) $(SEOBJ)
+DEPS     = $(OBJ:.o=.d)
+TARGETS  = $(KWTARGET) $(SETARGET)
 
 .PHONY: all nodoc doc install uninstall clean
 
