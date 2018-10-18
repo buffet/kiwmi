@@ -78,7 +78,7 @@ main(int argc, char *argv[])
 	int max_fd = g_sock_fd + 1;
 	fd_set file_descriptors;
 
-	while (g_is_about_to_quit) {
+	while (!g_is_about_to_quit) {
 		FD_ZERO(&file_descriptors);
 		FD_SET(g_sock_fd, &file_descriptors);
 
