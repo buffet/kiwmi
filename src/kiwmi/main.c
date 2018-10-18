@@ -6,6 +6,7 @@
 #include <limits.h>
 #include <signal.h>
 #include <sys/select.h>
+#include <sys/socket.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -84,7 +85,18 @@ main(int argc, char *argv[])
 		select(max_fd, &file_descriptors, NULL, NULL, NULL);
 
 		if (FD_ISSET(g_sock_fd, &file_descriptors)) {
-			// TODO: handle client event
+			int client_fd;
+			char msg[BUFSIZ];
+			int msg_len;
+
+			client_fd = accept(g_sock_fd, NULL, 0);
+
+			if (!(client_fd < 0) && (msg_len = read(client_fd, msg, sizeof(msg))) > 0) {
+				// client sent something
+				msg[msg_len] = '\0';
+				// TODO: handle event
+				close(client_fd);
+			}
 		}
 	}
 }
