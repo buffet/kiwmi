@@ -15,51 +15,29 @@ OBJ     = $(KWOBJ) $(SEOBJ)
 DEPS    = $(OBJ:.o=.d)
 TARGETS = $(KWTARGET) $(SETARGET)
 
-ifeq ($(VERBOSE), 1)
-	HIDE =
-else
-	HIDE = @
-endif
+.PHONY: all nodoc doc install uninstall clean
 
-.PHONY: all all-nodoc doc install uninstall clean
-
-all: all-nodoc doc
-
-all-nodoc: $(TARGETS)
+all: $(TARGETS)
 
 $(KWTARGET): $(KWOBJ)
-	@echo "  [LD]  $@..."
-	$(HIDE) $(LD) -o "$@" $^ $(LDFLAGS)
+	$(LD) -o $@ $(LDFLAGS) $^
 
 $(SETARGET): $(SEOBJ)
-	@echo "  [LD]  $@..."
-	$(HIDE) $(LD) -o "$@" $^ $(LDFLAGS)
-
-.c.o:
-	@echo "  [CC]  $@..."
-	$(HIDE) $(CC) -o "$@" "$<" -c $(CFLAGS) $(CPPFLAGS)
-
-doc:
+	$(LD) -o $@ $(LDFLAGS) $^
 
 install: all misc/kiwmi.desktop
-	install -Dm755 "$(KWTARGET)" "$(DESTDIR)$(BINPREFIX)/$(KWTARGET)"
-	install -Dm755 "$(SETARGET)" "$(DESTDIR)$(BINPREFIX)/$(SETARGET)"
+	install -Dm755 $(KWTARGET) "$(DESTDIR)$(BINPREFIX)/$(KWTARGET)"
+	install -Dm755 $(SETARGET) "$(DESTDIR)$(BINPREFIX)/$(SETARGET)"
 	install -Dm644 misc/kiwmi.desktop "$(DESTDIR)$(XSESSIONS)/kiwmi.desktop"
 
 uninstall:
-	@echo "  [RM]  $(KWTARGET)..."
-	$(HIDE) $(RM) "$(DESTDIR)$(BINPREFIX)/$(KWTARGET)"
-	@echo "  [RM]  $(SETARGET)..."
-	$(HIDE) $(RM) "$(DESTDIR)$(BINPREFIX)/$(SETARGET)"
-	@echo "  [RM]  kiwmi.desktop..."
-	$(HIDE) $(RM) "$(DESTDIR)$(XSESSIONS)/kiwmi.desktop"
+	$(RM) "$(DESTDIR)$(BINPREFIX)/$(KWTARGET)"
+	$(RM) "$(DESTDIR)$(BINPREFIX)/$(SETARGET)"
+	$(RM) "$(DESTDIR)$(XSESSIONS)/kiwmi.desktop"
 
 clean:
-	@echo "  [RM]  $(DEPS)..."
-	$(HIDE) $(RM) $(DEPS)
-	@echo "  [RM]  $(OBJ)..."
-	$(HIDE) $(RM) $(OBJ)
-	@echo "  [RM]  $(TARGETS)..."
-	$(HIDE) $(RM) $(TARGETS)
+	$(RM) $(DEPS)
+	$(RM) $(OBJ)
+	$(RM) $(TARGETS)
 
 -include $(DEPS)

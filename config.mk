@@ -1,5 +1,4 @@
 VERSION = NaV
-VERBOSE = 0
 
 PREFIX    = /usr/local
 BINPREFIX = $(PREFIX)/bin
