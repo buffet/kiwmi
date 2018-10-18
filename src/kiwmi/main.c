@@ -5,10 +5,12 @@
 #include <getopt.h>
 #include <limits.h>
 #include <signal.h>
+#include <sys/select.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
 #include "common.h"
+#include "ipc.h"
 
 static void exec_config(const char *path);
 static void sig_handler(int sig);
@@ -68,7 +70,23 @@ main(int argc, char *argv[])
 	signal(SIGCHLD, sig_handler);
 	signal(SIGPIPE, SIG_IGN);
 
+	init_socket();
+
 	exec_config(config_path);
+
+	int max_fd = g_sock_fd + 1;
+	fd_set file_descriptors;
+
+	while (g_is_about_to_quit) {
+		FD_ZERO(&file_descriptors);
+		FD_SET(g_sock_fd, &file_descriptors);
+
+		select(max_fd, &file_descriptors, NULL, NULL, NULL);
+
+		if (FD_ISSET(g_sock_fd, &file_descriptors)) {
+			// TODO: handle client event
+		}
+	}
 }
 
 static void
