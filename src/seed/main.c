@@ -50,7 +50,7 @@ main(int argc, const char *argv[])
 	size_t msg_len = 0;
 
 	for (int i = 1; i < argc; ++i) {
-		msg_len += (size_t)snprintf(msg + msg_len, sizeof(msg), "%s", argv[i]);
+		msg_len += (size_t)snprintf(msg + msg_len, sizeof(msg), "%s ", argv[i]);
 	}
 
 	msg_len -= 1; // remove trailing space
