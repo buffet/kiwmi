@@ -29,10 +29,10 @@ int g_is_about_to_quit = 0;
 int
 main(int argc, char *argv[])
 {
+	argv0 = argv[0];
+
 	char config_path[PATH_MAX];
 	int option;
-
-	argv0 = argv[0];
 
 	config_path[0] = '\0';
 
