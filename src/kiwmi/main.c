@@ -117,7 +117,13 @@ main(int argc, char *argv[])
 		}
 
 		if (FD_ISSET(g_dpy_fd, &file_descriptors)) {
-			// TODO: handle event
+			xcb_generic_event_t *event = xcb_wait_for_event(g_dpy);
+
+			if (!event) {
+				die("XCB connection broke\n");
+			}
+
+			handle_xcb_event(event);
 		}
 	}
 }

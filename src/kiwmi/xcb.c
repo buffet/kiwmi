@@ -53,3 +53,14 @@ init_xcb(void)
 
 	g_dpy_fd = xcb_get_file_descriptor(g_dpy);
 }
+
+void
+handle_xcb_event(xcb_generic_event_t *event)
+{
+	// TODO: handle event
+
+	switch (event->response_type) {
+	}
+
+	free(event);
+}

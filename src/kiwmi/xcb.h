@@ -11,6 +11,7 @@
 #include <xcb/xcb.h>
 
 void init_xcb(void);
+void handle_xcb_event(xcb_generic_event_t *event);
 
 extern int g_dpy_fd;
 extern xcb_connection_t *g_dpy;
