@@ -17,10 +17,14 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <xcb/xcb.h>
+
 #include "ipc.h"
 #include "xcb.h"
 
 #include "common.h"
+
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 static void exec_config(const char *path);
 static void sig_handler(int sig);
@@ -85,12 +89,15 @@ main(int argc, char *argv[])
 
 	exec_config(config_path);
 
-	int max_fd = g_sock_fd + 1;
+	int max_fd = MAX(g_sock_fd, g_dpy_fd) + 1;
 	fd_set file_descriptors;
 
 	while (!g_is_about_to_quit) {
+		xcb_flush(g_dpy);
+
 		FD_ZERO(&file_descriptors);
 		FD_SET(g_sock_fd, &file_descriptors);
+		FD_SET(g_dpy_fd, &file_descriptors);
 
 		select(max_fd, &file_descriptors, NULL, NULL, NULL);
 
@@ -107,6 +114,10 @@ main(int argc, char *argv[])
 				// TODO: handle event
 				close(client_fd);
 			}
+		}
+
+		if (FD_ISSET(g_dpy_fd, &file_descriptors)) {
+			// TODO: handle event
 		}
 	}
 }
