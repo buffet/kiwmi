@@ -1,3 +1,10 @@
+/* Copyright (c), Niclas Meyer <niclas@countingsort.com>
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,8 +17,9 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "common.h"
 #include "ipc.h"
+
+#include "common.h"
 
 static void exec_config(const char *path);
 static void sig_handler(int sig);
@@ -72,6 +80,7 @@ main(int argc, char *argv[])
 	signal(SIGPIPE, SIG_IGN);
 
 	init_socket();
+	init_xcb();
 
 	exec_config(config_path);
 
