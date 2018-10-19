@@ -18,6 +18,7 @@
 #include <unistd.h>
 
 #include "ipc.h"
+#include "xcb.h"
 
 #include "common.h"
 
