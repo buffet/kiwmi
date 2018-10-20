@@ -126,6 +126,8 @@ main(int argc, char *argv[])
 			handle_xcb_event(event);
 		}
 	}
+
+	close(g_sock_fd);
 }
 
 static void
