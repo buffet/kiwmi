@@ -19,6 +19,7 @@
 
 #include <xcb/xcb.h>
 
+#include "events.h"
 #include "ipc.h"
 #include "xcb.h"
 

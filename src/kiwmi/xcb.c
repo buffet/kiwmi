@@ -7,11 +7,13 @@
 
 #include "xcb.h"
 
+#include <stdlib.h>
+
 #include <xcb/xcb.h>
 
 #include "common.h"
 
-#define ROOT_MASK ( XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY | XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT )
+#define ROOT_MASK ( XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY )
 
 int g_dpy_fd;
 xcb_connection_t *g_dpy;
@@ -52,15 +54,4 @@ init_xcb(void)
 	}
 
 	g_dpy_fd = xcb_get_file_descriptor(g_dpy);
-}
-
-void
-handle_xcb_event(xcb_generic_event_t *event)
-{
-	// TODO: handle event
-
-	switch (event->response_type) {
-	}
-
-	free(event);
 }
