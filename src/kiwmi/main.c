@@ -31,7 +31,7 @@
 static void exec_config(const char *path);
 static void sig_handler(int sig);
 
-bool g_is_about_to_quit = 0;
+bool g_is_about_to_quit = false;
 
 int
 main(int argc, char *argv[])
@@ -154,6 +154,6 @@ sig_handler(int sig)
 			// EMPTY
 		}
 	} else if (sig == SIGINT || sig == SIGHUP || sig == SIGTERM) {
-		g_is_about_to_quit = 1;
+		g_is_about_to_quit = true;
 	}
 }
