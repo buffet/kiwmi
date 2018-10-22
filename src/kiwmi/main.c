@@ -5,6 +5,7 @@
  * You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,7 +31,7 @@
 static void exec_config(const char *path);
 static void sig_handler(int sig);
 
-int g_is_about_to_quit = 0;
+bool g_is_about_to_quit = 0;
 
 int
 main(int argc, char *argv[])
