@@ -3,10 +3,11 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdnoreturn.h>
 
 const char *argv0;
 
-void
+noreturn void
 die(char *fmt, ...)
 {
 	fprintf(stderr, "%s: ", argv0);
