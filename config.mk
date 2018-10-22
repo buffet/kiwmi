@@ -12,6 +12,6 @@ INCS = -Isrc/
 
 DEFS = -D_POSIX_C_SOURCE=2 -DVERSION_STRING=\"$(VERSION)\"
 
-CFLAGS   = -std=c99 -Wall -Wextra -pedantic -Os $(DEFS) $(INCS)
+CFLAGS   = -std=c11 -Wall -Wextra -pedantic -Os $(DEFS) $(INCS)
 LDFLAGS  = -lxcb
 CPPFLAGS = -MD -MP
