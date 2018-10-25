@@ -37,9 +37,9 @@ main(int argc, const char *argv[])
 	char *sock_path = getenv(SOCK_ENV_VAR);
 
 	if (sock_path) {
-		strncpy(sock_addr.sun_path, sock_path, sizeof(sock_addr.sun_path));
+		strncpy(sock_addr.sun_path, sock_path, sizeof(sock_addr.sun_path) - 1);
 	} else {
-		strncpy(sock_addr.sun_path, SOCK_DEF_PATH, sizeof(sock_addr.sun_path));
+		strncpy(sock_addr.sun_path, SOCK_DEF_PATH, sizeof(sock_addr.sun_path) - 1);
 	}
 
 	if (connect(sock_fd, (struct sockaddr *)&sock_addr, sizeof(sock_addr)) < 0) {
