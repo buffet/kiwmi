@@ -9,9 +9,10 @@ CC = gcc
 LD = $(CC)
 
 INCS = -Isrc/
+LIBS = `pkg-config --libs xcb`
 
 DEFS = -D_POSIX_C_SOURCE=2 -DVERSION_STRING=\"$(VERSION)\"
 
-CFLAGS   = -std=c11 -Wall -Wextra -pedantic -Os $(DEFS) $(INCS)
-LDFLAGS  = -lxcb
-CPPFLAGS = -MD -MP
+CFLAGS   += -std=c11 -Wall -Wextra -pedantic $(DEFS) $(INCS)
+LDFLAGS  += $(LIBS)
+CPPFLAGS += -MD -MP
