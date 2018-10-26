@@ -31,12 +31,17 @@ Configuration languages suck and they add a lot of complexity to a program.
 
 This allows you to write your configuration in any language you want, while also removing the task of listening to keybinds for me, since you can use tools like https://github.com/baskerville/sxhkd[sxhkd] to do that.
 
+Dependencies
+------------
+
+At the moment kiwmi only requires libxcb. It also requires pkg-config for the build process.
+
 Building
 --------
 
 Configuration can be done mostly in link:config.mk[config.mk].
 
-. Be sure to have the dependencies installed (libxcb).
+. Be sure to have the dependencies installed.
 . `make`
 . `sudo make install`
 
