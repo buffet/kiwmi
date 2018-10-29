@@ -126,6 +126,8 @@ main(int argc, char *argv[])
 			if (!event) {
 				continue;
 			}
+
+			free(event);
 		}
 	}
 
