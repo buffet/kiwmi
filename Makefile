@@ -20,10 +20,10 @@ TARGETS  = $(KWTARGET) $(SETARGET)
 all: $(TARGETS)
 
 $(KWTARGET): $(KWOBJ)
-	$(LD) -o $@ $(LDFLAGS) $^
+	$(LD) -o $@ $^ $(LDFLAGS)
 
 $(SETARGET): $(SEOBJ)
-	$(LD) -o $@ $(LDFLAGS) $^
+	$(LD) -o $@ $^ $(LDFLAGS)
 
 install: all misc/kiwmi.desktop
 	install -Dm755 $(KWTARGET) "$(DESTDIR)$(BINPREFIX)/$(KWTARGET)"
