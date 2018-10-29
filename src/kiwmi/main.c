@@ -51,7 +51,7 @@ main(int argc, char *argv[])
 				printf("v" VERSION_STRING "\n");
 				exit(EXIT_SUCCESS);
 			case 'c':
-				strncpy(config_path, optarg, sizeof(config_path));
+				strncpy(config_path, optarg, sizeof(config_path) - 1);
 				break;
 		}
 	}

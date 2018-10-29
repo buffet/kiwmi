@@ -29,9 +29,9 @@ init_socket(void)
 	char *sock_path = getenv(SOCK_ENV_VAR);
 
 	if (sock_path) {
-		strncpy(sock_addr.sun_path, sock_path, sizeof(sock_addr.sun_path));
+		strncpy(sock_addr.sun_path, sock_path, sizeof(sock_addr.sun_path) - 1);
 	} else {
-		strncpy(sock_addr.sun_path, SOCK_DEF_PATH, sizeof(sock_addr.sun_path));
+		strncpy(sock_addr.sun_path, SOCK_DEF_PATH, sizeof(sock_addr.sun_path) - 1);
 	}
 
 	sock_addr.sun_family = AF_UNIX;
