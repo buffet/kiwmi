@@ -112,7 +112,7 @@ main(int argc, char *argv[])
 
 			client_fd = accept(g_sock_fd, NULL, 0);
 
-			if (!(client_fd < 0) && (msg_len = read(client_fd, msg, sizeof(msg))) > 0) {
+			if (!(client_fd < 0) && (msg_len = read(client_fd, msg, sizeof(msg) - 1)) > 0) {
 				// client sent something
 				msg[msg_len] = '\0';
 				handle_ipc_event(msg);
