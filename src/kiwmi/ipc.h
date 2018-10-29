@@ -9,6 +9,7 @@
 #define IPC_H
 
 void init_socket(void);
+void handle_ipc_event(char *msg);
 
 extern int g_sock_fd;
 

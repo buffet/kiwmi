@@ -5,6 +5,8 @@
  * You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+#include "main.h"
+
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,20 +29,21 @@
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-static void exec_config(const char *path);
 static void sig_handler(int sig);
 
 bool g_is_about_to_quit = false;
+
+static char *g_config_path;
 
 int
 main(int argc, char *argv[])
 {
 	argv0 = argv[0];
 
-	char config_path[PATH_MAX];
 	int option;
+	g_config_path = malloc(PATH_MAX);
 
-	config_path[0] = '\0';
+	g_config_path[0] = '\0';
 
 	while ((option = getopt(argc, argv, "hvc:")) != -1) {
 		switch (option) {
@@ -51,18 +54,18 @@ main(int argc, char *argv[])
 				printf("v" VERSION_STRING "\n");
 				exit(EXIT_SUCCESS);
 			case 'c':
-				strncpy(config_path, optarg, sizeof(config_path) - 1);
+				strncpy(g_config_path, optarg, PATH_MAX - 1);
 				break;
 		}
 	}
 
 	// default config path
-	if (!config_path[0]) {
+	if (!g_config_path[0]) {
 		char *config_home = getenv("XDG_CONFIG_HOME");
 		if (config_home) {
 			snprintf(
-				config_path,
-				sizeof(config_path),
+				g_config_path,
+				PATH_MAX,
 				"%s/%s",
 				config_home,
 				CONFIG_FILE
@@ -70,8 +73,8 @@ main(int argc, char *argv[])
 		} else {
 			// ${HOME}/.config as fallback
 			snprintf(
-				config_path,
-				sizeof(config_path),
+				g_config_path,
+				PATH_MAX,
 				"%s/%s",
 				getenv("HOME"),
 				".config/" CONFIG_FILE
@@ -88,7 +91,7 @@ main(int argc, char *argv[])
 	init_socket();
 	init_xcb();
 
-	exec_config(config_path);
+	exec_config();
 
 	int max_fd = MAX(g_sock_fd, g_dpy_fd) + 1;
 	fd_set file_descriptors;
@@ -112,7 +115,7 @@ main(int argc, char *argv[])
 			if (!(client_fd < 0) && (msg_len = read(client_fd, msg, sizeof(msg))) > 0) {
 				// client sent something
 				msg[msg_len] = '\0';
-				// TODO: handle event
+				handle_ipc_event(msg);
 				close(client_fd);
 			}
 		}
@@ -126,19 +129,20 @@ main(int argc, char *argv[])
 		}
 	}
 
+	free(g_config_path);
 	close(g_sock_fd);
 	xcb_disconnect(g_dpy);
 }
 
-static void
-exec_config(const char *path)
+void
+exec_config(void)
 {
 	switch(fork()) {
 	case -1:
 		warn("failed to execute config\n");
 		break;
 	case 0:
-		execl(path, path, NULL);
+		execl(g_config_path, g_config_path, NULL);
 		die("failed to execute config\n");
 	}
 }

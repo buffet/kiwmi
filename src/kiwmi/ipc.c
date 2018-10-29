@@ -7,6 +7,7 @@
 
 #include "ipc.h"
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,7 +16,11 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#include "main.h"
+
 #include "common.h"
+
+#define STREQ(a, b) (strcmp((a), (b)) == 0)
 
 int g_sock_fd;
 
@@ -48,5 +53,19 @@ init_socket(void)
 
 	if (listen(g_sock_fd, 1) < 0) {
 		die("failed to listen to socket\n");
+	}
+}
+
+void
+handle_ipc_event(char *msg)
+{
+	char *command = strtok(msg, " ");
+
+	if (STREQ(command, "quit")) {
+		g_is_about_to_quit = true;
+	} else if (STREQ(command, "reload")) {
+		exec_config();
+	} else {
+		warn("ignoring unknown command: %s\n", command);
 	}
 }
