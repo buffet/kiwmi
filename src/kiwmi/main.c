@@ -33,7 +33,7 @@ static void sig_handler(int sig);
 bool g_is_about_to_quit = false;
 
 int
-main(int argc, const char *argv[])
+main(int argc, char *argv[])
 {
 	argv0 = argv[0];
 

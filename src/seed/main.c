@@ -17,7 +17,7 @@
 #include "common.h"
 
 int
-main(int argc, const char *argv[])
+main(int argc, char *argv[])
 {
 	argv0 = argv[0];
 
