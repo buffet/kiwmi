@@ -20,7 +20,6 @@
 
 #include <xcb/xcb.h>
 
-#include "events.h"
 #include "ipc.h"
 #include "xcb.h"
 
@@ -124,12 +123,11 @@ main(int argc, char *argv[])
 			if (!event) {
 				die("XCB connection broke\n");
 			}
-
-			handle_xcb_event(event);
 		}
 	}
 
 	close(g_sock_fd);
+	xcb_disconnect(g_dpy);
 }
 
 static void
