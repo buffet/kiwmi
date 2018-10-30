@@ -38,7 +38,7 @@ install: all misc/kiwmi.desktop
 	install -Dm755 $(KWTARGET) "$(DESTDIR)$(BINPREFIX)/$(KWTARGET)"
 	install -Dm755 $(SETARGET) "$(DESTDIR)$(BINPREFIX)/$(SETARGET)"
 	install -Dm644 misc/kiwmi.desktop "$(DESTDIR)$(XSESSIONS)/kiwmi.desktop"
-	install -Dm644 $(MANTARGET) "$(DESTDIR)$(MANPREFIX)/$(MANPREFIX)"
+	install -Dm644 $(MANTARGET) "$(DESTDIR)$(MANPREFIX)/man1/$(MANTARGET)"
 
 uninstall:
 	$(RM) "$(DESTDIR)$(BINPREFIX)/$(KWTARGET)"
