@@ -44,7 +44,7 @@ uninstall:
 	$(RM) "$(DESTDIR)$(BINPREFIX)/$(KWTARGET)"
 	$(RM) "$(DESTDIR)$(BINPREFIX)/$(SETARGET)"
 	$(RM) "$(DESTDIR)$(XSESSIONS)/kiwmi.desktop"
-	$(RM) "$(DESTDIR)$(MANPREFIX)/$(MANTARGET)"
+	$(RM) "$(DESTDIR)$(MANPREFIX)/man1/$(MANTARGET)"
 
 clean:
 	$(RM) $(DEPS)
