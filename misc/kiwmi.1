@@ -1,0 +1,78 @@
+.TH KIWMI 1 "2018 October 30" "{{VERSION}}" ""
+
+.SH NAME
+kiwmi \- fully manual tiling window manager
+
+.SH SYNPOSIS
+.B kiwmi
+.R [
+.B -h
+.R |
+.B -v
+.R |
+.B -c
+.I CONFIG_PATH
+.R ]
+
+.PP
+.B seed
+.I COMMAND
+
+.SH DESCRIPTION
+Starts the
+.B kiwmi
+window manager on
+.IR DISPLAY .
+It is controlled and configured via
+.BR seed .
+
+.PP
+A list of
+.IR COMMAND s
+can be found below.
+
+.SH OPTIONS
+
+.PP
+.B \-h
+.RS
+Print help and exit
+.RE
+
+.PP
+.B \-V
+.RS
+Print version info and exit
+.RE
+
+.PP
+.B \-d
+.RS
+Print debug information
+.RE
+
+.PP
+\fB\-c\fR \fICONFIG_PATH\fR
+.RS
+Print help and exit
+.RE
+
+.SH USAGE
+Possible commands for
+.B seed
+are:
+
+.PP
+.B quit
+.RS
+Quit kiwmi
+.RE
+
+.PP
+.B reload
+.RS
+Reload the configuration file.
+.RE
+
+.SH AUTHOR
+Niclas Meyer <niclas@countingsort.com>
