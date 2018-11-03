@@ -3,45 +3,35 @@ kiwmi
 
 A fully manual tiling window manager for the X window system.
 
-Why?
-----
-
-There's not enough so called "manual" tiling window managers and none of the existing ones is *fully* manual.
-
-When a new window opens, without having space assigned, I don't want my WM to suddenly be dynamic and just put it _somewhere_ or even on top something that's already existing.
-
 Concepts
 --------
 
-I don't know what you expect to find here.
+Most *manual* window managers aren't *truly* manual. They behave like a dynamic one sometimes. However, kiwmi is fully manual. It doesn't become dynamic all of a sudden.
 
-It's a window manager: there's tags (workspaces), windows and they get arranged.
+When a window is spawned without allocating space, it's put in an invisible queue. Then you allocate space for the window; when the window is pulled from the queue, it goes into the aforementioned space. This solves the classic problem with regular window managers, where the window with a longer start time will spawn in the current tag (workspace) instead of the one in which it was opened in.
 
-So what happens when a window is created when there's no space yet?
-It's put in a queue, from where it can be popped into available space (which is also getting a cool name soon).
-This also solves the problem of creating a window and moving the focus before it spawns, since you can assign future queue positions to available space.
-
-I plan on having available space behave like a window, so that you don't have to think about stuff, but we'll see about that.
+In kiwmi, empty spaces available for windows behave like a normal window does. You can resize and move around them. Ergo, you don't need to re-learn how a tiling window manager behaves and works.
 
 Configuration
 -------------
 
-Configuration languages suck and they add a lot of complexity to a program.
-`kiwmi` listens to a socket and offers a basic client (called `seed`) to communicate with the WM.
+Configuration languages are confusing. They are neither flexible nor easy to use. Moreover, it adds a lot of complexity to the program itself.
+`kiwmi` listens to a socket and offers a basic client, `seed`, to communicate with kiwmi. Much like how `bspwm` works.
 
-This allows you to write your configuration in any language you want, while also removing the task of listening to keybinds for me, since you can use tools like https://github.com/baskerville/sxhkd[sxhkd] to do that.
+This allows the user to write the configuration in any language, while also removing the need to have a custom hotkey manager since you can use external tools like https://github.com/baskerville/sxhkd[sxhkd] instead.
 
 Dependencies
 ------------
 
-At the moment kiwmi only requires libxcb. It also requires pkg-config for the build process.
+* `libxcb`
+* `pkgconfig` (make)
 
 Building
 --------
 
-Configuration can be done mostly in link:config.mk[config.mk].
+For the most part, configuration is done in link:config.mk[config.mk].
 
-. Be sure to have the dependencies installed.
+. Make sure to have the dependencies installed.
 . `make`
 . `sudo make install`
 
@@ -50,6 +40,8 @@ Contribution
 
 You want to contribute? Great!
 
-Future requests, bug reports and PRs are welcome. Be sure to read the link:CONTRIBUTING.adoc[CONTRIBUTING.adoc]. Note that pull requests without a valid issue they reference are ignored, to decrease the amount of duplicate work.
+Future requests, bug reports and PRs are always welcome. Make sure you read the link:CONTRIBUTING.adoc[CONTRIBUTING.adoc]. Note that pull requests without a valid issue are ignored to decrease the amount of duplicate work.
 
-If anything is unclear, feel free to reach out to me.
+If anything is unclear, feel free to contact me.
+
+If you don't program but want to contribute to kiwmi, spread the world about kiwmi and star the repo.
