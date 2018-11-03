@@ -65,6 +65,10 @@ handle_ipc_event(char *msg)
 		g_is_about_to_quit = true;
 	} else if (STREQ(command, "reload")) {
 		exec_config();
+	} else if (STREQ(command, "exec")) {
+		char *command = strtok(NULL, "");
+		execl("/bin/sh", "/bin/sh", "-c", command, NULL);
+		g_is_about_to_quit = true;
 	} else {
 		warn("ignoring unknown command: %s\n", command);
 	}
