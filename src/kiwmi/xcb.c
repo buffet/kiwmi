@@ -13,7 +13,7 @@
 
 #include "common.h"
 
-#define ROOT_MASK ( XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY )
+#define ROOT_MASK ( XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY | XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT )
 
 int g_dpy_fd;
 xcb_connection_t *g_dpy;
