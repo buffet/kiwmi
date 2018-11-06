@@ -50,5 +50,6 @@ clean:
 	$(RM) $(DEPS)
 	$(RM) $(OBJ)
 	$(RM) $(TARGETS)
+	$(RM) $(MANTARGET)
 
 -include $(DEPS)
