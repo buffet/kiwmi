@@ -22,6 +22,7 @@ die(char *fmt, ...)
 	va_start(ap, fmt);
 	vfprintf(stderr, fmt, ap);
 	va_end(ap);
+	fflush(stderr);
 	exit(EXIT_FAILURE);
 }
 
@@ -33,4 +34,5 @@ warn(char *fmt, ...)
 	va_start(ap, fmt);
 	vfprintf(stderr, fmt, ap);
 	va_end(ap);
+	fflush(stderr);
 }
