@@ -127,6 +127,8 @@ main(int argc, char *argv[])
 				continue;
 			}
 
+			handle_xcb_event(event);
+
 			free(event);
 		}
 	}
