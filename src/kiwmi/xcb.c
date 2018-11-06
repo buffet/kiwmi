@@ -79,8 +79,6 @@ handle_xcb_event(xcb_generic_event_t *event)
 static void
 handle_create_notify_event(xcb_create_notify_event_t *event)
 {
-	warn("create_nofify\n");
-
 	// TODO: handle
 }
 
@@ -93,8 +91,6 @@ handle_destroy_notify_event(xcb_destroy_notify_event_t *event)
 static void
 handle_map_request_event(xcb_map_request_event_t *event)
 {
-	warn("map_request\n");
-
 	// TODO: handle properly
 	xcb_map_window(g_dpy, event->window);
 }
