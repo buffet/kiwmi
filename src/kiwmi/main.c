@@ -121,15 +121,11 @@ main(int argc, char *argv[])
 		}
 
 		if (FD_ISSET(g_dpy_fd, &file_descriptors)) {
-			xcb_generic_event_t *event = xcb_poll_for_event(g_dpy);
-
-			if (!event) {
-				continue;
+			xcb_generic_event_t *event;
+			while ((event= xcb_poll_for_event(g_dpy))) {
+				handle_xcb_event(event);
+				free(event);
 			}
-
-			handle_xcb_event(event);
-
-			free(event);
 		}
 	}
 
