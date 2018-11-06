@@ -20,8 +20,6 @@
 
 #include "common.h"
 
-#define STREQ(a, b) (strcmp((a), (b)) == 0)
-
 int g_sock_fd;
 
 void
@@ -56,16 +54,18 @@ init_socket(void)
 	}
 }
 
+#define CMDIS(c) (strcmp(command, (c)) == 0)
+
 void
 handle_ipc_event(char *msg)
 {
 	char *command = strtok(msg, " ");
 
-	if (STREQ(command, "quit")) {
+	if (CMDIS("quit")) {
 		g_is_about_to_quit = true;
-	} else if (STREQ(command, "reload")) {
+	} else if (CMDIS("reload")) {
 		exec_config();
-	} else if (STREQ(command, "exec")) {
+	} else if (CMDIS("exec")) {
 		char *command = strtok(NULL, "");
 		execl("/bin/sh", "/bin/sh", "-c", command, NULL);
 		g_is_about_to_quit = true;
