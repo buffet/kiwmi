@@ -103,7 +103,9 @@ main(int argc, char *argv[])
 		FD_SET(g_sock_fd, &file_descriptors);
 		FD_SET(g_dpy_fd, &file_descriptors);
 
-		select(max_fd, &file_descriptors, NULL, NULL, NULL);
+		if (!(select(max_fd, &file_descriptors, NULL, NULL, NULL) > 0)) {
+			continue;
+		}
 
 		if (FD_ISSET(g_sock_fd, &file_descriptors)) {
 			int client_fd;
