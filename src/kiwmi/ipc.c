@@ -69,7 +69,7 @@ handle_ipc_event(FILE *client, char *msg)
 		char *command = strtok(NULL, "");
 		fclose(client);
 		execl("/bin/sh", "/bin/sh", "-c", command, NULL);
-		g_is_about_to_quit = true;
+		g_is_about_to_quit = true; // in case the exec failed
 	} else {
 		warn("ignoring unknown command: %s\n", command);
 	}
