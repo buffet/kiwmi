@@ -57,7 +57,7 @@ init_socket(void)
 #define CMDIS(c) (strcmp(command, (c)) == 0)
 
 void
-handle_ipc_event(char *msg)
+handle_ipc_event(FILE *client, char *msg)
 {
 	char *command = strtok(msg, " ");
 
@@ -67,6 +67,7 @@ handle_ipc_event(char *msg)
 		exec_config();
 	} else if (CMDIS("exec")) {
 		char *command = strtok(NULL, "");
+		fclose(client);
 		execl("/bin/sh", "/bin/sh", "-c", command, NULL);
 		g_is_about_to_quit = true;
 	} else {

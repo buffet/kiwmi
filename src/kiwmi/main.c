@@ -117,8 +117,15 @@ main(int argc, char *argv[])
 			if (!(client_fd < 0) && (msg_len = read(client_fd, msg, sizeof(msg) - 1)) > 0) {
 				// client sent something
 				msg[msg_len] = '\0';
-				handle_ipc_event(msg);
-				close(client_fd);
+
+				FILE *file = fdopen(client_fd, "w");
+				if (!file) {
+					warn("failed to open client as file\n");
+					close(client_fd);
+				} else {
+					handle_ipc_event(file, msg);
+					fclose(file);
+				}
 			}
 		}
 

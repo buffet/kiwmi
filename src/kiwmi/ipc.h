@@ -8,8 +8,10 @@
 #ifndef IPC_H
 #define IPC_H
 
+#include <stdio.h>
+
 void init_socket(void);
-void handle_ipc_event(char *msg);
+void handle_ipc_event(FILE *client, char *msg);
 
 extern int g_sock_fd;
 
