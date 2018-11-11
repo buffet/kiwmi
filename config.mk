@@ -4,6 +4,7 @@ PREFIX    = /usr/local
 BINPREFIX = $(PREFIX)/bin
 MANPREFIX = $(PREFIX)/share/man
 XSESSIONS = $(PREFIX)/share/xsessions
+XSESSIONSDM = /usr/share/xsessions
 
 CC = gcc
 LD = $(CC)
