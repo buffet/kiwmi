@@ -1,0 +1,47 @@
+kiwmi
+=====
+
+A fully manual tiling Wayland compositor.
+
+Concepts
+--------
+
+Most *manual* window managers aren't *truly* manual. They behave like a dynamic one sometimes. However, kiwmi is fully manual. It doesn't do this.
+
+When a window is spawned without allocating space, it's put in an invisible queue. Then you allocate space for the window; when the window is pulled from the queue, it goes into the aforementioned space. This solves the classic problem with regular window managers, where the window with a longer start time will spawn in the current tag (workspace) instead of the one in which it was opened in.
+
+In kiwmi, empty spaces available for windows behave like a normal window does. You can resize and move around them. Ergo, you don't need to re-learn how a tiling window manager behaves and works.
+
+Configuration
+-------------
+
+Configuration languages are confusing. They are neither flexible nor easy to use. Moreover, it adds a lot of complexity to the program itself.
+`kiwmi` listens to a socket and offers a basic client, `seed`, to communicate with kiwmi. Much like how `bspwm` works.
+
+This allows the user to write the configuration in any langauge, e.g. as a bash script, which allows for high flexibility.
+
+More info soon(TM).
+
+Dependencies
+------------
+
+* https://github.com/swaywm/wlroots[wlroots]
+
+Building
+--------
+
+----
+$ cargo build --release
+----
+
+Contribution
+------------
+
+You want to contribute? Great!
+
+Future requests, bug reports and PRs are always welcome.
+Note that pull requests without a valid issue are ignored to decrease the amount of duplicate work.
+
+If anything is unclear, feel free to contact me.
+
+If you don't program but want to contribute to kiwmi, spread the word about kiwmi and star the repo.
