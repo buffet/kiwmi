@@ -1,0 +1,11 @@
+[package]
+name = "kiwmi"
+version = "0.1.0"
+authors = ["buffet <niclas@countingsort.com>"]
+edition = "2018"
+
+[dependencies]
+
+[dependencies.wlroots]
+version = "0.2.4"
+features = ["static", "unstable"]
