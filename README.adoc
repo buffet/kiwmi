@@ -25,7 +25,9 @@ More info soon(TM).
 Dependencies
 ------------
 
-* https://github.com/swaywm/wlroots[wlroots]
+kiwmi depends on https://github.com/swaywm/wlroots-rs[wlroots-rs]. This means that all dependencies listed there are required.
+
+No further dependencies are needed.
 
 Building
 --------
