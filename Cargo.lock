@@ -211,7 +211,7 @@ version = "0.1.0"
 dependencies = [
  "env_logger 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "wlroots 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "wlroots 0.2.4",
 ]
 
 [[package]]
@@ -725,19 +725,17 @@ dependencies = [
 [[package]]
 name = "wlroots"
 version = "0.2.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "vsprintf 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "wlroots-dehandle 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "wlroots-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "wlroots-dehandle 1.0.0",
+ "wlroots-sys 0.2.1",
  "xkbcommon 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "wlroots-dehandle"
 version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "proc-macro2 0.4.24 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 0.6.10 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -747,7 +745,6 @@ dependencies = [
 [[package]]
 name = "wlroots-sys"
 version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bindgen 0.30.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.45 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -872,9 +869,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum winapi-util 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)" = "afc5508759c5bf4285e61feb862b6083c8480aec864fa17a81fdec6f69b461ab"
 "checksum winapi-x86_64-pc-windows-gnu 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 "checksum wincolor 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "561ed901ae465d6185fa7864d63fbd5720d0ef718366c9a4dc83cf6170d7e9ba"
-"checksum wlroots 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)" = "fd4f710c4c389af5acad1187809b5a7adf64598e27ffbc2b4802c8c9aa977b22"
-"checksum wlroots-dehandle 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "701237a3b10a4d758289602ccee3dd5eca960e65c53981b797f776c7e2b615e1"
-"checksum wlroots-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "734297908d6d32d3155feff64bed6503ccd925c76b68f17f88f78b428a2f02d9"
 "checksum ws2_32-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "d59cefebd0c892fa2dd6de581e937301d8552cb44489cdff035c6187cb63fa5e"
 "checksum xkbcommon 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)" = "7ac975d685d902d49d5ae9b52dbd217b2accb40ae17ee6e62beec95fafe8c856"
 "checksum xml-rs 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "541b12c998c5b56aa2b4e6f18f03664eef9a4fd0a246a55594efae6cc2d964b5"
