@@ -1,3 +1,5 @@
+mod input;
+
 use log::info;
 
 use wlroots::{
@@ -14,10 +16,7 @@ fn main() {
 fn init_logs() {
     init_logging(WLR_INFO, None);
 
-    env_logger::Builder::from_env(
-        env_logger::Env::default()
-            .filter("KIWMI_LOG")
-    ).init();
+    env_logger::Builder::from_env(env_logger::Env::default().filter("KIWMI_LOG")).init();
 
     info!("Logger initialized!");
 }
@@ -26,5 +25,6 @@ fn build_compositor() -> compositor::Compositor {
     compositor::Builder::new()
         .gles2(true)
         .data_device(true)
+        .input_manager(input::input_manager())
         .build_auto(())
 }
