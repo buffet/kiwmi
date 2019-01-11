@@ -25,6 +25,6 @@ fn build_compositor() -> compositor::Compositor {
     compositor::Builder::new()
         .gles2(true)
         .data_device(true)
-        .input_manager(input::input_manager())
+        .input_manager(input::manager())
         .build_auto(())
 }
