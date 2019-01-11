@@ -1,5 +1,5 @@
-mod input_manager;
+mod manager;
 mod keyboard;
 
-pub use self::input_manager::*;
+pub use self::manager::*;
 pub use self::keyboard::*;
