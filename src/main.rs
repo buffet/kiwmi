@@ -1,24 +1,14 @@
 mod input;
+mod logger;
 
-use log::info;
+use log::LevelFilter;
 
-use wlroots::{
-    compositor,
-    utils::log::{init_logging, WLR_INFO},
-};
+use wlroots::compositor;
 
 fn main() {
-    init_logs();
+    logger::init(LevelFilter::Info);
 
     build_compositor().run();
-}
-
-fn init_logs() {
-    init_logging(WLR_INFO, None);
-
-    env_logger::Builder::from_env(env_logger::Env::default().filter("KIWMI_LOG")).init();
-
-    info!("Logger initialized!");
 }
 
 fn build_compositor() -> compositor::Compositor {
