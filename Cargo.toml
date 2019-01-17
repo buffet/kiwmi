@@ -5,8 +5,7 @@ authors = ["buffet <niclas@countingsort.com>"]
 edition = "2018"
 
 [dependencies]
-env_logger = "0.6.0"
-log = "0.4.0"
+log = "0.4"
 
 [dependencies.wlroots]
 path = "wlroots-rs"
