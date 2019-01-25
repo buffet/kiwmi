@@ -34,6 +34,7 @@ Building
 
 ----
 $ git clone --recurse-submodules https://github.com/buffet/kiwmi
+$ cd kiwmi
 $ cargo build --release
 ----
 
