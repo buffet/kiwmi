@@ -1,9 +1,53 @@
 mod input;
 mod logger;
+mod output;
 
-use log::LevelFilter;
+use log::{warn, LevelFilter};
 
-use wlroots::compositor;
+use wlroots::{
+    compositor,
+    cursor::{self, xcursor, Cursor},
+    input::keyboard,
+    output::layout,
+};
+
+struct ExCursor;
+impl cursor::Handler for ExCursor {}
+
+struct ExOutputLayout;
+impl layout::Handler for ExOutputLayout {}
+
+struct CompositorState {
+    pub xcursor_manager: xcursor::Manager,
+    pub cursor_handle: cursor::Handle,
+    pub layout_handle: layout::Handle,
+    pub keyboards: Vec<keyboard::Handle>,
+}
+
+impl CompositorState {
+    pub fn new() -> Self {
+        let mut xcursor_manager = xcursor::Manager::create(String::from("default"), 24)
+            .expect("Could not create xcursor manager");
+
+        if xcursor_manager.load(1.0) {
+            warn!("Cursor did not load");
+        }
+
+        let cursor_handle = Cursor::create(Box::new(ExCursor));
+        cursor_handle
+            .run(|c| xcursor_manager.set_cursor_image(String::from("left_ptr"), c))
+            .unwrap();
+
+        let layout_handle = layout::Layout::create(Box::new(ExOutputLayout));
+
+        CompositorState {
+            xcursor_manager: xcursor_manager,
+            cursor_handle: cursor_handle,
+            layout_handle: layout_handle,
+            keyboards: Vec::new(),
+        }
+    }
+}
 
 fn main() {
     logger::init(LevelFilter::Info);
@@ -16,5 +60,6 @@ fn build_compositor() -> compositor::Compositor {
         .gles2(true)
         .data_device(true)
         .input_manager(input::manager())
-        .build_auto(())
+        .output_manager(output::manager())
+        .build_auto(CompositorState::new())
 }

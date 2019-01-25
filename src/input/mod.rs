@@ -1,5 +1,8 @@
-mod manager;
 mod keyboard;
+mod manager;
+mod pointer;
 
 pub use self::manager::*;
-pub use self::keyboard::*;
+
+use self::keyboard::*;
+use self::pointer::*;
