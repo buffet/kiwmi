@@ -1,14 +1,14 @@
 mod input;
-mod logger;
 mod output;
 
-use log::{warn, LevelFilter};
+use log::{info, warn, LevelFilter};
 
 use wlroots::{
     compositor,
     cursor::{self, xcursor, Cursor},
     input::keyboard,
     output::layout,
+    utils::log::Logger,
 };
 
 struct ExCursor;
@@ -50,7 +50,8 @@ impl CompositorState {
 }
 
 fn main() {
-    logger::init(LevelFilter::Info);
+    Logger::init(LevelFilter::Info, None);
+    info!("Logger initialized");
 
     build_compositor().run();
 }
