@@ -668,6 +668,7 @@ name = "wlroots"
 version = "0.2.4"
 dependencies = [
  "bitflags 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "vsprintf 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "wlroots-dehandle 1.0.0",
  "wlroots-sys 0.2.1",
