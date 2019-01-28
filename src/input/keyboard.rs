@@ -3,7 +3,7 @@ use log::debug;
 use wlroots::{
     compositor,
     input::{self, keyboard},
-    xkbcommon::xkb::{keysyms, keysym_get_name},
+    xkbcommon::xkb::{keysym_get_name, keysyms},
     WLR_KEY_PRESSED,
 };
 
@@ -16,8 +16,8 @@ impl input::keyboard::Handler for Keyboard {
         _keyboard_handle: keyboard::Handle,
         key_event: &keyboard::event::Key,
     ) {
-        for key in key_event.pressed_keys() {
-            if key_event.key_state() == WLR_KEY_PRESSED {
+        if key_event.key_state() == WLR_KEY_PRESSED {
+            for key in key_event.pressed_keys() {
                 debug!("Key down: {}", keysym_get_name(key));
                 match key {
                     keysyms::KEY_Escape => compositor::terminate(),
@@ -33,7 +33,9 @@ impl input::keyboard::Handler for Keyboard {
                     }
                     _ => {}
                 }
-            } else {
+            }
+        } else {
+            for key in key_event.pressed_keys() {
                 debug!("Key up: {}", keysym_get_name(key));
             }
         }
