@@ -50,7 +50,7 @@ impl CompositorState {
 }
 
 fn main() {
-    Logger::init(LevelFilter::Info, None);
+    Logger::init(LevelFilter::Debug, None);
     info!("Logger initialized");
 
     build_compositor().run();
