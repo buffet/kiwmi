@@ -60,7 +60,7 @@ fn build_compositor() -> compositor::Compositor {
     compositor::Builder::new()
         .gles2(true)
         .data_device(true)
-        .input_manager(input::manager())
-        .output_manager(output::manager())
+        .input_manager(input::build())
+        .output_manager(output::build())
         .build_auto(CompositorState::new())
 }
