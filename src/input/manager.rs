@@ -11,7 +11,7 @@ use wlroots::{
     with_handles,
 };
 
-pub fn manager() -> input::manager::Builder {
+pub fn build() -> input::manager::Builder {
     input::manager::Builder::default()
         .keyboard_added(keyboard_added)
         .pointer_added(pointer_added)

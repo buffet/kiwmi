@@ -3,7 +3,7 @@ use crate::CompositorState;
 use log::debug;
 use wlroots::{compositor, output, with_handles};
 
-pub fn manager() -> output::manager::Builder {
+pub fn build() -> output::manager::Builder {
     output::manager::Builder::default().output_added(output_added)
 }
 
