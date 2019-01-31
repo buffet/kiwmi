@@ -1,42 +1,41 @@
-use crate::CompositorState;
+use crate::{output::Output, CompositorState};
 
 use log::debug;
-use wlroots::{compositor, output, with_handles};
+use wlroots::{compositor, output, wlroots_dehandle};
 
 pub fn build() -> output::manager::Builder {
     output::manager::Builder::default().output_added(output_added)
 }
 
-struct Output;
-
-impl output::Handler for Output {}
-
+#[wlroots_dehandle(compositor, layout, cursor, output)]
 fn output_added<'output>(
     compositor_handle: compositor::Handle,
     output_builder: output::Builder<'output>,
 ) -> Option<output::BuilderResult<'output>> {
     debug!("Output added");
 
-    let mut result = output_builder.build_best_mode(Output);
-    with_handles!([(compositor: {compositor_handle})] => {
-        let compositor_state: &mut CompositorState = compositor.data.downcast_mut().unwrap();
-        let layout_handle = &mut compositor_state.layout_handle;
-        let cursor_handle = &mut compositor_state.cursor_handle;
-        let xcursor_manager = &mut compositor_state.xcursor_manager;
-        // TODO use output config if present instead of auto
-        with_handles!([
-            (layout: {layout_handle}),
-            (cursor: {cursor_handle}),
-            (output: {&mut result.output})
-        ] => {
-            layout.add_auto(output);
-            cursor.attach_output_layout(layout);
-            xcursor_manager.load(output.scale());
-            xcursor_manager.set_cursor_image("left_ptr".to_string(), cursor);
-            let (x, y) = cursor.coords();
-            cursor.warp(None, x, y);
-        }).unwrap();
-        Some(result)
-    })
-    .unwrap()
+    let result = output_builder.build_best_mode(Output);
+
+    {
+        use compositor_handle as compositor;
+        let state: &mut CompositorState = compositor.data.downcast_mut().unwrap();
+
+        let xcursor_manager = &mut state.xcursor_manager;
+        let layout_handle = &state.layout_handle;
+        let cursor_handle = &state.cursor_handle;
+        let output_handle = &result.output;
+
+        use cursor_handle as cursor;
+        use layout_handle as layout;
+        use output_handle as output;
+
+        layout.add_auto(output);
+        cursor.attach_output_layout(layout);
+        xcursor_manager.load(output.scale());
+        xcursor_manager.set_cursor_image("left_ptr".to_string(), cursor);
+        let (x, y) = cursor.coords();
+        cursor.warp(None, x, y);
+    }
+
+    Some(result)
 }

@@ -1,5 +1,6 @@
 mod input;
 mod output;
+mod shells;
 
 use log::{info, warn, LevelFilter};
 
@@ -8,6 +9,8 @@ use wlroots::{
     cursor::{self, xcursor, Cursor},
     input::keyboard,
     output::layout,
+    seat::{self, Seat},
+    shell::xdg_shell_v6,
     utils::log::Logger,
 };
 
@@ -18,10 +21,12 @@ struct ExOutputLayout;
 impl layout::Handler for ExOutputLayout {}
 
 struct CompositorState {
-    pub xcursor_manager: xcursor::Manager,
-    pub cursor_handle: cursor::Handle,
-    pub layout_handle: layout::Handle,
-    pub keyboards: Vec<keyboard::Handle>,
+    xcursor_manager: xcursor::Manager,
+    cursor_handle: cursor::Handle,
+    layout_handle: layout::Handle,
+    keyboards: Vec<keyboard::Handle>,
+    shells: Vec<xdg_shell_v6::Handle>,
+    seat_handle: Option<seat::Handle>,
 }
 
 impl CompositorState {
@@ -44,7 +49,9 @@ impl CompositorState {
             xcursor_manager: xcursor_manager,
             cursor_handle: cursor_handle,
             layout_handle: layout_handle,
-            keyboards: Vec::new(),
+            keyboards: vec![],
+            shells: vec![],
+            seat_handle: None,
         }
     }
 }
@@ -56,11 +63,31 @@ fn main() {
     build_compositor().run();
 }
 
+struct SeatHandler;
+impl seat::Handler for SeatHandler {}
+
 fn build_compositor() -> compositor::Compositor {
-    compositor::Builder::new()
+    let mut compositor = compositor::Builder::new()
         .gles2(true)
+        .wl_shm(true)
         .data_device(true)
         .input_manager(input::build())
         .output_manager(output::build())
-        .build_auto(CompositorState::new())
+        .xdg_shell_v6_manager(shells::xdg_v6::build())
+        .build_auto(CompositorState::new());
+
+    let seat_handle = Seat::create(
+        &mut compositor,
+        String::from("seat0"),
+        Box::new(SeatHandler),
+    );
+
+    seat_handle
+        .run(|seat| seat.set_capabilities(seat::Capability::all()))
+        .unwrap();
+
+    let state: &mut CompositorState = compositor.downcast();
+    state.seat_handle = Some(seat_handle);
+
+    compositor
 }
