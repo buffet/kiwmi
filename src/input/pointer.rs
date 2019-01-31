@@ -1,6 +1,6 @@
 use crate::CompositorState;
 
-use wlroots::{compositor, input::pointer, wlroots_dehandle};
+use wlroots::{compositor, input::pointer, wlroots_dehandle, shell::xdg_shell_v6};
 
 pub struct Pointer;
 
@@ -37,5 +37,38 @@ impl pointer::Handler for Pointer {
         cursor.move_to(None, dx, dy);
     }
 
-    // TODO: implement on_button
+    #[wlroots_dehandle(compositor, shell, keyboard, seat, surface)]
+    fn on_button(
+        &mut self,
+        compositor_handle: compositor::Handle,
+        _pointer_handle: pointer::Handle,
+        _: &pointer::event::Button,
+    ) {
+        use compositor_handle as compositor;
+        let state: &mut CompositorState = compositor.downcast();
+
+        let shell_handle = &state.shells[0];
+        let seat_handle = state.seat_handle.clone().unwrap();
+        let keyboard_handle = state.keyboards[0].clone();
+
+        use shell_handle as shell;
+        match shell.state() {
+            Some(&mut xdg_shell_v6::ShellState::TopLevel(ref mut toplevel)) => {
+                toplevel.set_activated(true);
+            }
+            _ => {}
+        };
+
+        let surface_handle = shell.surface();
+        use keyboard_handle as keyboard;
+        use seat_handle as seat;
+        use surface_handle as surface;
+
+        seat.set_keyboard(keyboard.input_device());
+        seat.keyboard_notify_enter(
+            surface,
+            &mut keyboard.keycodes(),
+            &mut keyboard.get_modifier_masks(),
+        );
+    }
 }
