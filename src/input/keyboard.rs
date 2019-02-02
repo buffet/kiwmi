@@ -15,11 +15,11 @@ use std::{process::Command, thread};
 pub struct Keyboard;
 
 impl input::keyboard::Handler for Keyboard {
-    #[wlroots_dehandle(compositor, seat)]
+    #[wlroots_dehandle(compositor, seat, keyboard)]
     fn on_key(
         &mut self,
         compositor_handle: compositor::Handle,
-        _keyboard_handle: keyboard::Handle,
+        keyboard_handle: keyboard::Handle,
         key_event: &keyboard::event::Key,
     ) {
         use compositor_handle as compositor;
@@ -53,6 +53,8 @@ impl input::keyboard::Handler for Keyboard {
         let state: &mut CompositorState = compositor.downcast();
         let seat_handle = state.seat_handle.clone().unwrap();
         use seat_handle as seat;
+        use keyboard_handle as keyboard;
+        seat.keyboard_send_modifiers(&mut keyboard.get_modifier_masks());
         seat.keyboard_notify_key(
             key_event.time_msec(),
             key_event.keycode(),
