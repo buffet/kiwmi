@@ -49,7 +49,7 @@ impl pointer::Handler for Pointer {
 
         let shell_handle = &state.shells[0];
         let seat_handle = state.seat_handle.clone().unwrap();
-        let keyboard_handle = state.keyboards[0].clone();
+        let keyboard_handle = &state.keyboards[0];
 
         use shell_handle as shell;
         match shell.state() {

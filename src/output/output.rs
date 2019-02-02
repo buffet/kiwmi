@@ -28,9 +28,8 @@ impl output::Handler for Output {
 
 #[wlroots_dehandle(shell, surface, layout)]
 fn render_shells(state: &mut CompositorState, renderer: &mut Renderer) {
-    let shells = state.shells.clone();
     let layout_handle = &state.layout_handle;
-    for shell_handle in shells {
+    for shell_handle in &state.shells {
         use shell_handle as shell;
         let surface_handle = shell.surface();
         use layout_handle as layout;
