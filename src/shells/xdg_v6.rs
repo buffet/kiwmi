@@ -49,7 +49,6 @@ fn surface_added(
         shell.ping();
         let state: &mut CompositorState = compositor.downcast();
         state.shells.push(shell.weak_reference());
-        log::warn!("shells.len(): {}", state.shells.len());
         let layout_handle = &state.layout_handle;
         use layout_handle as layout;
         for (output_handle, _) in layout.outputs() {
