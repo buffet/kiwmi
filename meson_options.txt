@@ -1,0 +1,1 @@
+option('kiwmi-version', type: 'string', description: 'The version string reported in `kiwmi --version`.')
