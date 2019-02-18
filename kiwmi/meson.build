@@ -1,6 +1,8 @@
 kiwmi_sources = files(
   'main.c',
   'server.c',
+  'output.c',
+  'desktop/output.c',
 )
 
 kiwmi_deps = [

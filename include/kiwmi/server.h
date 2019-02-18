@@ -21,10 +21,12 @@ struct kiwmi_server {
     struct wlr_data_device_manager *data_device_manager;
     struct wlr_output_layout *output_layout;
     const char *socket;
+    struct wl_list outputs; // struct kiwmi_output::link
+    struct wl_listener new_output;
 };
 
 bool server_init(struct kiwmi_server *server);
-void server_run(struct kiwmi_server *server);
+bool server_run(struct kiwmi_server *server);
 void server_fini(struct kiwmi_server *server);
 
 #endif /* KIWMI_SERVER_H */

@@ -26,7 +26,10 @@ main(void)
 
     wlr_log(WLR_INFO, "Starting kiwmi v" KIWMI_VERSION);
 
-    server_run(&server);
+    if (!server_run(&server)) {
+        wlr_log(WLR_ERROR, "Failed to run server");
+        exit(EXIT_FAILURE);
+    }
 
     server_fini(&server);
 }
