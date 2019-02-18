@@ -17,6 +17,8 @@
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/util/log.h>
 
+#include "kiwmi/desktop/output.h"
+
 bool
 server_init(struct kiwmi_server *server)
 {
@@ -26,6 +28,7 @@ server_init(struct kiwmi_server *server)
     server->backend = wlr_backend_autocreate(server->wl_display, NULL);
     if (!server->backend) {
         wlr_log(WLR_ERROR, "Failed to create backend");
+        wl_display_destroy(server->wl_display);
         return false;
     }
 
@@ -36,6 +39,19 @@ server_init(struct kiwmi_server *server)
     server->data_device_manager = wlr_data_device_manager_create(server->wl_display);
 
     server->output_layout = wlr_output_layout_create();
+
+    wl_list_init(&server->outputs);
+
+    server->new_output.notify = new_output_notify;
+    wl_signal_add(&server->backend->events.new_output, &server->new_output);
+
+    return true;
+}
+
+bool
+server_run(struct kiwmi_server *server)
+{
+    wlr_log(WLR_DEBUG, "Running Wayland server on display '%s'", server->socket);
 
     server->socket = wl_display_add_socket_auto(server->wl_display);
     if (!server->socket) {
@@ -54,15 +70,9 @@ server_init(struct kiwmi_server *server)
 
     setenv("WAYLAND_DISPLAY", server->socket, true);
 
-    return true;
-}
-
-void
-server_run(struct kiwmi_server *server)
-{
-    wlr_log(WLR_DEBUG, "Running Wayland server on display '%s'", server->socket);
-
     wl_display_run(server->wl_display);
+
+    return true;
 }
 
 void
