@@ -65,7 +65,7 @@ output_destroy_nofity(struct wl_listener *listener, void *data)
 
     wl_list_remove(&output->link);
     wl_list_remove(&output->frame.link);
-    wl_list_remove(&output->frame.link);
+    wl_list_remove(&output->destroy.link);
 
     free(output);
 }
