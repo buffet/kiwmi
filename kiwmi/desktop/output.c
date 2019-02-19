@@ -23,7 +23,8 @@ new_output_notify(struct wl_listener *listener, void *data)
     wlr_log(WLR_DEBUG, "New output %p: %s", wlr_output, wlr_output->name);
 
     if (!wl_list_empty(&wlr_output->modes)) {
-        struct wlr_output_mode *mode = wl_container_of(wlr_output->modes.prev, mode, link);
+        struct wlr_output_mode *mode =
+            wl_container_of(wlr_output->modes.prev, mode, link);
         wlr_output_set_mode(wlr_output, mode);
     }
 
