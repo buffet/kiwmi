@@ -25,7 +25,7 @@ server_init(struct kiwmi_server *server)
     wlr_log(WLR_DEBUG, "Initializing Wayland server");
 
     server->wl_display = wl_display_create();
-    server->backend = wlr_backend_autocreate(server->wl_display, NULL);
+    server->backend    = wlr_backend_autocreate(server->wl_display, NULL);
     if (!server->backend) {
         wlr_log(WLR_ERROR, "Failed to create backend");
         wl_display_destroy(server->wl_display);
@@ -36,7 +36,8 @@ server_init(struct kiwmi_server *server)
     wlr_renderer_init_wl_display(renderer, server->wl_display);
 
     server->compositor = wlr_compositor_create(server->wl_display, renderer);
-    server->data_device_manager = wlr_data_device_manager_create(server->wl_display);
+    server->data_device_manager =
+        wlr_data_device_manager_create(server->wl_display);
 
     server->output_layout = wlr_output_layout_create();
 
@@ -51,7 +52,8 @@ server_init(struct kiwmi_server *server)
 bool
 server_run(struct kiwmi_server *server)
 {
-    wlr_log(WLR_DEBUG, "Running Wayland server on display '%s'", server->socket);
+    wlr_log(
+        WLR_DEBUG, "Running Wayland server on display '%s'", server->socket);
 
     server->socket = wl_display_add_socket_auto(server->wl_display);
     if (!server->socket) {

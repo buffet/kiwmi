@@ -10,8 +10,8 @@
 #include <stdlib.h>
 
 #include <wayland-server.h>
-#include <wlr/types/wlr_output.h>
 #include <wlr/render/wlr_renderer.h>
+#include <wlr/types/wlr_output.h>
 
 #include "kiwmi/server.h"
 
@@ -27,7 +27,7 @@ output_create(struct wlr_output *wlr_output, struct kiwmi_server *server)
     }
 
     output->wlr_output = wlr_output;
-    output->server = server;
+    output->server     = server;
 
     output->frame.notify = output_frame_notify;
     wl_signal_add(&wlr_output->events.frame, &output->frame);
@@ -41,9 +41,10 @@ output_create(struct wlr_output *wlr_output, struct kiwmi_server *server)
 static void
 output_frame_notify(struct wl_listener *listener, void *data)
 {
-    struct kiwmi_output *output = wl_container_of(listener, output, frame);
+    struct kiwmi_output *output   = wl_container_of(listener, output, frame);
     struct wlr_output *wlr_output = data;
-    struct wlr_renderer *renderer = wlr_backend_get_renderer(wlr_output->backend);
+    struct wlr_renderer *renderer =
+        wlr_backend_get_renderer(wlr_output->backend);
 
     wlr_output_make_current(wlr_output, NULL);
     wlr_renderer_begin(renderer, wlr_output->width, wlr_output->height);
