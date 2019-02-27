@@ -32,7 +32,7 @@ output_create(struct wlr_output *wlr_output, struct kiwmi_server *server)
     output->frame.notify = output_frame_notify;
     wl_signal_add(&wlr_output->events.frame, &output->frame);
 
-    output->destroy.notify = output_destroy_nofity;
+    output->destroy.notify = output_destroy_notify;
     wl_signal_add(&wlr_output->events.destroy, &output->destroy);
 
     return output;
