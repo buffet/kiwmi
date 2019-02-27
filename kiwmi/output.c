@@ -58,7 +58,7 @@ output_frame_notify(struct wl_listener *listener, void *data)
 }
 
 static void
-output_destroy_nofity(struct wl_listener *listener, void *data)
+output_destroy_notify(struct wl_listener *listener, void *data)
 {
     struct kiwmi_output *output = wl_container_of(listener, output, destroy);
 
