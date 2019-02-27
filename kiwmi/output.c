@@ -16,7 +16,7 @@
 #include "kiwmi/server.h"
 
 static void output_frame_notify(struct wl_listener *listener, void *data);
-static void output_destroy_nofity(struct wl_listener *listener, void *data);
+static void output_destroy_notify(struct wl_listener *listener, void *data);
 
 struct kiwmi_output *
 output_create(struct wlr_output *wlr_output, struct kiwmi_server *server)
