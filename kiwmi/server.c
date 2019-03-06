@@ -52,9 +52,6 @@ server_init(struct kiwmi_server *server)
 bool
 server_run(struct kiwmi_server *server)
 {
-    wlr_log(
-        WLR_DEBUG, "Running Wayland server on display '%s'", server->socket);
-
     server->socket = wl_display_add_socket_auto(server->wl_display);
     if (!server->socket) {
         wlr_log(WLR_ERROR, "Failed to open Wayland socket");
@@ -62,6 +59,9 @@ server_run(struct kiwmi_server *server)
         wl_display_destroy(server->wl_display);
         return false;
     }
+
+    wlr_log(
+        WLR_DEBUG, "Running Wayland server on display '%s'", server->socket);
 
     if (!wlr_backend_start(server->backend)) {
         wlr_log(WLR_ERROR, "Failed to start backend");
