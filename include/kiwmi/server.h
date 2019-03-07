@@ -26,6 +26,7 @@ struct kiwmi_server {
     struct wl_list outputs; // struct kiwmi_output::link
     struct wl_listener new_output;
     struct kiwmi_cursor *cursor;
+    struct wl_listener new_input;
 };
 
 bool server_init(struct kiwmi_server *server);

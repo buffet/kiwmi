@@ -20,6 +20,7 @@
 #include <wlr/util/log.h>
 
 #include "kiwmi/desktop/output.h"
+#include "kiwmi/input.h"
 #include "kiwmi/input/cursor.h"
 
 bool
@@ -42,6 +43,8 @@ server_init(struct kiwmi_server *server)
     server->data_device_manager =
         wlr_data_device_manager_create(server->wl_display);
 
+    server->output_layout = wlr_output_layout_create();
+
     server->cursor = cursor_create(server->output_layout);
     if (!server->cursor) {
         wlr_log(WLR_ERROR, "Failed to create cursor");
@@ -50,12 +53,13 @@ server_init(struct kiwmi_server *server)
         return false;
     }
 
-    server->output_layout = wlr_output_layout_create();
-
     wl_list_init(&server->outputs);
 
     server->new_output.notify = new_output_notify;
     wl_signal_add(&server->backend->events.new_output, &server->new_output);
+
+    server->new_input.notify = new_input_notify;
+    wl_signal_add(&server->backend->events.new_input, &server->new_input);
 
     return true;
 }
