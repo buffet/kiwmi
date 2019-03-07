@@ -14,6 +14,8 @@
 #include <wlr/types/wlr_data_device.h>
 #include <wlr/types/wlr_output_layout.h>
 
+#include "kiwmi/input/cursor.h"
+
 struct kiwmi_server {
     struct wl_display *wl_display;
     struct wlr_backend *backend;
@@ -23,6 +25,7 @@ struct kiwmi_server {
     const char *socket;
     struct wl_list outputs; // struct kiwmi_output::link
     struct wl_listener new_output;
+    struct kiwmi_cursor *cursor;
 };
 
 bool server_init(struct kiwmi_server *server);

@@ -13,11 +13,14 @@
 #include <wlr/backend.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_compositor.h>
+#include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_data_device.h>
 #include <wlr/types/wlr_output_layout.h>
+#include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/util/log.h>
 
 #include "kiwmi/desktop/output.h"
+#include "kiwmi/input/cursor.h"
 
 bool
 server_init(struct kiwmi_server *server)
@@ -38,6 +41,14 @@ server_init(struct kiwmi_server *server)
     server->compositor = wlr_compositor_create(server->wl_display, renderer);
     server->data_device_manager =
         wlr_data_device_manager_create(server->wl_display);
+
+    server->cursor = cursor_create(server->output_layout);
+    if (!server->cursor) {
+        wlr_log(WLR_ERROR, "Failed to create cursor");
+        wlr_backend_destroy(server->backend);
+        wl_display_destroy(server->wl_display);
+        return false;
+    }
 
     server->output_layout = wlr_output_layout_create();
 
