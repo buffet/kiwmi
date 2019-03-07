@@ -15,29 +15,6 @@
 
 #include "kiwmi/server.h"
 
-static void output_frame_notify(struct wl_listener *listener, void *data);
-static void output_destroy_notify(struct wl_listener *listener, void *data);
-
-struct kiwmi_output *
-output_create(struct wlr_output *wlr_output, struct kiwmi_server *server)
-{
-    struct kiwmi_output *output = calloc(1, sizeof(*output));
-    if (!output) {
-        return NULL;
-    }
-
-    output->wlr_output = wlr_output;
-    output->server     = server;
-
-    output->frame.notify = output_frame_notify;
-    wl_signal_add(&wlr_output->events.frame, &output->frame);
-
-    output->destroy.notify = output_destroy_notify;
-    wl_signal_add(&wlr_output->events.destroy, &output->destroy);
-
-    return output;
-}
-
 static void
 output_frame_notify(struct wl_listener *listener, void *data)
 {
@@ -69,4 +46,24 @@ output_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
     wl_list_remove(&output->destroy.link);
 
     free(output);
+}
+
+struct kiwmi_output *
+output_create(struct wlr_output *wlr_output, struct kiwmi_server *server)
+{
+    struct kiwmi_output *output = calloc(1, sizeof(*output));
+    if (!output) {
+        return NULL;
+    }
+
+    output->wlr_output = wlr_output;
+    output->server     = server;
+
+    output->frame.notify = output_frame_notify;
+    wl_signal_add(&wlr_output->events.frame, &output->frame);
+
+    output->destroy.notify = output_destroy_notify;
+    wl_signal_add(&wlr_output->events.destroy, &output->destroy);
+
+    return output;
 }
