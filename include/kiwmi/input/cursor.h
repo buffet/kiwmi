@@ -1,0 +1,24 @@
+/* Copyright (c), Niclas Meyer <niclas@countingsort.com>
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+#ifndef KIWMI_INPUT_CURSOR_H
+#define KIWMI_INPUT_CURSOR_H
+
+#include <wlr/types/wlr_cursor.h>
+#include <wlr/types/wlr_output_layout.h>
+#include <wlr/types/wlr_xcursor_manager.h>
+
+struct kiwmi_cursor {
+    struct wlr_cursor *cursor;
+    struct wlr_xcursor_manager *xcursor_manager;
+    struct wl_listener cursor_motion;
+    struct wl_listener cursor_motion_absolute;
+};
+
+struct kiwmi_cursor *cursor_create(struct wlr_output_layout *output_layout);
+
+#endif /* KIWMI_INPUT_CURSOR_H */

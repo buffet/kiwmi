@@ -3,6 +3,7 @@ kiwmi_sources = files(
   'server.c',
   'output.c',
   'desktop/output.c',
+  'input/cursor.c',
 )
 
 kiwmi_deps = [
