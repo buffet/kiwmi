@@ -44,6 +44,26 @@ Install with:
 # ninja -C build install
 ----
 
+Using kiwmi
+-----------
+
+### Execution
+kiwmi can be run in X or another Wayland compositor, and will automatically use an appropriate backend.
+
+**WARNING:** kiwmi cannot yet be run in a TTY. Running kiwmi in a TTY at this time will softlock the machine.
+
+
+### Sending commands from kiwmic to kiwmi
+kiwmic is not implemented at this time.
+
+When kiwmic is implemented, it will use the interface `kiwmic COMMAND [PARAMETERS]...`
+
+### Configuring kimwi
+kimwi is not yet configurable.
+
+Recommended configurations will be supplied to make setup easier.
+
+
 Contribution
 ------------
 
