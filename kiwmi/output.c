@@ -23,15 +23,24 @@ output_frame_notify(struct wl_listener *listener, void *data)
     struct wlr_renderer *renderer =
         wlr_backend_get_renderer(wlr_output->backend);
 
-    wlr_output_make_current(wlr_output, NULL);
-    wlr_renderer_begin(renderer, wlr_output->width, wlr_output->height);
+    if (!wlr_output_make_current(wlr_output, NULL)) {
+        return;
+    }
+
+    int width;
+    int height;
+
+    wlr_output_effective_resolution(wlr_output, &width, &height);
+
     {
+        wlr_renderer_begin(renderer, width, height);
         float color[] = {0.18f, 0.20f, 0.25f, 1.0f};
         wlr_renderer_clear(renderer, color);
         wlr_output_render_software_cursors(wlr_output, NULL);
-        wlr_output_swap_buffers(wlr_output, NULL, NULL);
+        wlr_renderer_end(renderer);
     }
-    wlr_renderer_end(renderer);
+
+    wlr_output_swap_buffers(wlr_output, NULL, NULL);
 }
 
 static void
