@@ -6,18 +6,17 @@ A client controlled Wayland compositor.
 Configuration
 -------------
 
-Configuration languages are confusing. They are neither flexible nor easy to use. Moreover, it adds a lot of complexity to the program itself.
-kiwmi listens to a socket and offers a basic client, kiwmic, to communicate with kiwmi. Much like how bspwm works.
+Configuration languages are confusing. They are neither flexible nor easy to use. Moreover, they add significant complexity to the program itself.
+kiwmi listens to a socket and offers a basic client, kiwmic, to communicate with kiwmi, similarly to how bspwm works.
 
 This allows the user to write the configuration in any langauge, e.g. as a bash script, which allows for high flexibility.
 
-On top of that, kiwmi barely handles anything on it's own.
-Instead it emmits events, to which the client can subscribe and react accordingly.
-This allows for 100% flexibility and customizability, while comming at a little effort at first.
-As soon as they exist I'll link a few user configurations, that are likely to help you get started.
+kiwmi handles almost nothing on it's own, and instead it emits events, to which the client can subscribe and react accordingly.
+This allows for 100% flexibility and customizability, while requiring little overhead effort.
+New user configurations will be linked as they are created, to help new users get started.
 
-This means the user will end up using a big, monolithic frontend, or a collection of small scripts, to configure kiwmi.
-If I get around to it I will probably create a small Python (probably) library, to make it easier to create a monolithic frontend.
+kiwmi will end up being configured by a monolithic frontend, or collection of small scripts.
+A small (probably) Python library may be created to aid creating a monolithic frontend.
 
 Dependencies
 ------------
@@ -30,14 +29,16 @@ Dependencies
 Building
 --------
 
-Make sure all dependencies are installed. Then run this.
+Make sure all dependencies are installed. 
+
+Run:
 
 ----
 $ meson build
 $ ninja -C build
 ----
 
-You can then install it like this.
+Install with:
 
 ----
 # ninja -C build install
