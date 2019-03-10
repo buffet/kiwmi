@@ -34,8 +34,7 @@ output_frame_notify(struct wl_listener *listener, void *data)
 
     {
         wlr_renderer_begin(renderer, width, height);
-        float color[] = {0.18f, 0.20f, 0.25f, 1.0f};
-        wlr_renderer_clear(renderer, color);
+        wlr_renderer_clear(renderer, (float[]){0.18f, 0.20f, 0.25f, 1.0f});
         wlr_output_render_software_cursors(wlr_output, NULL);
         wlr_renderer_end(renderer);
     }
