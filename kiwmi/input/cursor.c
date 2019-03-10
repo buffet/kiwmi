@@ -30,7 +30,7 @@ static void
 cursor_motion_absolute_notify(struct wl_listener *listener, void *data)
 {
     struct kiwmi_cursor *cursor =
-        wl_container_of(listener, cursor, cursor_motion);
+        wl_container_of(listener, cursor, cursor_motion_absolute);
     struct wlr_event_pointer_motion_absolute *event = data;
 
     wlr_cursor_warp_absolute(cursor->cursor, event->device, event->x, event->y);
