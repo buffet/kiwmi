@@ -18,6 +18,8 @@ New user configurations will be linked as they are created, to help new users ge
 kiwmi will end up being configured by a monolithic frontend, or collection of small scripts.
 A small (probably) Python library may be created to aid creating a monolithic frontend.
 
+*WARNING*: Right now you shouldn't run kiwmi from a TTY, as you won't be able to exit it.
+
 Dependencies
 ------------
 
