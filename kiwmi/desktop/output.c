@@ -34,6 +34,10 @@ new_output_notify(struct wl_listener *listener, void *data)
         return;
     }
 
+    struct kiwmi_cursor *cursor = server->cursor;
+
+    wlr_xcursor_manager_load(cursor->xcursor_manager, wlr_output->scale);
+
     wl_list_insert(&server->outputs, &output->link);
 
     wlr_output_layout_add_auto(server->output_layout, wlr_output);
