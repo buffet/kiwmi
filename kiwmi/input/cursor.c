@@ -22,6 +22,8 @@ cursor_motion_notify(struct wl_listener *listener, void *data)
         wl_container_of(listener, cursor, cursor_motion);
     struct wlr_event_pointer_motion *event = data;
 
+    wlr_xcursor_manager_set_cursor_image(
+        cursor->xcursor_manager, "left_ptr", cursor->cursor);
     wlr_cursor_move(
         cursor->cursor, event->device, event->delta_x, event->delta_y);
 }
@@ -33,6 +35,8 @@ cursor_motion_absolute_notify(struct wl_listener *listener, void *data)
         wl_container_of(listener, cursor, cursor_motion_absolute);
     struct wlr_event_pointer_motion_absolute *event = data;
 
+    wlr_xcursor_manager_set_cursor_image(
+        cursor->xcursor_manager, "left_ptr", cursor->cursor);
     wlr_cursor_warp_absolute(cursor->cursor, event->device, event->x, event->y);
 }
 
@@ -57,10 +61,6 @@ cursor_create(struct wlr_output_layout *output_layout)
     wlr_cursor_attach_output_layout(cursor->cursor, output_layout);
 
     cursor->xcursor_manager = wlr_xcursor_manager_create(NULL, 24);
-    wlr_xcursor_manager_load(cursor->xcursor_manager, 1);
-
-    wlr_xcursor_manager_set_cursor_image(
-        cursor->xcursor_manager, "left_ptr", cursor->cursor);
 
     cursor->cursor_motion.notify = cursor_motion_notify;
     wl_signal_add(&cursor->cursor->events.motion, &cursor->cursor_motion);
