@@ -59,6 +59,9 @@ cursor_create(struct wlr_output_layout *output_layout)
     cursor->xcursor_manager = wlr_xcursor_manager_create(NULL, 24);
     wlr_xcursor_manager_load(cursor->xcursor_manager, 1);
 
+    wlr_xcursor_manager_set_cursor_image(
+        cursor->xcursor_manager, "left_ptr", cursor->cursor);
+
     cursor->cursor_motion.notify = cursor_motion_notify;
     wl_signal_add(&cursor->cursor->events.motion, &cursor->cursor_motion);
 
