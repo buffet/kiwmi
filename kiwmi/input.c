@@ -25,7 +25,7 @@ new_input_notify(struct wl_listener *listener, void *data)
     struct kiwmi_server *server = wl_container_of(listener, server, new_input);
     struct wlr_input_device *device = data;
 
-    wlr_log(WLR_DEBUG, "Adding input device: '%s'", device->name);
+    wlr_log(WLR_DEBUG, "New input %p: %s", device, device->name);
 
     switch (device->type) {
     case WLR_INPUT_DEVICE_POINTER:
