@@ -26,6 +26,16 @@
 bool
 server_init(struct kiwmi_server *server)
 {
+    // Returns a boolean depending on the success or failure of creating
+    // the various components we need.
+    //
+    // Setup the display and display backend. If we can't create the backend
+    // we log it, destroy the display and return. Then create the
+    // renderer and initialize it, as well as the compositor, the device-
+    // manager, and the cursor. If we can't create the cursor, fail out.
+    // We then tell Wayland that `&server->outputs` is where we
+    // want to receive events, and that we will send Wayland our events
+    // via `&server->inputs`. If all of this goes well, return `true`.
     wlr_log(WLR_DEBUG, "Initializing Wayland server");
 
     server->wl_display = wl_display_create();
