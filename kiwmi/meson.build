@@ -1,15 +1,17 @@
 kiwmi_sources = files(
   'main.c',
-  'server.c',
   'input.c',
   'output.c',
+  'server.c',
   'desktop/output.c',
   'input/cursor.c',
+  'input/keyboard.c',
 )
 
 kiwmi_deps = [
   wayland_server,
   wlroots,
+  xkbcommon,
 ]
 
 executable(
