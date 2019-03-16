@@ -23,6 +23,7 @@ struct kiwmi_server {
     struct wlr_data_device_manager *data_device_manager;
     struct wlr_output_layout *output_layout;
     const char *socket;
+    struct wl_list keyboards; // struct kiwmi_keyboard::link
     struct wl_list outputs; // struct kiwmi_output::link
     struct wl_listener new_output;
     struct kiwmi_cursor *cursor;

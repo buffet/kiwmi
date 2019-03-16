@@ -53,6 +53,7 @@ server_init(struct kiwmi_server *server)
         return false;
     }
 
+    wl_list_init(&server->keyboards);
     wl_list_init(&server->outputs);
 
     server->new_output.notify = new_output_notify;

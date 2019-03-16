@@ -16,9 +16,10 @@ add_project_arguments(
   language: 'c',
 )
 
-git = find_program('git', required: false)
+git            = find_program('git', required: false)
 wayland_server = dependency('wayland-server')
-wlroots = dependency('wlroots')
+wlroots        = dependency('wlroots')
+xkbcommon      = dependency('xkbcommon')
 
 include = include_directories('include')
 
