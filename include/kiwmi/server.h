@@ -12,14 +12,14 @@
 #include <wlr/backend.h>
 
 #include "kiwmi/desktop/desktop.h"
+#include "kiwmi/input/input.h"
 
 struct kiwmi_server {
     struct wl_display *wl_display;
     struct wlr_backend *backend;
     const char *socket;
     struct kiwmi_desktop desktop;
-    struct wl_list keyboards; // struct kiwmi_keyboard::link
-    struct wl_listener new_input;
+    struct kiwmi_input input;
 };
 
 bool server_init(struct kiwmi_server *server);

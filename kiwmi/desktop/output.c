@@ -8,6 +8,7 @@
 #include "kiwmi/desktop/output.h"
 
 #include <wayland-server.h>
+#include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_output.h>
 #include <wlr/util/log.h>
 

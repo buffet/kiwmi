@@ -17,6 +17,7 @@
 #include "kiwmi/desktop/desktop.h"
 #include "kiwmi/input.h"
 #include "kiwmi/input/cursor.h"
+#include "kiwmi/input/input.h"
 
 bool
 server_init(struct kiwmi_server *server)
@@ -40,10 +41,11 @@ server_init(struct kiwmi_server *server)
         return false;
     }
 
-    wl_list_init(&server->keyboards);
-
-    server->new_input.notify = new_input_notify;
-    wl_signal_add(&server->backend->events.new_input, &server->new_input);
+    if (!input_init(&server->input)) {
+        wlr_log(WLR_ERROR, "Failed to initialize input");
+        wl_display_destroy(server->wl_display);
+        return false;
+    }
 
     return true;
 }
