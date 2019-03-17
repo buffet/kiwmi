@@ -6,6 +6,7 @@ kiwmi_sources = files(
   'desktop/desktop.c',
   'desktop/output.c',
   'input/cursor.c',
+  'input/input.c',
   'input/keyboard.c',
 )
 
