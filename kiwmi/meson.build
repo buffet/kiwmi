@@ -3,6 +3,7 @@ kiwmi_sources = files(
   'input.c',
   'output.c',
   'server.c',
+  'desktop/desktop.c',
   'desktop/output.c',
   'input/cursor.c',
   'input/keyboard.c',

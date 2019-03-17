@@ -11,17 +11,17 @@
 #include <wayland-server.h>
 #include <wlr/types/wlr_output.h>
 
-#include "kiwmi/server.h"
+#include "kiwmi/desktop/desktop.h"
 
 struct kiwmi_output {
     struct wl_list link;
-    struct kiwmi_server *server;
+    struct kiwmi_desktop *desktop;
     struct wlr_output *wlr_output;
     struct wl_listener frame;
     struct wl_listener destroy;
 };
 
 struct kiwmi_output *
-output_create(struct wlr_output *wlr_output, struct kiwmi_server *server);
+output_create(struct wlr_output *wlr_output, struct kiwmi_desktop *desktop);
 
 #endif /* KIWMI_OUTPUT_H */

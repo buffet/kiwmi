@@ -10,23 +10,15 @@
 
 #include <wayland-server.h>
 #include <wlr/backend.h>
-#include <wlr/types/wlr_compositor.h>
-#include <wlr/types/wlr_data_device.h>
-#include <wlr/types/wlr_output_layout.h>
 
-#include "kiwmi/input/cursor.h"
+#include "kiwmi/desktop/desktop.h"
 
 struct kiwmi_server {
     struct wl_display *wl_display;
     struct wlr_backend *backend;
-    struct wlr_compositor *compositor;
-    struct wlr_data_device_manager *data_device_manager;
-    struct wlr_output_layout *output_layout;
     const char *socket;
+    struct kiwmi_desktop desktop;
     struct wl_list keyboards; // struct kiwmi_keyboard::link
-    struct wl_list outputs; // struct kiwmi_output::link
-    struct wl_listener new_output;
-    struct kiwmi_cursor *cursor;
     struct wl_listener new_input;
 };
 

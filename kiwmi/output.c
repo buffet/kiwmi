@@ -13,7 +13,7 @@
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_output.h>
 
-#include "kiwmi/server.h"
+#include "kiwmi/desktop/desktop.h"
 
 static void
 output_frame_notify(struct wl_listener *listener, void *data)
@@ -47,7 +47,7 @@ output_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_output *output = wl_container_of(listener, output, destroy);
 
-    wlr_output_layout_remove(output->server->output_layout, output->wlr_output);
+    wlr_output_layout_remove(output->desktop->output_layout, output->wlr_output);
 
     wl_list_remove(&output->link);
     wl_list_remove(&output->frame.link);
@@ -57,7 +57,7 @@ output_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
 }
 
 struct kiwmi_output *
-output_create(struct wlr_output *wlr_output, struct kiwmi_server *server)
+output_create(struct wlr_output *wlr_output, struct kiwmi_desktop *desktop)
 {
     struct kiwmi_output *output = calloc(1, sizeof(*output));
     if (!output) {
@@ -65,7 +65,7 @@ output_create(struct wlr_output *wlr_output, struct kiwmi_server *server)
     }
 
     output->wlr_output = wlr_output;
-    output->server     = server;
+    output->desktop     = desktop;
 
     output->frame.notify = output_frame_notify;
     wl_signal_add(&wlr_output->events.frame, &output->frame);

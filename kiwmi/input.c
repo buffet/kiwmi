@@ -17,7 +17,7 @@
 static void
 new_pointer(struct kiwmi_server *server, struct wlr_input_device *device)
 {
-    wlr_cursor_attach_input_device(server->cursor->cursor, device);
+    wlr_cursor_attach_input_device(server->desktop.cursor->cursor, device);
 }
 
 static void

@@ -13,11 +13,14 @@
 
 #include "kiwmi/output.h"
 #include "kiwmi/server.h"
+#include "kiwmi/desktop/desktop.h"
 
 void
 new_output_notify(struct wl_listener *listener, void *data)
 {
-    struct kiwmi_server *server = wl_container_of(listener, server, new_output);
+    struct kiwmi_desktop *desktop =
+        wl_container_of(listener, desktop, new_output);
+    struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
     struct wlr_output *wlr_output = data;
 
     wlr_log(WLR_DEBUG, "New output %p: %s", wlr_output, wlr_output->name);
@@ -28,19 +31,19 @@ new_output_notify(struct wl_listener *listener, void *data)
         wlr_output_set_mode(wlr_output, mode);
     }
 
-    struct kiwmi_output *output = output_create(wlr_output, server);
+    struct kiwmi_output *output = output_create(wlr_output, desktop);
     if (!output) {
         wlr_log(WLR_ERROR, "Failed to create output");
         return;
     }
 
-    struct kiwmi_cursor *cursor = server->cursor;
+    struct kiwmi_cursor *cursor = desktop->cursor;
 
     wlr_xcursor_manager_load(cursor->xcursor_manager, wlr_output->scale);
 
-    wl_list_insert(&server->outputs, &output->link);
+    wl_list_insert(&desktop->outputs, &output->link);
 
-    wlr_output_layout_add_auto(server->output_layout, wlr_output);
+    wlr_output_layout_add_auto(desktop->output_layout, wlr_output);
 
     wlr_output_create_global(wlr_output);
 }

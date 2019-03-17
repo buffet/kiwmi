@@ -11,15 +11,10 @@
 
 #include <wayland-server.h>
 #include <wlr/backend.h>
-#include <wlr/render/wlr_renderer.h>
-#include <wlr/types/wlr_compositor.h>
-#include <wlr/types/wlr_cursor.h>
-#include <wlr/types/wlr_data_device.h>
-#include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/util/log.h>
 
-#include "kiwmi/desktop/output.h"
+#include "kiwmi/desktop/desktop.h"
 #include "kiwmi/input.h"
 #include "kiwmi/input/cursor.h"
 
@@ -39,24 +34,13 @@ server_init(struct kiwmi_server *server)
     struct wlr_renderer *renderer = wlr_backend_get_renderer(server->backend);
     wlr_renderer_init_wl_display(renderer, server->wl_display);
 
-    server->compositor = wlr_compositor_create(server->wl_display, renderer);
-    server->data_device_manager =
-        wlr_data_device_manager_create(server->wl_display);
-
-    server->output_layout = wlr_output_layout_create();
-
-    server->cursor = cursor_create(server->output_layout);
-    if (!server->cursor) {
-        wlr_log(WLR_ERROR, "Failed to create cursor");
+    if (!desktop_init(&server->desktop, renderer)) {
+        wlr_log(WLR_ERROR, "Failed to initialize desktop");
         wl_display_destroy(server->wl_display);
         return false;
     }
 
     wl_list_init(&server->keyboards);
-    wl_list_init(&server->outputs);
-
-    server->new_output.notify = new_output_notify;
-    wl_signal_add(&server->backend->events.new_output, &server->new_output);
 
     server->new_input.notify = new_input_notify;
     wl_signal_add(&server->backend->events.new_input, &server->new_input);
