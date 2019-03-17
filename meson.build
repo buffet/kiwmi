@@ -11,7 +11,7 @@ project(
 add_project_arguments(
   [
     '-DWLR_USE_UNSTABLE',
-    '-D_POSIX_C_SOURCE=200112L'
+    '-D_POSIX_C_SOURCE=200112L',
   ],
   language: 'c',
 )

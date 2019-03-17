@@ -48,7 +48,6 @@ server_init(struct kiwmi_server *server)
     server->cursor = cursor_create(server->output_layout);
     if (!server->cursor) {
         wlr_log(WLR_ERROR, "Failed to create cursor");
-        wlr_backend_destroy(server->backend);
         wl_display_destroy(server->wl_display);
         return false;
     }
@@ -71,7 +70,6 @@ server_run(struct kiwmi_server *server)
     server->socket = wl_display_add_socket_auto(server->wl_display);
     if (!server->socket) {
         wlr_log(WLR_ERROR, "Failed to open Wayland socket");
-        wlr_backend_destroy(server->backend);
         wl_display_destroy(server->wl_display);
         return false;
     }
@@ -81,7 +79,6 @@ server_run(struct kiwmi_server *server)
 
     if (!wlr_backend_start(server->backend)) {
         wlr_log(WLR_ERROR, "Failed to start backend");
-        wlr_backend_destroy(server->backend);
         wl_display_destroy(server->wl_display);
         return false;
     }
@@ -98,7 +95,6 @@ server_fini(struct kiwmi_server *server)
 {
     wlr_log(WLR_DEBUG, "Shutting down Wayland server");
 
-    wlr_backend_destroy(server->backend);
     wl_display_destroy_clients(server->wl_display);
     wl_display_destroy(server->wl_display);
 }
