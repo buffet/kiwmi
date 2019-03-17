@@ -13,13 +13,10 @@
 #include <wlr/types/wlr_data_device.h>
 #include <wlr/types/wlr_output_layout.h>
 
-#include "kiwmi/input/cursor.h"
-
 struct kiwmi_desktop {
     struct wlr_compositor *compositor;
     struct wlr_data_device_manager *data_device_manager;
     struct wlr_output_layout *output_layout;
-    struct kiwmi_cursor *cursor;
     struct wl_list outputs; // struct kiwmi_output::link
 
     struct wl_listener new_output;
