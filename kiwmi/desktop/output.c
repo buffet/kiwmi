@@ -38,7 +38,7 @@ new_output_notify(struct wl_listener *listener, void *data)
         return;
     }
 
-    struct kiwmi_cursor *cursor = desktop->cursor;
+    struct kiwmi_cursor *cursor = server->input.cursor;
 
     wlr_xcursor_manager_load(cursor->xcursor_manager, wlr_output->scale);
 
