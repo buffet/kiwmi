@@ -26,9 +26,9 @@ main(int argc, char **argv)
     const char *usage =
         "Usage: kiwmi [options] FRONTEND\n"
         "\n"
-        "  -h, --help     Show help message and quit\n"
-        "  -v, --version  Show version number and quit\n"
-        "  -V, --verbose  Increase verbosity Level\n";
+        "  -h  Show help message and quit\n"
+        "  -v  Show version number and quit\n"
+        "  -V  Increase verbosity Level\n";
 
     int option;
     while ((option = getopt(argc, argv, "hvV")) != -1) {
