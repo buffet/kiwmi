@@ -31,7 +31,7 @@ Dependencies
 Building
 --------
 
-Make sure all dependencies are installed. 
+Make sure all dependencies are installed.
 
 Run:
 
