@@ -15,7 +15,6 @@
 #include <wlr/util/log.h>
 
 #include "kiwmi/desktop/desktop.h"
-#include "kiwmi/input.h"
 #include "kiwmi/input/cursor.h"
 #include "kiwmi/input/input.h"
 

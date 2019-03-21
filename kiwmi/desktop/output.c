@@ -7,14 +7,77 @@
 
 #include "kiwmi/desktop/output.h"
 
+#include <stdlib.h>
+
 #include <wayland-server.h>
+#include <wlr/backend.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_output.h>
 #include <wlr/util/log.h>
 
-#include "kiwmi/output.h"
 #include "kiwmi/server.h"
 #include "kiwmi/desktop/desktop.h"
+
+static void
+output_frame_notify(struct wl_listener *listener, void *data)
+{
+    struct kiwmi_output *output   = wl_container_of(listener, output, frame);
+    struct wlr_output *wlr_output = data;
+    struct wlr_renderer *renderer =
+        wlr_backend_get_renderer(wlr_output->backend);
+
+    if (!wlr_output_make_current(wlr_output, NULL)) {
+        return;
+    }
+
+    int width;
+    int height;
+
+    wlr_output_effective_resolution(wlr_output, &width, &height);
+
+    {
+        wlr_renderer_begin(renderer, width, height);
+        wlr_renderer_clear(renderer, (float[]){0.18f, 0.20f, 0.25f, 1.0f});
+        wlr_output_render_software_cursors(wlr_output, NULL);
+        wlr_renderer_end(renderer);
+    }
+
+    wlr_output_swap_buffers(wlr_output, NULL, NULL);
+}
+
+static void
+output_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
+{
+    struct kiwmi_output *output = wl_container_of(listener, output, destroy);
+
+    wlr_output_layout_remove(output->desktop->output_layout, output->wlr_output);
+
+    wl_list_remove(&output->link);
+    wl_list_remove(&output->frame.link);
+    wl_list_remove(&output->destroy.link);
+
+    free(output);
+}
+
+static struct kiwmi_output *
+output_create(struct wlr_output *wlr_output, struct kiwmi_desktop *desktop)
+{
+    struct kiwmi_output *output = calloc(1, sizeof(*output));
+    if (!output) {
+        return NULL;
+    }
+
+    output->wlr_output = wlr_output;
+    output->desktop     = desktop;
+
+    output->frame.notify = output_frame_notify;
+    wl_signal_add(&wlr_output->events.frame, &output->frame);
+
+    output->destroy.notify = output_destroy_notify;
+    wl_signal_add(&wlr_output->events.destroy, &output->destroy);
+
+    return output;
+}
 
 void
 new_output_notify(struct wl_listener *listener, void *data)
