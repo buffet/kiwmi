@@ -19,8 +19,8 @@
 int
 main(int argc, char **argv)
 {
-    int verbosity             = 0;
-    const char *frontend_path = NULL;
+    int verbosity = 0;
+    const char *frontend_path;
 
     const char *usage =
         "Usage: kiwmi [options] FRONTEND\n"
