@@ -12,7 +12,6 @@
 #include <getopt.h>
 #include <limits.h>
 
-#include <wayland-server.h>
 #include <wlr/util/log.h>
 
 #include "kiwmi/server.h"

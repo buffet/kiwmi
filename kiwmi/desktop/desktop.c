@@ -10,14 +10,13 @@
 #include <stdbool.h>
 
 #include <wayland-server.h>
-#include <wlr/render/wlr_renderer.h>
+#include <wlr/backend.h>
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_data_device.h>
 #include <wlr/types/wlr_output_layout.h>
 
 #include "kiwmi/server.h"
 #include "kiwmi/desktop/output.h"
-#include "kiwmi/input/cursor.h"
 
 bool
 desktop_init(struct kiwmi_desktop *desktop, struct wlr_renderer *renderer)

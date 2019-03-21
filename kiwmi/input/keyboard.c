@@ -11,8 +11,8 @@
 #include <stdlib.h>
 
 #include <wayland-server.h>
+#include <wlr/backend.h>
 #include <wlr/backend/multi.h>
-#include <wlr/backend/session.h>
 #include <wlr/types/wlr_input_device.h>
 #include <wlr/util/log.h>
 #include <xkbcommon/xkbcommon.h>

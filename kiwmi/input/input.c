@@ -8,10 +8,14 @@
 #include "kiwmi/input/input.h"
 
 #include <wayland-server.h>
+#include <wlr/backend.h>
+#include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_input_device.h>
 #include <wlr/util/log.h>
 
 #include "kiwmi/server.h"
+#include "kiwmi/desktop/desktop.h"
+#include "kiwmi/input/cursor.h"
 #include "kiwmi/input/keyboard.h"
 
 static void

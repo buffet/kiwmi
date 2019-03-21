@@ -13,10 +13,14 @@
 #include <wlr/backend.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_output.h>
+#include <wlr/types/wlr_output_layout.h>
+#include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/util/log.h>
 
 #include "kiwmi/server.h"
 #include "kiwmi/desktop/desktop.h"
+#include "kiwmi/input/cursor.h"
+#include "kiwmi/input/input.h"
 
 static void
 output_frame_notify(struct wl_listener *listener, void *data)

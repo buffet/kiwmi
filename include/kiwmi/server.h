@@ -8,9 +8,6 @@
 #ifndef KIWMI_SERVER_H
 #define KIWMI_SERVER_H
 
-#include <wayland-server.h>
-#include <wlr/backend.h>
-
 #include "kiwmi/desktop/desktop.h"
 #include "kiwmi/input/input.h"
 
