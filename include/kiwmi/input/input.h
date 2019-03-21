@@ -10,8 +10,6 @@
 
 #include <wayland-server.h>
 
-#include "kiwmi/input/cursor.h"
-
 struct kiwmi_input {
     struct wl_list keyboards; // struct kiwmi_keyboard::link
     struct wl_listener new_input;

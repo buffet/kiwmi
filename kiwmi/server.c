@@ -11,12 +11,8 @@
 
 #include <wayland-server.h>
 #include <wlr/backend.h>
-#include <wlr/types/wlr_xcursor_manager.h>
+#include <wlr/render/wlr_renderer.h>
 #include <wlr/util/log.h>
-
-#include "kiwmi/desktop/desktop.h"
-#include "kiwmi/input/cursor.h"
-#include "kiwmi/input/input.h"
 
 bool
 server_init(struct kiwmi_server *server)

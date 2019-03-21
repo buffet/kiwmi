@@ -8,9 +8,8 @@
 #ifndef KIWMI_INPUT_CURSOR_H
 #define KIWMI_INPUT_CURSOR_H
 
-#include <wlr/types/wlr_cursor.h>
+#include <wayland-server.h>
 #include <wlr/types/wlr_output_layout.h>
-#include <wlr/types/wlr_xcursor_manager.h>
 
 struct kiwmi_cursor {
     struct wlr_cursor *cursor;

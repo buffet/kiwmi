@@ -10,8 +10,6 @@
 
 #include <wayland-server.h>
 #include <wlr/render/wlr_renderer.h>
-#include <wlr/types/wlr_data_device.h>
-#include <wlr/types/wlr_output_layout.h>
 
 struct kiwmi_desktop {
     struct wlr_compositor *compositor;

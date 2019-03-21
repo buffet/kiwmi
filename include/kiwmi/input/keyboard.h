@@ -9,9 +9,6 @@
 #define KIWMI_INPUT_KEYBOARD_H
 
 #include <wayland-server.h>
-#include <wlr/types/wlr_input_device.h>
-
-#include "kiwmi/server.h"
 
 struct kiwmi_keyboard {
     struct wl_list link;

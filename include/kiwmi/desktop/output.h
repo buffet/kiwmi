@@ -9,9 +9,6 @@
 #define KIWMI_DESKTOP_OUTPUT_H
 
 #include <wayland-server.h>
-#include <wlr/types/wlr_output.h>
-
-#include "kiwmi/desktop/desktop.h"
 
 struct kiwmi_output {
     struct wl_list link;
