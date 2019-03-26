@@ -15,7 +15,7 @@
 #include <wlr/util/log.h>
 
 bool
-server_init(struct kiwmi_server *server)
+server_init(struct kiwmi_server *server, const char *frontend_path)
 {
     wlr_log(WLR_DEBUG, "Initializing Wayland server");
 
@@ -38,6 +38,12 @@ server_init(struct kiwmi_server *server)
 
     if (!input_init(&server->input)) {
         wlr_log(WLR_ERROR, "Failed to initialize input");
+        wl_display_destroy(server->wl_display);
+        return false;
+    }
+
+    if (!frontend_init(&server->frontend, frontend_path)) {
+        wlr_log(WLR_ERROR, "Failed to initialize frontend");
         wl_display_destroy(server->wl_display);
         return false;
     }
