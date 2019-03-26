@@ -72,7 +72,7 @@ main(int argc, char **argv)
 
     struct kiwmi_server server;
 
-    if (!server_init(&server)) {
+    if (!server_init(&server, frontend_path)) {
         wlr_log(WLR_ERROR, "Failed to initialize server");
         exit(EXIT_FAILURE);
     }
