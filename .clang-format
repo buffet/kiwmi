@@ -5,7 +5,6 @@ AlignConsecutiveAssignments: true
 AlignConsecutiveDeclarations: false
 AlignEscapedNewlines: Right
 AlignOperands: false
-AlignTrailingComments: false
 AllowAllParametersOfDeclarationOnNextLine: false
 AllowShortBlocksOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false
@@ -16,13 +15,12 @@ AlwaysBreakAfterReturnType: AllDefinitions
 AlwaysBreakBeforeMultilineStrings: true
 BinPackArguments: false
 BinPackParameters: false
-BreakBeforeBinaryOperators: None
+BreakBeforeBinaryOperators: NonAssignment
 BreakBeforeBraces: Linux
 BreakBeforeTernaryOperators: true
 BreakStringLiterals: true
 ColumnLimit: 80
 ContinuationIndentWidth: 4
-IncludeBlocks: Preserve
 IndentCaseLabels: false
 IndentPPDirectives: AfterHash
 IndentWidth: 4
