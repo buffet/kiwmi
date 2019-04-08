@@ -16,6 +16,7 @@
 
 struct kiwmi_server {
     struct wl_display *wl_display;
+    struct wl_event_loop *wl_event_loop;
     struct wlr_backend *backend;
     const char *socket;
     struct kiwmi_desktop desktop;
