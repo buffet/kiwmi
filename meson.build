@@ -45,3 +45,4 @@ else
 endif
 
 subdir('kiwmi')
+subdir('kiwmic')
