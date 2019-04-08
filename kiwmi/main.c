@@ -70,6 +70,11 @@ main(int argc, char **argv)
 
     fprintf(stderr, "Using kiwmi v" KIWMI_VERSION "\n");
 
+    if (!getenv("XDG_RUNTIME_DIR")) {
+        wlr_log(WLR_ERROR, "XDG_RUNTIME_DIR not set");
+        exit(EXIT_FAILURE);
+    }
+
     struct kiwmi_server server;
 
     if (!server_init(&server, frontend_path)) {
