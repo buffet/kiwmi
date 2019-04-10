@@ -85,8 +85,6 @@ ipc_connection(int fd, uint32_t mask, void *UNUSED(data))
 
     msg[msg_len] = '\0';
 
-    wlr_log(WLR_ERROR, "%s", msg);
-
     // TODO: handle properly
 
     fclose(client_file);
