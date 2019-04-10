@@ -57,7 +57,13 @@ main(int argc, char **argv)
     fprintf(socket_file, "%c", '\0');
     fflush(socket_file);
 
-    // TODO: read result
+    int c;
+    while ((c = getc(socket_file)) != '\0') {
+        putchar(c);
+        if (c == '\n') {
+            fflush(stdout);
+        }
+    }
 
     fclose(socket_file);
 }
