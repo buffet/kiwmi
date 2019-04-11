@@ -58,7 +58,7 @@ main(int argc, char **argv)
     fflush(socket_file);
 
     int c;
-    while ((c = getc(socket_file)) != '\0') {
+    while ((c = getc(socket_file)) != EOF) {
         putchar(c);
         if (c == '\n') {
             fflush(stdout);
