@@ -130,10 +130,6 @@ ipc_init(struct kiwmi_frontend *frontend)
         return false;
     }
 
-    if (fcntl(frontend->sock_fd, F_SETFD, O_NONBLOCK) < 0) {
-        wlr_log(WLR_ERROR, "Failed to set NONBLOCK on socket");
-    }
-
     unlink(sock_addr.sun_path);
 
     if (bind(
