@@ -66,10 +66,8 @@ ipc_connection(int fd, uint32_t mask, void *UNUSED(data))
         return 0;
     }
 
-    bool is_reading = true;
-    while (is_reading) {
-        int c = getc(client_file);
-
+    int c;
+    while ((c = getc(client_file)) != '\0') {
         if (msg_len >= buffer_size) {
             buffer_size *= 2;
             char *tmp = realloc(msg, buffer_size);
@@ -82,18 +80,13 @@ ipc_connection(int fd, uint32_t mask, void *UNUSED(data))
             msg = tmp;
         }
 
-        switch (c) {
-        case '\0':
-            is_reading = false;
-            // FALLTHROUGH
-        case '\n':
-            msg[msg_len] = '\0';
-            msg_len = 0;
-            // TODO: handle command
-            break;
-        default:
-            msg[msg_len++] = c;
-        }
+        msg[msg_len++] = c;
+    }
+
+    msg[msg_len] = '\0';
+
+    for (const char *cmd = strtok(msg, "\n"); cmd; cmd = strtok(NULL, "\n")) {
+        // TODO: handle client command
     }
 
     fclose(client_file);
