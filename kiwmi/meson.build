@@ -1,5 +1,6 @@
 kiwmi_sources = files(
   'main.c',
+  'commands.c',
   'frontend.c',
   'server.c',
   'desktop/desktop.c',

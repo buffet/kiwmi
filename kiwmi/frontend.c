@@ -20,6 +20,7 @@
 
 #include <wlr/util/log.h>
 
+#include "kiwmi/commands.h"
 #include "kiwmi/server.h"
 
 static void
@@ -40,9 +41,11 @@ display_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
 }
 
 static int
-ipc_connection(int fd, uint32_t mask, void *UNUSED(data))
+ipc_connection(int fd, uint32_t mask, void *data)
 {
     wlr_log(WLR_DEBUG, "Received an IPC event");
+
+    struct kiwmi_server *server = data;
 
     if (!(mask & WL_EVENT_READABLE)) {
         return 0;
@@ -85,8 +88,10 @@ ipc_connection(int fd, uint32_t mask, void *UNUSED(data))
 
     msg[msg_len] = '\0';
 
-    for (const char *cmd = strtok(msg, "\n"); cmd; cmd = strtok(NULL, "\n")) {
-        // TODO: handle client command
+    for (char *cmd = strtok(msg, "\n"); cmd; cmd = strtok(NULL, "\n")) {
+        if (!handle_client_command(cmd, client_file, server)) {
+            break;
+        }
     }
 
     fclose(client_file);
