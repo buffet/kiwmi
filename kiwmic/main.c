@@ -60,9 +60,6 @@ main(int argc, char **argv)
     int c;
     while ((c = getc(socket_file)) != EOF) {
         putchar(c);
-        if (c == '\n') {
-            fflush(stdout);
-        }
     }
 
     fclose(socket_file);
