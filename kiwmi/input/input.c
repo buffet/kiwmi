@@ -13,10 +13,10 @@
 #include <wlr/types/wlr_input_device.h>
 #include <wlr/util/log.h>
 
-#include "kiwmi/server.h"
 #include "kiwmi/desktop/desktop.h"
 #include "kiwmi/input/cursor.h"
 #include "kiwmi/input/keyboard.h"
+#include "kiwmi/server.h"
 
 static void
 new_pointer(struct kiwmi_input *input, struct wlr_input_device *device)

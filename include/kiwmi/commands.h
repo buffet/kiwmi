@@ -13,9 +13,7 @@
 
 #include "kiwmi/server.h"
 
-bool handle_client_command(
-    char *command,
-    FILE *client,
-    struct kiwmi_server *server);
+bool
+handle_client_command(char *command, FILE *client, struct kiwmi_server *server);
 
 #endif /* KIWMI_COMMANDS_H */

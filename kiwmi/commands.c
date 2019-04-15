@@ -37,9 +37,9 @@ handle_client_command(char *command, FILE *client, struct kiwmi_server *server)
     const char *name = strtok(command, " \t\r");
 
     for (size_t i = 0; i < SIZE(commands); ++i) {
-	if (strcmp(name, commands[i].name) == 0) {
-	    return commands[i].handler(client, NULL, server);
-	}
+        if (strcmp(name, commands[i].name) == 0) {
+            return commands[i].handler(client, NULL, server);
+        }
     }
 
     fprintf(client, "Unknown command: %s\n", name);
