@@ -17,10 +17,10 @@
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/util/log.h>
 
-#include "kiwmi/server.h"
 #include "kiwmi/desktop/desktop.h"
 #include "kiwmi/input/cursor.h"
 #include "kiwmi/input/input.h"
+#include "kiwmi/server.h"
 
 static void
 output_frame_notify(struct wl_listener *listener, void *data)
@@ -54,7 +54,8 @@ output_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_output *output = wl_container_of(listener, output, destroy);
 
-    wlr_output_layout_remove(output->desktop->output_layout, output->wlr_output);
+    wlr_output_layout_remove(
+        output->desktop->output_layout, output->wlr_output);
 
     wl_list_remove(&output->link);
     wl_list_remove(&output->frame.link);
@@ -72,7 +73,7 @@ output_create(struct wlr_output *wlr_output, struct kiwmi_desktop *desktop)
     }
 
     output->wlr_output = wlr_output;
-    output->desktop     = desktop;
+    output->desktop    = desktop;
 
     output->frame.notify = output_frame_notify;
     wl_signal_add(&wlr_output->events.frame, &output->frame);
