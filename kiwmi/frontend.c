@@ -16,6 +16,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/un.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 #include <wlr/util/log.h>
@@ -176,9 +177,25 @@ spawn_frontend(const char *path)
     }
 
     if (pid == 0) {
-        execlp(path, path, NULL);
-        wlr_log(WLR_ERROR, "Failed to start frontend (exec), continuing");
-        _exit(EXIT_FAILURE);
+        pid = fork();
+
+        if (pid < 0) {
+            wlr_log(WLR_ERROR, "Failed to start frontend (fork)");
+            _exit(EXIT_FAILURE);
+        }
+
+        if (pid == 0) {
+            execlp(path, path, NULL);
+            wlr_log(WLR_ERROR, "Failed to start frontend (exec), continuing");
+            _exit(EXIT_FAILURE);
+        }
+
+        _exit(EXIT_SUCCESS);
+    }
+
+    if (waitpid(pid, NULL, 0) < 0) {
+        wlr_log(WLR_ERROR, "Failed to start frontend (waitpid)");
+        return false;
     }
 
     return true;
