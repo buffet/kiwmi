@@ -39,9 +39,9 @@ add_project_arguments('-DKIWMI_VERSION=@0@'.format(version), language: 'c')
 
 compiler = meson.get_compiler('c')
 if compiler.get_id() == 'gcc' or compiler.get_id() == 'clang'
-    add_project_arguments('-DUNUSED(x)=UNUSED_ ## x __attribute__((__unused__))', language: 'c')
+  add_project_arguments('-DUNUSED(x)=UNUSED_ ## x __attribute__((__unused__))', language: 'c')
 else
-    add_project_arguments('-DUNUSED(x)=UNUSED_ ## x', language: 'c')
+  add_project_arguments('-DUNUSED(x)=UNUSED_ ## x', language: 'c')
 endif
 
 subdir('kiwmi')
