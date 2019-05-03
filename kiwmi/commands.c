@@ -9,6 +9,9 @@
 
 #include <string.h>
 
+typedef bool (
+    *cmd_handler)(FILE *client, const char **args, struct kiwmi_server *server);
+
 static bool
 cmd_quit(
     FILE *UNUSED(client),
@@ -18,9 +21,6 @@ cmd_quit(
     wl_display_terminate(server->wl_display);
     return false;
 }
-
-typedef bool (
-    *cmd_handler)(FILE *client, const char **args, struct kiwmi_server *server);
 
 static const struct {
     const char *name;
