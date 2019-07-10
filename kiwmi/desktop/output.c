@@ -30,7 +30,7 @@ output_frame_notify(struct wl_listener *listener, void *data)
     struct wlr_renderer *renderer =
         wlr_backend_get_renderer(wlr_output->backend);
 
-    if (!wlr_output_make_current(wlr_output, NULL)) {
+    if (!wlr_output_attach_render(wlr_output, NULL)) {
         return;
     }
 
@@ -46,7 +46,7 @@ output_frame_notify(struct wl_listener *listener, void *data)
         wlr_renderer_end(renderer);
     }
 
-    wlr_output_swap_buffers(wlr_output, NULL, NULL);
+    wlr_output_commit(wlr_output);
 }
 
 static void
