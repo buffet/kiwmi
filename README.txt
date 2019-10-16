@@ -17,7 +17,7 @@ In the future there might be a base to base your stuff on, but at the moment thi
 Dependencies
 ------------
 
-- https://github.com/swaywm/wlroots[wlroots]
+- wlroots (https://github.com/swaywm/wlroots)
 - meson (build)
 - ninja (build)
 - git (build, optional, to fetch the version)
@@ -45,7 +45,7 @@ You want to contribute? Great!
 
 Future requests, bug reports and PRs are always welcome.
 Note that pull requests without a valid issue are ignored to decrease the amount of duplicate work.
-Also read link:CONTRIBUTING.adoc[CONTRIBUTING.adoc].
+Also read CONTRIBUTING.adoc.
 
 If anything is unclear, feel free to contact me.
 

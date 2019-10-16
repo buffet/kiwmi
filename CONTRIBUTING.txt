@@ -1,0 +1,19 @@
+Contribution Guidelines
+=======================
+
+Note: contributing implies that your contributions get licensed under the terms of MPL 2.0.
+
+Opening issues
+--------------
+
+- Make sure you have a GitHub account.
+- Include steps to reproduce, if it is a bug.
+- Include information on what version you are using.
+
+Submit changes
+--------------
+
+Commit messages should be both _clear_ and _descriptive_. If possible they should start with the _verb_ that describes the change.
+Don't be shy to include additional information, like motivation, for that change below the initial line.
+
+Other developers should be able to understand _why_ a change occurred, when looking at it at a later point in time.
