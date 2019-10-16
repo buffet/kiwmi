@@ -5,7 +5,7 @@
  * You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "kiwmi/input/keyboard.h"
+#include "input/keyboard.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -17,7 +17,7 @@
 #include <wlr/util/log.h>
 #include <xkbcommon/xkbcommon.h>
 
-#include "kiwmi/server.h"
+#include "server.h"
 
 static bool
 switch_vt(const xkb_keysym_t *syms, int nsyms, struct wlr_backend *backend)

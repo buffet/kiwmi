@@ -10,9 +10,8 @@
 
 #include <stdbool.h>
 
-#include "kiwmi/desktop/desktop.h"
-#include "kiwmi/frontend.h"
-#include "kiwmi/input/input.h"
+#include "desktop/desktop.h"
+#include "input/input.h"
 
 struct kiwmi_server {
     struct wl_display *wl_display;
@@ -21,10 +20,9 @@ struct kiwmi_server {
     const char *socket;
     struct kiwmi_desktop desktop;
     struct kiwmi_input input;
-    struct kiwmi_frontend frontend;
 };
 
-bool server_init(struct kiwmi_server *server, const char *frontend_path);
+bool server_init(struct kiwmi_server *server, const char *config_path);
 bool server_run(struct kiwmi_server *server);
 void server_fini(struct kiwmi_server *server);
 

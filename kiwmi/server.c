@@ -5,7 +5,7 @@
  * You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "kiwmi/server.h"
+#include "server.h"
 
 #include <stdlib.h>
 
@@ -15,7 +15,7 @@
 #include <wlr/util/log.h>
 
 bool
-server_init(struct kiwmi_server *server, const char *frontend_path)
+server_init(struct kiwmi_server *server, const char *UNUSED(config_path))
 {
     wlr_log(WLR_DEBUG, "Initializing Wayland server");
 
@@ -46,12 +46,6 @@ server_init(struct kiwmi_server *server, const char *frontend_path)
     server->socket = wl_display_add_socket_auto(server->wl_display);
     if (!server->socket) {
         wlr_log(WLR_ERROR, "Failed to open Wayland socket");
-        wl_display_destroy(server->wl_display);
-        return false;
-    }
-
-    if (!frontend_init(&server->frontend, frontend_path)) {
-        wlr_log(WLR_ERROR, "Failed to initialize frontend");
         wl_display_destroy(server->wl_display);
         return false;
     }

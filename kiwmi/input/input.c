@@ -5,7 +5,7 @@
  * You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "kiwmi/input/input.h"
+#include "input/input.h"
 
 #include <wayland-server.h>
 #include <wlr/backend.h>
@@ -13,10 +13,10 @@
 #include <wlr/types/wlr_input_device.h>
 #include <wlr/util/log.h>
 
-#include "kiwmi/desktop/desktop.h"
-#include "kiwmi/input/cursor.h"
-#include "kiwmi/input/keyboard.h"
-#include "kiwmi/server.h"
+#include "desktop/desktop.h"
+#include "input/cursor.h"
+#include "input/keyboard.h"
+#include "server.h"
 
 static void
 new_pointer(struct kiwmi_input *input, struct wlr_input_device *device)
