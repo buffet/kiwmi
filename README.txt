@@ -9,7 +9,7 @@ Concepts
 --------
 
 kiwmi is cool and all, because it doesn't enforce any logic itself.
-This means that the user can easily (via some Lua scripting) create their own behaiors, and can do anything they wish!
+This means that the user can easily (via some Lua scripting) create their own behaviors, and can do anything they wish!
 Of course this means that there is a steep curve to get into it, but for some people it might be worth it.
 
 In the future there might be a base to base your stuff on, but at the moment this doesn't even work.
@@ -36,9 +36,7 @@ $ ninja -C build
 
 Install with:
 
-----
 # ninja -C build install
-----
 
 Contribution
 ------------
