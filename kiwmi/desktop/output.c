@@ -5,7 +5,7 @@
  * You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "kiwmi/desktop/output.h"
+#include "desktop/output.h"
 
 #include <stdlib.h>
 
@@ -17,10 +17,10 @@
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/util/log.h>
 
-#include "kiwmi/desktop/desktop.h"
-#include "kiwmi/input/cursor.h"
-#include "kiwmi/input/input.h"
-#include "kiwmi/server.h"
+#include "desktop/desktop.h"
+#include "input/cursor.h"
+#include "input/input.h"
+#include "server.h"
 
 static void
 output_frame_notify(struct wl_listener *listener, void *data)

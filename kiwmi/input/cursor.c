@@ -5,7 +5,7 @@
  * You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "kiwmi/input/cursor.h"
+#include "input/cursor.h"
 
 #include <stdlib.h>
 

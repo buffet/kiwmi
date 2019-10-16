@@ -14,23 +14,24 @@
 
 #include <wlr/util/log.h>
 
-#include "kiwmi/server.h"
+#include "server.h"
 
 int
 main(int argc, char **argv)
 {
     int verbosity = 0;
-    const char *frontend_path;
+    const char *config_path = NULL;
 
     const char *usage =
-        "Usage: kiwmi [options] FRONTEND\n"
+        "Usage: kiwmi [options]\n"
         "\n"
-        "  -h  Show help message and quit\n"
-        "  -v  Show version number and quit\n"
-        "  -V  Increase verbosity Level\n";
+        "  -h  Show help message and exit\n"
+        "  -v  Show version number and exit\n"
+        "  -c  Change config path\n"
+        "  -V  Increase verbosity level\n";
 
     int option;
-    while ((option = getopt(argc, argv, "hvV")) != -1) {
+    while ((option = getopt(argc, argv, "hvc:V")) != -1) {
         switch (option) {
         case 'h':
             printf("%s", usage);
@@ -40,6 +41,9 @@ main(int argc, char **argv)
             printf("kiwmi version " KIWMI_VERSION "\n");
             exit(EXIT_SUCCESS);
             break;
+        case 'c':
+            config_path = optarg;
+            break;
         case 'V':
             ++verbosity;
             break;
@@ -48,14 +52,6 @@ main(int argc, char **argv)
             exit(EXIT_FAILURE);
         }
     }
-
-    // no frontend passsed
-    if (optind >= argc) {
-        fprintf(stderr, "%s", usage);
-        exit(EXIT_FAILURE);
-    }
-
-    frontend_path = argv[optind];
 
     switch (verbosity) {
     case 0:
@@ -77,7 +73,7 @@ main(int argc, char **argv)
 
     struct kiwmi_server server;
 
-    if (!server_init(&server, frontend_path)) {
+    if (!server_init(&server, config_path)) {
         wlr_log(WLR_ERROR, "Failed to initialize server");
         exit(EXIT_FAILURE);
     }

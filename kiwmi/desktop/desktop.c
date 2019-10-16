@@ -5,7 +5,7 @@
  * You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#include "kiwmi/desktop/desktop.h"
+#include "desktop/desktop.h"
 
 #include <stdbool.h>
 
@@ -15,8 +15,8 @@
 #include <wlr/types/wlr_data_device.h>
 #include <wlr/types/wlr_output_layout.h>
 
-#include "kiwmi/desktop/output.h"
-#include "kiwmi/server.h"
+#include "desktop/output.h"
+#include "server.h"
 
 bool
 desktop_init(struct kiwmi_desktop *desktop, struct wlr_renderer *renderer)
