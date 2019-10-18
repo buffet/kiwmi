@@ -7,7 +7,10 @@
 
 #include "server.h"
 
+#include <stdio.h>
 #include <stdlib.h>
+
+#include <limits.h>
 
 #include <wayland-server.h>
 #include <wlr/backend.h>
@@ -15,7 +18,7 @@
 #include <wlr/util/log.h>
 
 bool
-server_init(struct kiwmi_server *server, const char *UNUSED(config_path))
+server_init(struct kiwmi_server *server, char *config_path)
 {
     wlr_log(WLR_DEBUG, "Initializing Wayland server");
 
@@ -50,6 +53,26 @@ server_init(struct kiwmi_server *server, const char *UNUSED(config_path))
         return false;
     }
 
+    if (!config_path) {
+        // default config path
+        free(config_path);
+        config_path = malloc(PATH_MAX);
+        if (!config_path) {
+            wlr_log(WLR_ERROR, "Falied to allocate memory");
+            wl_display_destroy(server->wl_display);
+            return false;
+        }
+
+        const char *config_home = getenv("XDG_CONFIG_HOME");
+        if (config_home) {
+            snprintf(config_path, PATH_MAX, "%s/kiwmi/init.lua", config_home);
+        } else {
+            snprintf(config_path, PATH_MAX, "%s/.config/kiwmi/init.lua", getenv("HOME"));
+        }
+    }
+
+    server->config_path = config_path;
+
     return true;
 }
 
@@ -79,4 +102,6 @@ server_fini(struct kiwmi_server *server)
 
     wl_display_destroy_clients(server->wl_display);
     wl_display_destroy(server->wl_display);
+
+    free(server->config_path);
 }
