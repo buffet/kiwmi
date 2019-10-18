@@ -17,6 +17,7 @@ add_project_arguments(
 )
 
 git            = find_program('git', required: false)
+lua            = dependency('lua')
 wayland_server = dependency('wayland-server')
 wlroots        = dependency('wlroots')
 xkbcommon      = dependency('xkbcommon')

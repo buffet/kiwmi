@@ -12,10 +12,13 @@
 
 #include <limits.h>
 
+#include <lauxlib.h>
 #include <wayland-server.h>
 #include <wlr/backend.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/util/log.h>
+
+#include "luak.h"
 
 bool
 server_init(struct kiwmi_server *server, char *config_path)
@@ -73,6 +76,12 @@ server_init(struct kiwmi_server *server, char *config_path)
 
     server->config_path = config_path;
 
+    if (!luaK_init(server)) {
+        wlr_log(WLR_ERROR, "Failed to initialize Lua");
+        wl_display_destroy(server->wl_display);
+        return false;
+    }
+
     return true;
 }
 
@@ -89,6 +98,12 @@ server_run(struct kiwmi_server *server)
     }
 
     setenv("WAYLAND_DISPLAY", server->socket, true);
+
+    if (luaL_dofile(server->L, server->config_path)) {
+        wlr_log(WLR_ERROR, "Error running config: %s", lua_tostring(server->L, -1));
+        wl_display_destroy(server->wl_display);
+        return false;
+    }
 
     wl_display_run(server->wl_display);
 

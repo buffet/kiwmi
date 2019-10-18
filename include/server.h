@@ -10,6 +10,8 @@
 
 #include <stdbool.h>
 
+#include <lua.h>
+
 #include "desktop/desktop.h"
 #include "input/input.h"
 
@@ -19,6 +21,7 @@ struct kiwmi_server {
     struct wlr_backend *backend;
     const char *socket;
     char *config_path;
+    lua_State *L;
     struct kiwmi_desktop desktop;
     struct kiwmi_input input;
 };

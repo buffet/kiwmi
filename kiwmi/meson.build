@@ -1,4 +1,5 @@
 kiwmi_sources = files(
+  'luak.c',
   'main.c',
   'server.c',
   'desktop/desktop.c',
@@ -9,6 +10,7 @@ kiwmi_sources = files(
 )
 
 kiwmi_deps = [
+  lua,
   wayland_server,
   wlroots,
   xkbcommon,
