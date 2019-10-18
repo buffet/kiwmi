@@ -20,7 +20,7 @@ int
 main(int argc, char **argv)
 {
     int verbosity = 0;
-    const char *config_path = NULL;
+    char *config_path = NULL;
 
     const char *usage =
         "Usage: kiwmi [options]\n"
@@ -42,7 +42,11 @@ main(int argc, char **argv)
             exit(EXIT_SUCCESS);
             break;
         case 'c':
-            config_path = optarg;
+            config_path = strdup(optarg); // gets freed in kiwmi_fini
+            if (!config_path) {
+                fprintf(stderr, "Failed to allocate memory\n");
+                exit(EXIT_FAILURE);
+            }
             break;
         case 'V':
             ++verbosity;

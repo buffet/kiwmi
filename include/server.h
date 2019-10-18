@@ -18,11 +18,12 @@ struct kiwmi_server {
     struct wl_event_loop *wl_event_loop;
     struct wlr_backend *backend;
     const char *socket;
+    char *config_path;
     struct kiwmi_desktop desktop;
     struct kiwmi_input input;
 };
 
-bool server_init(struct kiwmi_server *server, const char *config_path);
+bool server_init(struct kiwmi_server *server, char *config_path);
 bool server_run(struct kiwmi_server *server);
 void server_fini(struct kiwmi_server *server);
 
