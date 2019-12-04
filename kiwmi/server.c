@@ -16,6 +16,7 @@
 #include <wayland-server.h>
 #include <wlr/backend.h>
 #include <wlr/render/wlr_renderer.h>
+#include <wlr/types/wlr_screencopy_v1.h>
 #include <wlr/util/log.h>
 
 #include "luak.h"
@@ -73,6 +74,8 @@ server_init(struct kiwmi_server *server, char *config_path)
             snprintf(config_path, PATH_MAX, "%s/.config/kiwmi/init.lua", getenv("HOME"));
         }
     }
+
+    wlr_screencopy_manager_v1_create(server->wl_display);
 
     server->config_path = config_path;
 
