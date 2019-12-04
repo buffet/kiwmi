@@ -26,9 +26,15 @@ server_init(struct kiwmi_server *server, char *config_path)
 {
     wlr_log(WLR_DEBUG, "Initializing Wayland server");
 
-    server->wl_display    = wl_display_create();
+    server->wl_display = wl_display_create();
+    if (!server->wl_display) {
+        wlr_log(WLR_ERROR, "Failed to create display");
+        return false;
+    }
+
     server->wl_event_loop = wl_display_get_event_loop(server->wl_display);
-    server->backend       = wlr_backend_autocreate(server->wl_display, NULL);
+
+    server->backend = wlr_backend_autocreate(server->wl_display, NULL);
     if (!server->backend) {
         wlr_log(WLR_ERROR, "Failed to create backend");
         wl_display_destroy(server->wl_display);
@@ -71,7 +77,11 @@ server_init(struct kiwmi_server *server, char *config_path)
         if (config_home) {
             snprintf(config_path, PATH_MAX, "%s/kiwmi/init.lua", config_home);
         } else {
-            snprintf(config_path, PATH_MAX, "%s/.config/kiwmi/init.lua", getenv("HOME"));
+            snprintf(
+                config_path,
+                PATH_MAX,
+                "%s/.config/kiwmi/init.lua",
+                getenv("HOME"));
         }
     }
 
@@ -103,7 +113,8 @@ server_run(struct kiwmi_server *server)
     setenv("WAYLAND_DISPLAY", server->socket, true);
 
     if (luaL_dofile(server->L, server->config_path)) {
-        wlr_log(WLR_ERROR, "Error running config: %s", lua_tostring(server->L, -1));
+        wlr_log(
+            WLR_ERROR, "Error running config: %s", lua_tostring(server->L, -1));
         wl_display_destroy(server->wl_display);
         return false;
     }
