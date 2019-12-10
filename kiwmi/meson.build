@@ -11,6 +11,7 @@ kiwmi_sources = files(
 
 kiwmi_deps = [
   lua,
+  protocols_server,
   wayland_server,
   wlroots,
   xkbcommon,

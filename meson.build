@@ -16,11 +16,13 @@ add_project_arguments(
   language: 'c',
 )
 
-git            = find_program('git', required: false)
-lua            = dependency('lua')
-wayland_server = dependency('wayland-server')
-wlroots        = dependency('wlroots')
-xkbcommon      = dependency('xkbcommon')
+git               = find_program('git', required: false)
+lua               = dependency('lua')
+wayland_protocols = dependency('wayland-protocols')
+wayland_scanner   = dependency('wayland-scanner')
+wayland_server    = dependency('wayland-server')
+wlroots           = dependency('wlroots')
+xkbcommon         = dependency('xkbcommon')
 
 include = include_directories('include')
 
@@ -45,4 +47,5 @@ else
   add_project_arguments('-DUNUSED(x)=UNUSED_ ## x', language: 'c')
 endif
 
+subdir('protocols')
 subdir('kiwmi')
