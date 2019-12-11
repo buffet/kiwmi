@@ -79,6 +79,7 @@ main(int argc, char **argv)
 
     if (!server_init(&server, config_path)) {
         wlr_log(WLR_ERROR, "Failed to initialize server");
+        free(config_path);
         exit(EXIT_FAILURE);
     }
 
