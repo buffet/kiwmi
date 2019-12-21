@@ -12,25 +12,78 @@
 #include <wayland-server.h>
 #include <wlr/backend.h>
 #include <wlr/render/wlr_renderer.h>
+#include <wlr/types/wlr_matrix.h>
 #include <wlr/types/wlr_output.h>
 #include <wlr/types/wlr_output_layout.h>
+#include <wlr/types/wlr_surface.h>
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/util/log.h>
 
 #include "desktop/desktop.h"
+#include "desktop/view.h"
 #include "input/cursor.h"
 #include "input/input.h"
 #include "server.h"
+
+struct render_data {
+    struct wlr_output *output;
+    struct kiwmi_view *view;
+    struct wlr_renderer *renderer;
+    struct timespec *when;
+};
+
+static void
+render_surface(struct wlr_surface *surface, int sx, int sy, void *data)
+{
+    struct render_data *rdata = data;
+    struct kiwmi_view *view   = rdata->view;
+    struct wlr_output *output = rdata->output;
+
+    struct wlr_texture *texture = wlr_surface_get_texture(surface);
+    if (!texture) {
+        return;
+    }
+
+    double ox = 0;
+    double oy = 0;
+    wlr_output_layout_output_coords(
+        view->desktop->output_layout, output, &ox, &oy);
+
+    ox += view->x + sx;
+    oy += view->y + sy;
+
+    struct wlr_box box = {
+        .x      = ox * output->scale,
+        .y      = oy * output->scale,
+        .width  = surface->current.width * output->scale,
+        .height = surface->current.height * output->scale,
+    };
+
+    float matrix[9];
+    enum wl_output_transform transform =
+        wlr_output_transform_invert(surface->current.transform);
+    wlr_matrix_project_box(
+        matrix, &box, transform, 0, output->transform_matrix);
+
+    wlr_render_texture_with_matrix(rdata->renderer, texture, matrix, 1);
+
+    wlr_surface_send_frame_done(surface, rdata->when);
+}
 
 static void
 output_frame_notify(struct wl_listener *listener, void *data)
 {
     struct kiwmi_output *output   = wl_container_of(listener, output, frame);
     struct wlr_output *wlr_output = data;
+    struct kiwmi_desktop *desktop = output->desktop;
     struct wlr_renderer *renderer =
         wlr_backend_get_renderer(wlr_output->backend);
 
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+
     if (!wlr_output_attach_render(wlr_output, NULL)) {
+        wlr_log(WLR_ERROR, "Failed to attach renderer to output");
         return;
     }
 
@@ -39,12 +92,28 @@ output_frame_notify(struct wl_listener *listener, void *data)
 
     wlr_output_effective_resolution(wlr_output, &width, &height);
 
+    wlr_renderer_begin(renderer, width, height);
+    wlr_renderer_clear(renderer, (float[]){0.0f, 1.0f, 0.0f, 1.0f});
+
+    struct kiwmi_view *view;
+    wl_list_for_each_reverse(view, &desktop->views, link)
     {
-        wlr_renderer_begin(renderer, width, height);
-        wlr_renderer_clear(renderer, (float[]){0.0f, 1.0f, 0.0f, 1.0f});
-        wlr_output_render_software_cursors(wlr_output, NULL);
-        wlr_renderer_end(renderer);
+        if (!view->mapped) {
+            continue;
+        }
+
+        struct render_data rdata = {
+            .output   = output->wlr_output,
+            .view     = view,
+            .renderer = renderer,
+            .when     = &now,
+        };
+
+        kiwmi_view_for_each_surface(view, render_surface, &rdata);
     }
+
+    wlr_output_render_software_cursors(wlr_output, NULL);
+    wlr_renderer_end(renderer);
 
     wlr_output_commit(wlr_output);
 }

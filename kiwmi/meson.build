@@ -4,6 +4,8 @@ kiwmi_sources = files(
   'server.c',
   'desktop/desktop.c',
   'desktop/output.c',
+  'desktop/view.c',
+  'desktop/xdg_shell.c',
   'input/cursor.c',
   'input/input.c',
   'input/keyboard.c',

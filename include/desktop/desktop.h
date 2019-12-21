@@ -13,10 +13,13 @@
 
 struct kiwmi_desktop {
     struct wlr_compositor *compositor;
+    struct wlr_xdg_shell *xdg_shell;
     struct wlr_data_device_manager *data_device_manager;
     struct wlr_output_layout *output_layout;
     struct wl_list outputs; // struct kiwmi_output::link
+    struct wl_list views;   // struct kiwmi_view::link
 
+    struct wl_listener xdg_shell_new_surface;
     struct wl_listener new_output;
 };
 
