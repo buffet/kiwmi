@@ -19,7 +19,7 @@
 int
 main(int argc, char **argv)
 {
-    int verbosity = 0;
+    int verbosity     = 0;
     char *config_path = NULL;
 
     const char *usage =
