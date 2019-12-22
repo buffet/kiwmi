@@ -1,18 +1,27 @@
 kiwmi
 =====
 
-A fully programmable Waylnd Compositor.
+kiwmi is a Wayland compositor that is programmed by the user.
+This means that the sky is the limit:
+You can implement any tiling or floating logic you want; even stuff like modal window management becomes easy.
 
-NOTE: This whole project is a work in project, and is far from working.
+This means there is a steep entrance barrier, but in the future there will be base configurations to start with.
 
-Concepts
---------
+NOTE: This whole project is a work in project, and not usable yet.
 
-kiwmi is cool and all, because it doesn't enforce any logic itself.
-This means that the user can easily (via some Lua scripting) create their own behaviors, and can do anything they wish!
-Of course this means that there is a steep curve to get into it, but for some people it might be worth it.
+Installation
+------------
 
-In the future there might be a base to base your stuff on, but at the moment this doesn't even work.
+Make sure all dependencies are installed.
+
+Run:
+
+  $ meson build
+  $ ninja -C build
+
+Install with:
+
+  # ninja -C build install
 
 Dependencies
 ------------
@@ -22,22 +31,6 @@ Dependencies
 - ninja (build)
 - git (build, optional, to fetch the version)
 
-Building
---------
-
-Make sure all dependencies are installed.
-
-Run:
-
-----
-$ meson build
-$ ninja -C build
-----
-
-Install with:
-
-# ninja -C build install
-
 Contribution
 ------------
 
@@ -45,7 +38,7 @@ You want to contribute? Great!
 
 Future requests, bug reports and PRs are always welcome.
 Note that pull requests without a valid issue are ignored to decrease the amount of duplicate work.
-Also read CONTRIBUTING.adoc.
+Also read CONTRIBUTING.txt.
 
 If anything is unclear, feel free to contact me.
 
