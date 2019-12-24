@@ -34,11 +34,10 @@ xdg_surface_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_view *view = wl_container_of(listener, view, destroy);
 
+    wl_list_remove(&view->link);
     wl_list_remove(&view->map.link);
     wl_list_remove(&view->unmap.link);
     wl_list_remove(&view->destroy.link);
-
-    wl_list_remove(&view->link);
 
     free(view);
 }
