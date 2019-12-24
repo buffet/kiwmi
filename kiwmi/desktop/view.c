@@ -6,6 +6,10 @@
  */
 
 #include "desktop/view.h"
+
+#include <wlr/util/log.h>
+
+#include "desktop/output.h"
 #include "server.h"
 
 void
@@ -54,4 +58,27 @@ focus_view(struct kiwmi_view *view, struct wlr_surface *surface)
         keyboard->keycodes,
         keyboard->num_keycodes,
         &keyboard->modifiers);
+}
+
+struct kiwmi_view *
+view_create(
+    struct kiwmi_desktop *desktop,
+    enum kiwmi_view_type type,
+    const struct kiwmi_view_impl *impl)
+{
+    struct kiwmi_view *view = malloc(sizeof(*view));
+    if (!view) {
+        wlr_log(WLR_ERROR, "Failed to allocate view");
+        return NULL;
+    }
+
+    view->desktop = desktop;
+    view->type    = type;
+    view->impl    = impl;
+    view->mapped  = false;
+
+    view->x = 0;
+    view->y = 0;
+
+    return view;
 }
