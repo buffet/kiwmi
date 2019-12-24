@@ -11,6 +11,7 @@
 #include <wlr/backend.h>
 #include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_input_device.h>
+#include <wlr/types/wlr_seat.h>
 #include <wlr/util/log.h>
 
 #include "desktop/desktop.h"
@@ -56,6 +57,13 @@ new_input_notify(struct wl_listener *listener, void *data)
         // NOT HANDLED
         break;
     }
+
+    uint32_t caps = WL_SEAT_CAPABILITY_POINTER;
+    if (!wl_list_empty(&input->keyboards)) {
+        caps |= WL_SEAT_CAPABILITY_KEYBOARD;
+    }
+
+    wlr_seat_set_capabilities(input->seat, caps);
 }
 
 bool
@@ -68,6 +76,8 @@ input_init(struct kiwmi_input *input)
         wlr_log(WLR_ERROR, "Failed to create cursor");
         return false;
     }
+
+    input->seat = wlr_seat_create(server->wl_display, "seat-0");
 
     wl_list_init(&input->keyboards);
 

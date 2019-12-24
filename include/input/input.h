@@ -14,6 +14,7 @@ struct kiwmi_input {
     struct wl_list keyboards; // struct kiwmi_keyboard::link
     struct wl_listener new_input;
     struct kiwmi_cursor *cursor;
+    struct wlr_seat *seat;
 };
 
 bool input_init(struct kiwmi_input *input);
