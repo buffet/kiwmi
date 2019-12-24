@@ -53,5 +53,6 @@ void kiwmi_view_for_each_surface(
     void *user_data);
 
 void focus_view(struct kiwmi_view *view, struct wlr_surface *surface);
+struct kiwmi_view *view_create(struct kiwmi_desktop *desktop, enum kiwmi_view_type type, const struct kiwmi_view_impl *impl);
 
 #endif /* KIWMI_DESKTOP_VIEW_H */

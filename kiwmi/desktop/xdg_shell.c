@@ -75,17 +75,13 @@ xdg_shell_new_surface_notify(struct wl_listener *listener, void *data)
 
     wlr_xdg_surface_ping(xdg_surface);
 
-    struct kiwmi_view *view = malloc(sizeof(*view));
+    struct kiwmi_view *view =
+        view_create(desktop, KIWMI_VIEW_XDG_SHELL, &xdg_shell_view_impl);
     if (!view) {
-        wlr_log(WLR_ERROR, "Failed to allocate view");
         return;
     }
 
-    view->desktop     = desktop;
-    view->type        = KIWMI_VIEW_XDG_SHELL;
-    view->impl        = &xdg_shell_view_impl;
     view->xdg_surface = xdg_surface;
-    view->mapped      = false;
 
     view->map.notify = xdg_surface_map_notify;
     wl_signal_add(&xdg_surface->events.map, &view->map);
