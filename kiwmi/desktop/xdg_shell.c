@@ -19,6 +19,7 @@ xdg_surface_map_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_view *view = wl_container_of(listener, view, map);
     view->mapped            = true;
+    focus_view(view, view->xdg_surface->surface);
 }
 
 static void

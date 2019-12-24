@@ -52,4 +52,6 @@ void kiwmi_view_for_each_surface(
     wlr_surface_iterator_func_t iterator,
     void *user_data);
 
+void focus_view(struct kiwmi_view *view, struct wlr_surface *surface);
+
 #endif /* KIWMI_DESKTOP_VIEW_H */
