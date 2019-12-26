@@ -13,7 +13,7 @@
 #include "server.h"
 
 void
-kiwmi_view_for_each_surface(
+view_for_each_surface(
     struct kiwmi_view *view,
     wlr_surface_iterator_func_t iterator,
     void *user_data)
@@ -24,7 +24,28 @@ kiwmi_view_for_each_surface(
 }
 
 void
-focus_view(struct kiwmi_view *view, struct wlr_surface *surface)
+view_set_activated(struct kiwmi_view *view, bool activated)
+{
+    if (view->impl->set_activated) {
+        view->impl->set_activated(view, activated);
+    }
+}
+
+struct wlr_surface *
+view_surface_at(
+    struct kiwmi_view *view,
+    double sx,
+    double sy,
+    double *sub_x,
+    double *sub_y)
+{
+    if (view->impl->surface_at) {
+        return view->impl->surface_at(view, sx, sy, sub_x, sub_y);
+    }
+}
+
+void
+focus_view(struct kiwmi_view *view)
 {
     if (!view) {
         return;
@@ -33,16 +54,13 @@ focus_view(struct kiwmi_view *view, struct wlr_surface *surface)
     struct kiwmi_desktop *desktop = view->desktop;
     struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
     struct wlr_seat *seat         = server->input.seat;
-    struct wlr_surface *prev_surface = seat->keyboard_state.focused_surface;
 
-    if (prev_surface == surface) {
+    if (view == desktop->focused_view) {
         return;
     }
 
-    if (prev_surface) {
-        struct wlr_xdg_surface *previous = wlr_xdg_surface_from_wlr_surface(
-            seat->keyboard_state.focused_surface);
-        wlr_xdg_toplevel_set_activated(previous, false);
+    if (desktop->focused_view) {
+        view_set_activated(desktop->focused_view, false);
     }
 
     struct wlr_keyboard *keyboard = wlr_seat_get_keyboard(seat);
@@ -51,13 +69,59 @@ focus_view(struct kiwmi_view *view, struct wlr_surface *surface)
     wl_list_remove(&view->link);
     wl_list_insert(&desktop->views, &view->link);
 
-    wlr_xdg_toplevel_set_activated(view->xdg_surface, true);
+    view_set_activated(view, true);
     wlr_seat_keyboard_notify_enter(
         seat,
-        view->xdg_surface->surface,
+        view->wlr_surface,
         keyboard->keycodes,
         keyboard->num_keycodes,
         &keyboard->modifiers);
+}
+
+static bool
+surface_at(
+    struct kiwmi_view *view,
+    struct wlr_surface **surface,
+    double lx,
+    double ly,
+    double *sx,
+    double *sy)
+{
+    double view_sx = lx - view->x;
+    double view_sy = ly - view->y;
+
+    double _sx, _sy;
+    struct wlr_surface *_surface = NULL;
+    _surface = view_surface_at(view, view_sx, view_sy, &_sx, &_sy);
+
+    if (_surface != NULL) {
+        *sx      = _sx;
+        *sy      = _sy;
+        *surface = _surface;
+        return true;
+    }
+
+    return false;
+}
+
+struct kiwmi_view *
+view_at(
+    struct kiwmi_desktop *desktop,
+    double lx,
+    double ly,
+    struct wlr_surface **surface,
+    double *sx,
+    double *sy)
+{
+    struct kiwmi_view *view;
+    wl_list_for_each(view, &desktop->views, link)
+    {
+        if (surface_at(view, surface, lx, ly, sx, sy)) {
+            return view;
+        }
+    }
+
+    return NULL;
 }
 
 struct kiwmi_view *

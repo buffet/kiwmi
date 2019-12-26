@@ -12,12 +12,16 @@
 #include <wlr/types/wlr_output_layout.h>
 
 struct kiwmi_cursor {
+    struct kiwmi_server *server;
     struct wlr_cursor *cursor;
     struct wlr_xcursor_manager *xcursor_manager;
     struct wl_listener cursor_motion;
     struct wl_listener cursor_motion_absolute;
+    struct wl_listener cursor_button;
 };
 
-struct kiwmi_cursor *cursor_create(struct wlr_output_layout *output_layout);
+struct kiwmi_cursor *cursor_create(
+    struct kiwmi_server *server,
+    struct wlr_output_layout *output_layout);
 
 #endif /* KIWMI_INPUT_CURSOR_H */
