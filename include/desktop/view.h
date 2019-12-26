@@ -30,6 +30,8 @@ struct kiwmi_view {
         struct wlr_xdg_surface *xdg_surface;
     };
 
+    struct wlr_surface *wlr_surface;
+
     struct wl_listener map;
     struct wl_listener unmap;
     struct wl_listener destroy;
@@ -45,14 +47,38 @@ struct kiwmi_view_impl {
         struct kiwmi_view *view,
         wlr_surface_iterator_func_t iterator,
         void *user_data);
+    void (*set_activated)(struct kiwmi_view *view, bool activated);
+    struct wlr_surface *(*surface_at)(
+        struct kiwmi_view *view,
+        double sx,
+        double sy,
+        double *sub_x,
+        double *sub_y);
 };
 
-void kiwmi_view_for_each_surface(
+void view_for_each_surface(
     struct kiwmi_view *view,
     wlr_surface_iterator_func_t iterator,
     void *user_data);
+void view_set_activated(struct kiwmi_view *view, bool activated);
+struct wlr_surface *view_surface_at(
+    struct kiwmi_view *view,
+    double sx,
+    double sy,
+    double *sub_x,
+    double *sub_y);
 
-void focus_view(struct kiwmi_view *view, struct wlr_surface *surface);
-struct kiwmi_view *view_create(struct kiwmi_desktop *desktop, enum kiwmi_view_type type, const struct kiwmi_view_impl *impl);
+void focus_view(struct kiwmi_view *view);
+struct kiwmi_view *view_at(
+    struct kiwmi_desktop *desktop,
+    double lx,
+    double ly,
+    struct wlr_surface **surface,
+    double *sx,
+    double *sy);
+struct kiwmi_view *view_create(
+    struct kiwmi_desktop *desktop,
+    enum kiwmi_view_type type,
+    const struct kiwmi_view_impl *impl);
 
 #endif /* KIWMI_DESKTOP_VIEW_H */

@@ -109,7 +109,7 @@ output_frame_notify(struct wl_listener *listener, void *data)
             .when     = &now,
         };
 
-        kiwmi_view_for_each_surface(view, render_surface, &rdata);
+        view_for_each_surface(view, render_surface, &rdata);
     }
 
     wlr_output_render_software_cursors(wlr_output, NULL);

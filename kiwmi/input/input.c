@@ -71,7 +71,7 @@ input_init(struct kiwmi_input *input)
 {
     struct kiwmi_server *server = wl_container_of(input, server, input);
 
-    input->cursor = cursor_create(server->desktop.output_layout);
+    input->cursor = cursor_create(server, server->desktop.output_layout);
     if (!input->cursor) {
         wlr_log(WLR_ERROR, "Failed to create cursor");
         return false;

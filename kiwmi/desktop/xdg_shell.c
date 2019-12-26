@@ -19,7 +19,7 @@ xdg_surface_map_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_view *view = wl_container_of(listener, view, map);
     view->mapped            = true;
-    focus_view(view, view->xdg_surface->surface);
+    focus_view(view);
 }
 
 static void
@@ -32,7 +32,12 @@ xdg_surface_unmap_notify(struct wl_listener *listener, void *UNUSED(data))
 static void
 xdg_surface_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
 {
-    struct kiwmi_view *view = wl_container_of(listener, view, destroy);
+    struct kiwmi_view *view       = wl_container_of(listener, view, destroy);
+    struct kiwmi_desktop *desktop = view->desktop;
+
+    if (desktop->focused_view == view) {
+        desktop->focused_view = NULL;
+    }
 
     wl_list_remove(&view->link);
     wl_list_remove(&view->map.link);
@@ -51,8 +56,27 @@ xdg_shell_view_for_each_surface(
     wlr_xdg_surface_for_each_surface(view->xdg_surface, iterator, user_data);
 }
 
+static void
+xdg_shell_view_set_activated(struct kiwmi_view *view, bool activated)
+{
+    wlr_xdg_toplevel_set_activated(view->xdg_surface, activated);
+}
+
+struct wlr_surface *
+xdg_shell_view_surface_at(
+    struct kiwmi_view *view,
+    double sx,
+    double sy,
+    double *sub_x,
+    double *sub_y)
+{
+    return wlr_xdg_surface_surface_at(view->xdg_surface, sx, sy, sub_x, sub_y);
+}
+
 static const struct kiwmi_view_impl xdg_shell_view_impl = {
     .for_each_surface = xdg_shell_view_for_each_surface,
+    .set_activated    = xdg_shell_view_set_activated,
+    .surface_at       = xdg_shell_view_surface_at,
 };
 
 void
@@ -82,6 +106,7 @@ xdg_shell_new_surface_notify(struct wl_listener *listener, void *data)
     }
 
     view->xdg_surface = xdg_surface;
+    view->wlr_surface = xdg_surface->surface;
 
     view->map.notify = xdg_surface_map_notify;
     wl_signal_add(&xdg_surface->events.map, &view->map);

@@ -41,6 +41,8 @@ desktop_init(struct kiwmi_desktop *desktop, struct wlr_renderer *renderer)
         &desktop->xdg_shell->events.new_surface,
         &desktop->xdg_shell_new_surface);
 
+    desktop->focused_view = NULL;
+
     wl_list_init(&desktop->outputs);
     wl_list_init(&desktop->views);
 
