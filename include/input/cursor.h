@@ -20,6 +20,7 @@ struct kiwmi_cursor {
     struct wl_listener cursor_button;
     struct wl_listener cursor_axis;
     struct wl_listener cursor_frame;
+    struct wl_listener request_set_cursor;
 };
 
 struct kiwmi_cursor *cursor_create(
