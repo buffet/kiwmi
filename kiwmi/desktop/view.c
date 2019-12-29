@@ -42,6 +42,7 @@ view_surface_at(
     if (view->impl->surface_at) {
         return view->impl->surface_at(view, sx, sy, sub_x, sub_y);
     }
+    return NULL;
 }
 
 void
