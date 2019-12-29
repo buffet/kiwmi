@@ -110,6 +110,17 @@ cursor_button_notify(struct wl_listener *listener, void *data)
     }
 }
 
+static void
+request_set_cursor_notify(struct wl_listener *listener, void *data)
+{
+    struct kiwmi_cursor *cursor =
+        wl_container_of(listener, cursor, request_set_cursor);
+    struct wlr_seat_pointer_request_set_cursor_event *event = data;
+    // FIXME: this should verify if the window has focus
+    wlr_cursor_set_surface(
+        cursor->cursor, event->surface, event->hotspot_x, event->hotspot_y);
+}
+
 struct kiwmi_cursor *
 cursor_create(
     struct kiwmi_server *server,
@@ -146,6 +157,11 @@ cursor_create(
 
     cursor->cursor_button.notify = cursor_button_notify;
     wl_signal_add(&cursor->cursor->events.button, &cursor->cursor_button);
+
+    cursor->request_set_cursor.notify = request_set_cursor_notify;
+    wl_signal_add(
+        &server->input.seat->events.request_set_cursor,
+        &cursor->request_set_cursor);
 
     return cursor;
 }
