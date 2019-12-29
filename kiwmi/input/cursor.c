@@ -140,10 +140,10 @@ cursor_frame_notify(struct wl_listener *listener, void *UNUSED(data))
 }
 
 static void
-request_set_cursor_notify(struct wl_listener *listener, void *data)
+seat_request_set_cursor_notify(struct wl_listener *listener, void *data)
 {
     struct kiwmi_cursor *cursor =
-        wl_container_of(listener, cursor, request_set_cursor);
+        wl_container_of(listener, cursor, seat_request_set_cursor);
     struct wlr_seat_pointer_request_set_cursor_event *event = data;
 
     struct wlr_surface *focused_surface =
@@ -207,10 +207,10 @@ cursor_create(
     cursor->cursor_frame.notify = cursor_frame_notify;
     wl_signal_add(&cursor->cursor->events.frame, &cursor->cursor_frame);
 
-    cursor->request_set_cursor.notify = request_set_cursor_notify;
+    cursor->seat_request_set_cursor.notify = seat_request_set_cursor_notify;
     wl_signal_add(
         &server->input.seat->events.request_set_cursor,
-        &cursor->request_set_cursor);
+        &cursor->seat_request_set_cursor);
 
     return cursor;
 }
