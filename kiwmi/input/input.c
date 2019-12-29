@@ -71,13 +71,13 @@ input_init(struct kiwmi_input *input)
 {
     struct kiwmi_server *server = wl_container_of(input, server, input);
 
+    input->seat = wlr_seat_create(server->wl_display, "seat-0");
+
     input->cursor = cursor_create(server, server->desktop.output_layout);
     if (!input->cursor) {
         wlr_log(WLR_ERROR, "Failed to create cursor");
         return false;
     }
-
-    input->seat = wlr_seat_create(server->wl_display, "seat-0");
 
     wl_list_init(&input->keyboards);
 
