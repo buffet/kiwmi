@@ -110,6 +110,35 @@ cursor_button_notify(struct wl_listener *listener, void *data)
     }
 }
 
+static void
+cursor_axis_notify(struct wl_listener *listener, void *data)
+{
+    struct kiwmi_cursor *cursor =
+        wl_container_of(listener, cursor, cursor_axis);
+    struct kiwmi_server *server          = cursor->server;
+    struct kiwmi_input *input            = &server->input;
+    struct wlr_event_pointer_axis *event = data;
+
+    wlr_seat_pointer_notify_axis(
+        input->seat,
+        event->time_msec,
+        event->orientation,
+        event->delta,
+        event->delta_discrete,
+        event->source);
+}
+
+static void
+cursor_frame_notify(struct wl_listener *listener, void *UNUSED(data))
+{
+    struct kiwmi_cursor *cursor =
+        wl_container_of(listener, cursor, cursor_frame);
+    struct kiwmi_server *server = cursor->server;
+    struct kiwmi_input *input   = &server->input;
+
+    wlr_seat_pointer_notify_frame(input->seat);
+}
+
 struct kiwmi_cursor *
 cursor_create(
     struct kiwmi_server *server,
@@ -146,6 +175,12 @@ cursor_create(
 
     cursor->cursor_button.notify = cursor_button_notify;
     wl_signal_add(&cursor->cursor->events.button, &cursor->cursor_button);
+
+    cursor->cursor_axis.notify = cursor_axis_notify;
+    wl_signal_add(&cursor->cursor->events.axis, &cursor->cursor_axis);
+
+    cursor->cursor_frame.notify = cursor_frame_notify;
+    wl_signal_add(&cursor->cursor->events.frame, &cursor->cursor_frame);
 
     return cursor;
 }
