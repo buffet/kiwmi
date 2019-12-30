@@ -12,7 +12,6 @@
 
 #include <limits.h>
 
-#include <lauxlib.h>
 #include <wayland-server.h>
 #include <wlr/backend.h>
 #include <wlr/render/wlr_renderer.h>
@@ -111,9 +110,7 @@ server_run(struct kiwmi_server *server)
 
     setenv("WAYLAND_DISPLAY", server->socket, true);
 
-    if (luaL_dofile(server->L, server->config_path)) {
-        wlr_log(
-            WLR_ERROR, "Error running config: %s", lua_tostring(server->L, -1));
+    if (!luaK_dofile(server->lua, server->config_path)) {
         wl_display_destroy(server->wl_display);
         return false;
     }
