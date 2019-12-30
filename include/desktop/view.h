@@ -43,6 +43,7 @@ struct kiwmi_view {
 };
 
 struct kiwmi_view_impl {
+    void (*close)(struct kiwmi_view *view);
     void (*for_each_surface)(
         struct kiwmi_view *view,
         wlr_surface_iterator_func_t iterator,
@@ -56,6 +57,7 @@ struct kiwmi_view_impl {
         double *sub_y);
 };
 
+void view_close(struct kiwmi_view *view);
 void view_for_each_surface(
     struct kiwmi_view *view,
     wlr_surface_iterator_func_t iterator,

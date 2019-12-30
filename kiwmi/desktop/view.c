@@ -13,6 +13,14 @@
 #include "server.h"
 
 void
+view_close(struct kiwmi_view *view)
+{
+    if (view->impl->close) {
+        view->impl->close(view);
+    }
+}
+
+void
 view_for_each_surface(
     struct kiwmi_view *view,
     wlr_surface_iterator_func_t iterator,
