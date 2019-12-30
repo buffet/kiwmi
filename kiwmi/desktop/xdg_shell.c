@@ -48,6 +48,16 @@ xdg_surface_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
 }
 
 static void
+xdg_shell_view_close(struct kiwmi_view *view)
+{
+    struct wlr_xdg_surface *surface = view->xdg_surface;
+
+    if (surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL && surface->toplevel) {
+        wlr_xdg_toplevel_send_close(surface);
+    }
+}
+
+static void
 xdg_shell_view_for_each_surface(
     struct kiwmi_view *view,
     wlr_surface_iterator_func_t iterator,
@@ -74,6 +84,7 @@ xdg_shell_view_surface_at(
 }
 
 static const struct kiwmi_view_impl xdg_shell_view_impl = {
+    .close            = xdg_shell_view_close,
     .for_each_surface = xdg_shell_view_for_each_surface,
     .set_activated    = xdg_shell_view_set_activated,
     .surface_at       = xdg_shell_view_surface_at,
