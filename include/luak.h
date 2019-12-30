@@ -14,6 +14,11 @@
 
 #include "server.h"
 
+struct kiwmi_lua {
+    lua_State *L;
+};
+
 bool luaK_init(struct kiwmi_server *server);
+bool luaK_dofile(struct kiwmi_lua *lua, const char *config_path);
 
 #endif /* KIWMI_LUAK_H */
