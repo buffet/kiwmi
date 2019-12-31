@@ -145,17 +145,6 @@ get_server(lua_State *L)
     return server;
 }
 
-static void
-lua_callback_listener_notify(struct wl_listener *listener, void *UNUSED(data))
-{
-    struct lua_callback *lc     = wl_container_of(listener, lc, listener);
-    struct kiwmi_server *server = lc->server;
-    struct lua_State *L         = server->lua->L;
-
-    lua_rawgeti(L, LUA_REGISTRYINDEX, lc->callback_ref);
-    lua_pcall(L, 0, 0, 0);
-}
-
 static int
 l_on(lua_State *L)
 {
@@ -176,6 +165,26 @@ l_on(lua_State *L)
     return register_callback(L);
 }
 
+static void
+on_cursor_button_notify(struct wl_listener *listener, void *data)
+{
+    struct lua_callback *lc     = wl_container_of(listener, lc, listener);
+    struct kiwmi_server *server = lc->server;
+    struct lua_State *L         = server->lua->L;
+    struct wlr_event_pointer_button *event = data;
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lc->callback_ref);
+
+    lua_pushinteger(L, event->state);
+    lua_pushinteger(L, event->button);
+    lua_pushinteger(L, event->time_msec);
+    lua_pushlightuserdata(L, event->device); // TODO: make un-opaque
+
+    if (lua_pcall(L, 4, 0, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, 1));
+    }
+}
+
 static int
 on_cursor_button(lua_State *L)
 {
@@ -192,7 +201,7 @@ on_cursor_button(lua_State *L)
     lc->server       = server;
     lc->callback_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
-    lc->listener.notify = lua_callback_listener_notify;
+    lc->listener.notify = on_cursor_button_notify;
     wl_signal_add(&cursor->cursor->events.button, &lc->listener);
 
     lua_pushlightuserdata(L, lc);
