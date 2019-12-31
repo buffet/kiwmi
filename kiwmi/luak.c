@@ -37,6 +37,8 @@ l_lua_callback_cancel(lua_State *L)
     wl_list_remove(&lc->listener.link);
     wl_list_remove(&lc->link);
 
+    luaL_unref(L, LUA_REGISTRYINDEX, lc->callback_ref);
+
     free(lc);
 
     return 0;
@@ -299,6 +301,8 @@ luaK_fini(struct kiwmi_lua *lua)
     wl_list_for_each_safe(lc, tmp, &lua->callbacks, link) {
         wl_list_remove(&lc->listener.link);
         wl_list_remove(&lc->link);
+
+        luaL_unref(lua->L, LUA_REGISTRYINDEX, lc->callback_ref);
 
         free(lc);
     }
