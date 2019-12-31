@@ -21,6 +21,7 @@
 #include "input/input.h"
 
 struct lua_callback {
+    struct wl_list link;
     struct kiwmi_server *server;
     int callback_ref;
     struct wl_listener listener;
@@ -34,6 +35,8 @@ l_lua_callback_cancel(lua_State *L)
     lua_pop(L, 1);
 
     wl_list_remove(&lc->listener.link);
+    wl_list_remove(&lc->link);
+
     free(lc);
 
     return 0;
@@ -170,6 +173,8 @@ on_cursor_button(lua_State *L)
     struct kiwmi_server *server = get_server(L);
     struct kiwmi_cursor *cursor = server->input.cursor;
 
+    wl_list_insert(&server->lua->callbacks, &lc->link);
+
     lc->server       = server;
     lc->callback_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
@@ -269,6 +274,8 @@ luaK_init(struct kiwmi_server *server)
     lua->L      = L;
     server->lua = lua;
 
+    wl_list_init(&lua->callbacks);
+
     return true;
 }
 
@@ -282,4 +289,19 @@ luaK_dofile(struct kiwmi_lua *lua, const char *config_path)
     }
 
     return true;
+}
+
+void
+luaK_fini(struct kiwmi_lua *lua)
+{
+    struct lua_callback *lc;
+    struct lua_callback *tmp;
+    wl_list_for_each_safe(lc, tmp, &lua->callbacks, link) {
+        wl_list_remove(&lc->listener.link);
+        wl_list_remove(&lc->link);
+
+        free(lc);
+    }
+
+    lua_close(lua->L);
 }

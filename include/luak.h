@@ -16,9 +16,11 @@
 
 struct kiwmi_lua {
     lua_State *L;
+    struct wl_list callbacks; // lua_callback::link
 };
 
 bool luaK_init(struct kiwmi_server *server);
 bool luaK_dofile(struct kiwmi_lua *lua, const char *config_path);
+void luaK_fini(struct kiwmi_lua *lua);
 
 #endif /* KIWMI_LUAK_H */
