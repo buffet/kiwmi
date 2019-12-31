@@ -298,7 +298,7 @@ luaK_fini(struct kiwmi_lua *lua)
 {
     struct lua_callback *lc;
     struct lua_callback *tmp;
-    wl_list_for_each_safe(lc, tmp, &lua->callbacks, link) {
+    wl_list_for_each_safe (lc, tmp, &lua->callbacks, link) {
         wl_list_remove(&lc->listener.link);
         wl_list_remove(&lc->link);
 
