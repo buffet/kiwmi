@@ -40,6 +40,7 @@ struct kiwmi_view {
     double y;
 
     bool mapped;
+    bool hidden;
 };
 
 struct kiwmi_view_impl {
