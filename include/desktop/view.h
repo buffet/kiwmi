@@ -70,7 +70,7 @@ struct wlr_surface *view_surface_at(
     double *sub_x,
     double *sub_y);
 
-void focus_view(struct kiwmi_view *view);
+void view_focus(struct kiwmi_view *view);
 struct kiwmi_view *view_at(
     struct kiwmi_desktop *desktop,
     double lx,
