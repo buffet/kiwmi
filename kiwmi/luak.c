@@ -98,9 +98,25 @@ l_kiwmi_view_focus(lua_State *L)
     return 0;
 }
 
+static int
+l_kiwmi_view_move(lua_State *L)
+{
+    struct kiwmi_view *view =
+        *(struct kiwmi_view **)luaL_checkudata(L, 1, "kiwmi_view");
+
+    luaL_checktype(L, 2, LUA_TNUMBER);
+    luaL_checktype(L, 3, LUA_TNUMBER);
+
+    view->x = lua_tonumber(L, 2);
+    view->y = lua_tonumber(L, 3);
+
+    return 0;
+}
+
 static const luaL_Reg kiwmi_view_methods[] = {
     {"close", l_kiwmi_view_close},
     {"focus", l_kiwmi_view_focus},
+    {"move", l_kiwmi_view_move},
     {NULL, NULL},
 };
 
