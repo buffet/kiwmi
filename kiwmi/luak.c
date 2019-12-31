@@ -98,6 +98,28 @@ l_kiwmi_view_focus(lua_State *L)
 }
 
 static int
+l_kiwmi_view_hidden(lua_State *L)
+{
+    struct kiwmi_view *view =
+        *(struct kiwmi_view **)luaL_checkudata(L, 1, "kiwmi_view");
+
+    lua_pushboolean(L, view->hidden);
+
+    return 1;
+}
+
+static int
+l_kiwmi_view_hide(lua_State *L)
+{
+    struct kiwmi_view *view =
+        *(struct kiwmi_view **)luaL_checkudata(L, 1, "kiwmi_view");
+
+    view->hidden = true;
+
+    return 0;
+}
+
+static int
 l_kiwmi_view_move(lua_State *L)
 {
     struct kiwmi_view *view =
@@ -112,10 +134,24 @@ l_kiwmi_view_move(lua_State *L)
     return 0;
 }
 
+static int
+l_kiwmi_view_show(lua_State *L)
+{
+    struct kiwmi_view *view =
+        *(struct kiwmi_view **)luaL_checkudata(L, 1, "kiwmi_view");
+
+    view->hidden = false;
+
+    return 0;
+}
+
 static const luaL_Reg kiwmi_view_methods[] = {
     {"close", l_kiwmi_view_close},
     {"focus", l_kiwmi_view_focus},
+    {"hidden", l_kiwmi_view_hidden},
+    {"hide", l_kiwmi_view_hide},
     {"move", l_kiwmi_view_move},
+    {"show", l_kiwmi_view_show},
     {NULL, NULL},
 };
 

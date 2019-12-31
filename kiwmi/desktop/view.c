@@ -124,6 +124,10 @@ view_at(
 {
     struct kiwmi_view *view;
     wl_list_for_each (view, &desktop->views, link) {
+        if (view->hidden || !view->mapped) {
+            continue;
+        }
+
         if (surface_at(view, surface, lx, ly, sx, sy)) {
             return view;
         }
@@ -148,6 +152,7 @@ view_create(
     view->type    = type;
     view->impl    = impl;
     view->mapped  = false;
+    view->hidden  = true;
 
     view->x = 0;
     view->y = 0;
