@@ -71,7 +71,6 @@ lua_callback_register(lua_State *L)
     lua_pushvalue(L, -2);
     lua_settable(L, -3);
     luaL_setfuncs(L, lua_callback_methods, 0);
-    lua_pop(L, 1);
 
     return 0;
 }
@@ -126,7 +125,6 @@ kiwmi_view_create(lua_State *L)
     luaL_checktype(L, 1, LUA_TLIGHTUSERDATA); // kiwmi_view
 
     struct kiwmi_view *view = lua_touserdata(L, 1);
-    lua_pop(L, 1);
 
     struct kiwmi_view **view_ud = lua_newuserdata(L, sizeof(*view_ud));
     luaL_getmetatable(L, "kiwmi_view");
@@ -145,40 +143,40 @@ kiwmi_view_register(lua_State *L)
     lua_pushvalue(L, -2);
     lua_settable(L, -3);
     luaL_setfuncs(L, kiwmi_view_methods, 0);
-    lua_pop(L, 1);
 
     return 0;
-}
-
-static struct kiwmi_server *
-get_server(lua_State *L)
-{
-    lua_pushliteral(L, "kiwmi_server");
-    lua_gettable(L, LUA_REGISTRYINDEX);
-    struct kiwmi_server *server = lua_touserdata(L, -1);
-    lua_pop(L, 1);
-
-    return server;
 }
 
 static int
 l_on(lua_State *L)
 {
-    luaL_checktype(L, 1, LUA_TSTRING);   // type
-    luaL_checktype(L, 2, LUA_TFUNCTION); // callback
+    luaL_checkudata(L, 1, "kiwmi_server"); // server
+    luaL_checktype(L, 2, LUA_TSTRING);     // type
+    luaL_checktype(L, 3, LUA_TFUNCTION);   // callback
 
     // event_handler = registry['kiwmi_events'][type]
     lua_pushliteral(L, "kiwmi_events");
     lua_gettable(L, LUA_REGISTRYINDEX);
-    lua_pushvalue(L, 1);
+    lua_pushvalue(L, 2);
     lua_gettable(L, -2);
-    lua_CFunction register_callback = lua_tocfunction(L, -1);
-    lua_pop(L, 2);
 
-    luaL_argcheck(L, register_callback, 1, "invalid event");
+    luaL_argcheck(L, lua_iscfunction(L, -1), 2, "invalid event");
+
+    // stack: server type callback kiwmi_events register_callback
+
+    lua_remove(L, 4); // remove kiwmi_events
+    lua_remove(L, 2); // remove type
+    lua_rotate(L, 1, 1);
+
+    // stack: register_callback server callback
 
     // return register_callback(callback)
-    return register_callback(L);
+    if (lua_pcall(L, 2, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        return 0;
+    }
+
+    return 1;
 }
 
 static void
@@ -213,12 +211,15 @@ on_cursor_button_notify(struct wl_listener *listener, void *data)
 static int
 on_cursor_button(lua_State *L)
 {
+    struct kiwmi_server *server =
+        *(struct kiwmi_server **)luaL_checkudata(L, 1, "kiwmi_server");
+    luaL_checktype(L, 2, LUA_TFUNCTION);   // callback
+
     struct lua_callback *lc = malloc(sizeof(*lc));
     if (!lc) {
         return luaL_error(L, "failed to allocate lua_callback");
     }
 
-    struct kiwmi_server *server = get_server(L);
     struct kiwmi_cursor *cursor = server->input.cursor;
 
     wl_list_insert(&server->lua->callbacks, &lc->link);
@@ -238,7 +239,7 @@ on_cursor_button(lua_State *L)
 static int
 l_quit(lua_State *L)
 {
-    struct kiwmi_server *server = get_server(L);
+    struct kiwmi_server *server = *(struct kiwmi_server**)luaL_checkudata(L, 1, "kiwmi_server");
 
     wl_display_terminate(server->wl_display);
 
@@ -248,7 +249,8 @@ l_quit(lua_State *L)
 static int
 l_view_under_cursor(lua_State *L)
 {
-    struct kiwmi_server *server = get_server(L);
+    struct kiwmi_server *server = *(struct kiwmi_server **)luaL_checkudata(L, 1, "kiwmi_server");
+
     struct kiwmi_cursor *cursor = server->input.cursor;
 
     struct wlr_surface *surface;
@@ -264,8 +266,11 @@ l_view_under_cursor(lua_State *L)
         &sy);
 
     if (view) {
+        lua_pushcfunction(L, kiwmi_view_create);
         lua_pushlightuserdata(L, view);
-        kiwmi_view_create(L);
+        if (lua_pcall(L, 1, 1, 0)) {
+            wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        }
     } else {
         lua_pushnil(L);
     }
@@ -273,12 +278,40 @@ l_view_under_cursor(lua_State *L)
     return 1;
 }
 
-static const luaL_Reg kiwmi_lib[] = {
+static const luaL_Reg kiwmi_server_methods[] = {
     {"on", l_on},
     {"quit", l_quit},
     {"view_under_cursor", l_view_under_cursor},
     {NULL, NULL},
 };
+
+static int
+kiwmi_server_create(lua_State *L)
+{
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA); // kiwmi_server
+
+    struct kiwmi_server *server = lua_touserdata(L, 1);
+
+    struct kiwmi_server **server_ud = lua_newuserdata(L, sizeof(*server_ud));
+    luaL_getmetatable(L, "kiwmi_server");
+    lua_setmetatable(L, -2);
+
+    *server_ud = server;
+
+    return 1;
+}
+
+static int
+kiwmi_server_register(lua_State *L)
+{
+    luaL_newmetatable(L, "kiwmi_server");
+    lua_pushliteral(L, "__index");
+    lua_pushvalue(L, -2);
+    lua_settable(L, -3);
+    luaL_setfuncs(L, kiwmi_server_methods, 0);
+
+    return 0;
+}
 
 static const luaL_Reg kiwmi_events[] = {
     {"cursor_button", on_cursor_button},
@@ -301,22 +334,33 @@ luaK_init(struct kiwmi_server *server)
 
     luaL_openlibs(L);
 
-    // registry['kiwmi_server'] = server
-    lua_pushliteral(L, "kiwmi_server");
-    lua_pushlightuserdata(L, server);
-    lua_settable(L, LUA_REGISTRYINDEX);
-
     // registry['kiwmi_events'] = {'key_down' = l_key_down, ...}
     lua_pushliteral(L, "kiwmi_events");
     luaL_newlib(L, kiwmi_events);
     lua_settable(L, LUA_REGISTRYINDEX);
 
     // register types
-    lua_callback_register(L);
-    kiwmi_view_register(L);
+    int error = false;
 
-    // _G['kiwmi'] = kiwmi_lib
-    luaL_newlib(L, kiwmi_lib);
+    lua_pushcfunction(L, lua_callback_register);
+    error |= lua_pcall(L, 0, 0, 0);
+    lua_pushcfunction(L, kiwmi_view_register);
+    error |= lua_pcall(L, 0, 0, 0);
+    lua_pushcfunction(L, kiwmi_server_register);
+    error |= lua_pcall(L, 0, 0, 0);
+
+    if (error) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        return false;
+    }
+
+    // create kiwmi global
+    lua_pushcfunction(L, kiwmi_server_create);
+    lua_pushlightuserdata(L, server);
+    if (lua_pcall(L, 1, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        return false;
+    }
     lua_setglobal(L, "kiwmi");
 
     lua->L      = L;
