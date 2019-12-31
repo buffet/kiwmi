@@ -54,7 +54,7 @@ view_surface_at(
 }
 
 void
-focus_view(struct kiwmi_view *view)
+view_focus(struct kiwmi_view *view)
 {
     if (!view) {
         return;
