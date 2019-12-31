@@ -87,8 +87,20 @@ l_kiwmi_view_close(lua_State *L)
     return 0;
 }
 
+static int
+l_kiwmi_view_focus(lua_State *L)
+{
+    struct kiwmi_view *view =
+        *(struct kiwmi_view **)luaL_checkudata(L, 1, "kiwmi_view");
+
+    focus_view(view);
+
+    return 0;
+}
+
 static const luaL_Reg kiwmi_view_methods[] = {
     {"close", l_kiwmi_view_close},
+    {"focus", l_kiwmi_view_focus},
     {NULL, NULL},
 };
 
