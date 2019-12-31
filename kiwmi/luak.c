@@ -191,13 +191,22 @@ on_cursor_button_notify(struct wl_listener *listener, void *data)
 
     lua_rawgeti(L, LUA_REGISTRYINDEX, lc->callback_ref);
 
-    lua_pushinteger(L, event->state);
-    lua_pushinteger(L, event->button);
-    lua_pushinteger(L, event->time_msec);
-    lua_pushlightuserdata(L, event->device); // TODO: make un-opaque
+    lua_newtable(L);
 
-    if (lua_pcall(L, 4, 0, 0)) {
-        wlr_log(WLR_ERROR, "%s", lua_tostring(L, 1));
+    lua_pushlightuserdata(L, event->device); // TODO: make un-opaque
+    lua_setfield(L, -2, "device");
+
+    lua_pushinteger(L, event->time_msec);
+    lua_setfield(L, -2, "time");
+
+    lua_pushinteger(L, event->button);
+    lua_setfield(L, -2, "button");
+
+    lua_pushinteger(L, event->state);
+    lua_setfield(L, -2, "state");
+
+    if (lua_pcall(L, 1, 0, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
     }
 }
 
