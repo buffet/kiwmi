@@ -92,22 +92,6 @@ cursor_button_notify(struct wl_listener *listener, void *data)
 
     wlr_seat_pointer_notify_button(
         input->seat, event->time_msec, event->button, event->state);
-
-    double sx;
-    double sy;
-    struct wlr_surface *surface;
-
-    struct kiwmi_view *view = view_at(
-        &server->desktop,
-        cursor->cursor->x,
-        cursor->cursor->y,
-        &surface,
-        &sx,
-        &sy);
-
-    if (event->state == WLR_BUTTON_PRESSED) {
-        focus_view(view);
-    }
 }
 
 static void
