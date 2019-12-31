@@ -123,8 +123,7 @@ view_at(
     double *sy)
 {
     struct kiwmi_view *view;
-    wl_list_for_each(view, &desktop->views, link)
-    {
+    wl_list_for_each (view, &desktop->views, link) {
         if (surface_at(view, surface, lx, ly, sx, sy)) {
             return view;
         }

@@ -96,8 +96,7 @@ output_frame_notify(struct wl_listener *listener, void *data)
     wlr_renderer_clear(renderer, (float[]){0.0f, 1.0f, 0.0f, 1.0f});
 
     struct kiwmi_view *view;
-    wl_list_for_each_reverse(view, &desktop->views, link)
-    {
+    wl_list_for_each_reverse (view, &desktop->views, link) {
         if (!view->mapped) {
             continue;
         }
