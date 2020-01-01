@@ -49,5 +49,7 @@ desktop_init(struct kiwmi_desktop *desktop, struct wlr_renderer *renderer)
     desktop->new_output.notify = new_output_notify;
     wl_signal_add(&server->backend->events.new_output, &desktop->new_output);
 
+    wl_signal_init(&desktop->events.view_map);
+
     return true;
 }

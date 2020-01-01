@@ -22,6 +22,10 @@ struct kiwmi_desktop {
 
     struct wl_listener xdg_shell_new_surface;
     struct wl_listener new_output;
+
+    struct {
+        struct wl_signal view_map;
+    } events;
 };
 
 bool desktop_init(struct kiwmi_desktop *desktop, struct wlr_renderer *renderer);
