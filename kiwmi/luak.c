@@ -244,6 +244,27 @@ on_cursor_button_notify(struct wl_listener *listener, void *data)
     }
 }
 
+static void
+on_view_notify(struct wl_listener *listener, void *data)
+{
+    struct lua_callback *lc     = wl_container_of(listener, lc, listener);
+    struct kiwmi_server *server = lc->server;
+    struct lua_State *L         = server->lua->L;
+    struct kiwmi_view *view     = data;
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lc->callback_ref);
+
+    lua_pushcfunction(L, kiwmi_view_create);
+    lua_pushlightuserdata(L, view);
+    if (lua_pcall(L, 1, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+    }
+
+    if (lua_pcall(L, 1, 0, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+    }
+}
+
 static int
 on_cursor_button(lua_State *L)
 {
@@ -273,7 +294,33 @@ on_cursor_button(lua_State *L)
 }
 
 static int
-l_quit(lua_State *L)
+on_view(lua_State *L)
+{
+    struct kiwmi_server *server =
+        *(struct kiwmi_server **)luaL_checkudata(L, 1, "kiwmi_server");
+    luaL_checktype(L, 2, LUA_TFUNCTION);   // callback
+
+    struct lua_callback *lc = malloc(sizeof(*lc));
+    if (!lc) {
+        return luaL_error(L, "failed to allocate lua_callback");
+    }
+
+    wl_list_insert(&server->lua->callbacks, &lc->link);
+
+    lc->server       = server;
+    lc->callback_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+    lc->listener.notify = on_view_notify;
+    wl_signal_add(&server->desktop.events.view_map, &lc->listener);
+
+    lua_pushlightuserdata(L, lc);
+    lua_callback_create(L);
+
+    return 1;
+}
+
+static int
+l_kiwmi_server_quit(lua_State *L)
 {
     struct kiwmi_server *server = *(struct kiwmi_server**)luaL_checkudata(L, 1, "kiwmi_server");
 
@@ -351,6 +398,7 @@ kiwmi_server_register(lua_State *L)
 
 static const luaL_Reg kiwmi_events[] = {
     {"cursor_button", on_cursor_button},
+    {"view", on_view},
     {NULL, NULL},
 };
 
