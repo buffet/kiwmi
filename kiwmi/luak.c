@@ -184,7 +184,7 @@ kiwmi_view_register(lua_State *L)
 }
 
 static int
-l_on(lua_State *L)
+l_kiwmi_server_on(lua_State *L)
 {
     luaL_checkudata(L, 1, "kiwmi_server"); // server
     luaL_checktype(L, 2, LUA_TSTRING);     // type
@@ -330,7 +330,7 @@ l_kiwmi_server_quit(lua_State *L)
 }
 
 static int
-l_view_under_cursor(lua_State *L)
+l_kiwmi_server_view_under_cursor(lua_State *L)
 {
     struct kiwmi_server *server = *(struct kiwmi_server **)luaL_checkudata(L, 1, "kiwmi_server");
 
@@ -362,9 +362,9 @@ l_view_under_cursor(lua_State *L)
 }
 
 static const luaL_Reg kiwmi_server_methods[] = {
-    {"on", l_on},
-    {"quit", l_quit},
-    {"view_under_cursor", l_view_under_cursor},
+    {"on", l_kiwmi_server_on},
+    {"quit", l_kiwmi_server_quit},
+    {"view_under_cursor", l_kiwmi_server_view_under_cursor},
     {NULL, NULL},
 };
 
