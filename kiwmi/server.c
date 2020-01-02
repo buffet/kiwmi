@@ -18,7 +18,7 @@
 #include <wlr/types/wlr_screencopy_v1.h>
 #include <wlr/util/log.h>
 
-#include "luak.h"
+#include "luak/luak.h"
 
 bool
 server_init(struct kiwmi_server *server, char *config_path)
@@ -87,7 +87,7 @@ server_init(struct kiwmi_server *server, char *config_path)
 
     server->config_path = config_path;
 
-    if (!luaK_init(server)) {
+    if (!(server->lua = luaK_create(server))) {
         wlr_log(WLR_ERROR, "Failed to initialize Lua");
         wl_display_destroy(server->wl_display);
         return false;
@@ -128,7 +128,7 @@ server_fini(struct kiwmi_server *server)
     wl_display_destroy_clients(server->wl_display);
     wl_display_destroy(server->wl_display);
 
-    luaK_fini(server->lua);
+    luaK_destroy(server->lua);
 
     free(server->config_path);
 }

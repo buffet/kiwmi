@@ -1,5 +1,4 @@
 kiwmi_sources = files(
-  'luak.c',
   'main.c',
   'server.c',
   'desktop/desktop.c',
@@ -9,6 +8,10 @@ kiwmi_sources = files(
   'input/cursor.c',
   'input/input.c',
   'input/keyboard.c',
+  'luak/kiwmi_lua_callback.c',
+  'luak/kiwmi_server.c',
+  'luak/kiwmi_view.c',
+  'luak/luak.c',
 )
 
 kiwmi_deps = [

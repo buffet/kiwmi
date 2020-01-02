@@ -5,8 +5,8 @@
  * You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-#ifndef KIWMI_LUAK_H
-#define KIWMI_LUAK_H
+#ifndef KIWMI_LUAK_LUAK_H
+#define KIWMI_LUAK_LUAK_H
 
 #include <stdbool.h>
 
@@ -19,8 +19,8 @@ struct kiwmi_lua {
     struct wl_list callbacks; // lua_callback::link
 };
 
-bool luaK_init(struct kiwmi_server *server);
+struct kiwmi_lua *luaK_create(struct kiwmi_server *server);
 bool luaK_dofile(struct kiwmi_lua *lua, const char *config_path);
-void luaK_fini(struct kiwmi_lua *lua);
+void luaK_destroy(struct kiwmi_lua *lua);
 
-#endif /* KIWMI_LUAK_H */
+#endif /* KIWMI_LUAK_LUAK_H */
