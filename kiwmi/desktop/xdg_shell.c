@@ -28,6 +28,8 @@ xdg_surface_unmap_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_view *view = wl_container_of(listener, view, unmap);
     view->mapped            = false;
+
+    wl_signal_emit(&view->events.unmap, view);
 }
 
 static void

@@ -41,6 +41,10 @@ struct kiwmi_view {
 
     bool mapped;
     bool hidden;
+
+    struct {
+        struct wl_signal unmap;
+    } events;
 };
 
 struct kiwmi_view_impl {

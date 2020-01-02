@@ -8,8 +8,11 @@
 #include "luak/kiwmi_view.h"
 
 #include <lauxlib.h>
+#include <wlr/util/log.h>
 
 #include "desktop/view.h"
+#include "luak/kiwmi_lua_callback.h"
+#include "server.h"
 
 static int
 l_kiwmi_view_close(lua_State *L)
@@ -87,7 +90,59 @@ static const luaL_Reg kiwmi_view_methods[] = {
     {"hidden", l_kiwmi_view_hidden},
     {"hide", l_kiwmi_view_hide},
     {"move", l_kiwmi_view_move},
+    {"on", luaK_callback_register_dispatch},
     {"show", l_kiwmi_view_show},
+    {NULL, NULL},
+};
+
+static void
+kiwmi_view_on_destroy_notify(struct wl_listener *listener, void *data)
+{
+    struct kiwmi_lua_callback *lc = wl_container_of(listener, lc, listener);
+    struct kiwmi_server *server   = lc->server;
+    lua_State *L                  = server->lua->L;
+    struct kiwmi_view *view       = data;
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lc->callback_ref);
+
+    lua_pushcfunction(L, luaK_kiwmi_view_new);
+    lua_pushlightuserdata(L, view);
+
+    if (lua_pcall(L, 1, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+    }
+
+    if (lua_pcall(L, 1, 0, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+    }
+}
+
+static int
+l_kiwmi_view_on_destroy(lua_State *L)
+{
+    struct kiwmi_view *view =
+        *(struct kiwmi_view **)luaL_checkudata(L, 1, "kiwmi_view");
+    luaL_checktype(L, 2, LUA_TFUNCTION);
+
+    struct kiwmi_desktop *desktop = view->desktop;
+    struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
+
+    lua_pushcfunction(L, luaK_kiwmi_lua_callback_new);
+    lua_pushlightuserdata(L, server);
+    lua_pushvalue(L, 2);
+    lua_pushlightuserdata(L, kiwmi_view_on_destroy_notify);
+    lua_pushlightuserdata(L, &view->events.unmap);
+
+    if (lua_pcall(L, 4, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        return 0;
+    }
+
+    return 1;
+}
+
+static const luaL_Reg kiwmi_view_events[] = {
+    {"destroy", l_kiwmi_view_on_destroy},
     {NULL, NULL},
 };
 
@@ -115,6 +170,9 @@ luaK_kiwmi_view_register(lua_State *L)
     lua_pushvalue(L, -1);
     lua_setfield(L, -2, "__index");
     luaL_setfuncs(L, kiwmi_view_methods, 0);
+
+    luaL_newlib(L, kiwmi_view_events);
+    lua_setfield(L, -2, "__events");
 
     return 0;
 }
