@@ -19,30 +19,6 @@
 #include "server.h"
 
 static int
-l_kiwmi_server_on(lua_State *L)
-{
-    luaL_checkudata(L, 1, "kiwmi_server"); // server
-    luaL_checktype(L, 2, LUA_TSTRING);     // type
-    luaL_checktype(L, 3, LUA_TFUNCTION);   // callback
-
-    lua_getmetatable(L, 1);
-    lua_getfield(L, -1, "__events");
-    lua_pushvalue(L, 2);
-    lua_gettable(L, -2);
-
-    luaL_argcheck(L, lua_iscfunction(L, -1), 2, "invalid event");
-    lua_pushvalue(L, 1);
-    lua_pushvalue(L, 3);
-
-    if (lua_pcall(L, 2, 1, 0)) {
-        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
-        return 0;
-    }
-
-    return 1;
-}
-
-static int
 l_kiwmi_server_quit(lua_State *L)
 {
     struct kiwmi_server *server =
@@ -88,7 +64,7 @@ l_kiwmi_server_view_under_cursor(lua_State *L)
 }
 
 static const luaL_Reg kiwmi_server_methods[] = {
-    {"on", l_kiwmi_server_on},
+    {"on", luaK_callback_register_dispatch},
     {"quit", l_kiwmi_server_quit},
     {"view_under_cursor", l_kiwmi_server_view_under_cursor},
     {NULL, NULL},
