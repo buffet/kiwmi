@@ -17,6 +17,32 @@
 #include "luak/kiwmi_server.h"
 #include "luak/kiwmi_view.h"
 
+int
+luaK_callback_register_dispatch(lua_State *L)
+{
+    luaL_checktype(L, 1, LUA_TUSERDATA); // server
+    luaL_checktype(L, 2, LUA_TSTRING);   // type
+    luaL_checktype(L, 3, LUA_TFUNCTION); // callback
+
+    int has_mt = lua_getmetatable(L, 1);
+    luaL_argcheck(L, has_mt, 1, "no metatable");
+    lua_getfield(L, -1, "__events");
+    luaL_argcheck(L, lua_istable(L, -1), 1, "no __events");
+    lua_pushvalue(L, 2);
+    lua_gettable(L, -2);
+
+    luaL_argcheck(L, lua_iscfunction(L, -1), 2, "invalid event");
+    lua_pushvalue(L, 1);
+    lua_pushvalue(L, 3);
+
+    if (lua_pcall(L, 2, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        return 0;
+    }
+
+    return 1;
+}
+
 struct kiwmi_lua *
 luaK_create(struct kiwmi_server *server)
 {
