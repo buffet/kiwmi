@@ -157,5 +157,7 @@ view_create(
     view->x = 0;
     view->y = 0;
 
+    wl_signal_init(&view->events.unmap);
+
     return view;
 }
