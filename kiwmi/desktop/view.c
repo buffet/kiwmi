@@ -78,6 +78,7 @@ view_focus(struct kiwmi_view *view)
     wl_list_remove(&view->link);
     wl_list_insert(&desktop->views, &view->link);
 
+    desktop->focused_view = view;
     view_set_activated(view, true);
     wlr_seat_keyboard_notify_enter(
         seat,
