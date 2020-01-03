@@ -18,6 +18,7 @@ add_project_arguments(
 
 git               = find_program('git', required: false)
 lua               = dependency('lua')
+wayland_client    = dependency('wayland-client')
 wayland_protocols = dependency('wayland-protocols')
 wayland_scanner   = dependency('wayland-scanner')
 wayland_server    = dependency('wayland-server')
@@ -49,3 +50,4 @@ endif
 
 subdir('protocols')
 subdir('kiwmi')
+subdir('kiwmic')

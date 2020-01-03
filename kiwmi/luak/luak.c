@@ -13,6 +13,7 @@
 #include <lualib.h>
 #include <wlr/util/log.h>
 
+#include "luak/ipc.h"
 #include "luak/kiwmi_lua_callback.h"
 #include "luak/kiwmi_server.h"
 #include "luak/kiwmi_view.h"
@@ -54,6 +55,7 @@ luaK_create(struct kiwmi_server *server)
 
     lua_State *L = luaL_newstate();
     if (!L) {
+        free(lua);
         return NULL;
     }
 
@@ -71,6 +73,8 @@ luaK_create(struct kiwmi_server *server)
 
     if (error) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        lua_close(L);
+        free(lua);
         return NULL;
     }
 
@@ -79,6 +83,8 @@ luaK_create(struct kiwmi_server *server)
     lua_pushlightuserdata(L, server);
     if (lua_pcall(L, 1, 1, 0)) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        lua_close(L);
+        free(lua);
         return NULL;
     }
     lua_setglobal(L, "kiwmi");
@@ -86,6 +92,13 @@ luaK_create(struct kiwmi_server *server)
     lua->L = L;
 
     wl_list_init(&lua->callbacks);
+
+    if (!luaK_ipc_init(server, lua)) {
+        wlr_log(WLR_ERROR, "Failed to initialize IPC");
+        lua_close(L);
+        free(lua);
+        return NULL;
+    }
 
     return lua;
 }

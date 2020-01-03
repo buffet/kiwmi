@@ -17,6 +17,7 @@
 struct kiwmi_lua {
     lua_State *L;
     struct wl_list callbacks; // lua_callback::link
+    struct wl_global *global;
 };
 
 int luaK_callback_register_dispatch(lua_State *L);

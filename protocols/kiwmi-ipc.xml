@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="kiwmi_ipc">
+  <copyright>
+    Copyright (c), Niclas Meyer &lt;niclas@countingsort.com&gt;
+
+    This Source Code Form is subject to the terms of the Mozilla Public
+    License, v. 2.0. If a copy of the MPL was not distributed with this file,
+    You can obtain one at https://mozilla.org/MPL/2.0/.
+  </copyright>
+
+  <interface name="kiwmi_ipc" version="1">
+    <request name="eval">
+      <description summary="evaluate a given Lua snippet" />
+
+      <arg name="id" type="new_id" interface="kiwmi_command" />
+      <arg name="command" type="string" />
+    </request>
+  </interface>
+
+  <interface name="kiwmi_command" version="1">
+    <enum name="error">
+      <entry name="success" value="0" summary="the command ran successfully" />
+      <entry name="failure" value="1" summary="the command did not run successfully" />
+    </enum>
+
+    <event name="done">
+      <arg name="error" type="uint" />
+      <arg name="message" type="string" summary="error message or return value" />
+    </event>
+  </interface>
+</protocol>
