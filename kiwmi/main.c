@@ -11,6 +11,7 @@
 
 #include <getopt.h>
 #include <limits.h>
+#include <signal.h>
 
 #include <wlr/util/log.h>
 
@@ -69,6 +70,8 @@ main(int argc, char **argv)
     }
 
     fprintf(stderr, "Using kiwmi v" KIWMI_VERSION "\n");
+
+    signal(SIGCHLD, SIG_IGN); // prevent zombies from kiwmi:spawn()
 
     if (!getenv("XDG_RUNTIME_DIR")) {
         wlr_log(WLR_ERROR, "XDG_RUNTIME_DIR not set");
