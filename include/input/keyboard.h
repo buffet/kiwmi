@@ -9,6 +9,7 @@
 #define KIWMI_INPUT_KEYBOARD_H
 
 #include <wayland-server.h>
+#include <xkbcommon/xkbcommon.h>
 
 struct kiwmi_keyboard {
     struct wl_list link;
@@ -16,6 +17,18 @@ struct kiwmi_keyboard {
     struct wlr_input_device *device;
     struct wl_listener modifiers;
     struct wl_listener key;
+
+    struct {
+        struct wl_signal key_down;
+        struct wl_signal key_up;
+    } events;
+};
+
+struct kiwmi_keyboard_key_event {
+    const xkb_keysym_t *syms;
+    int nsyms;
+    struct kiwmi_keyboard *keyboard;
+    bool handled;
 };
 
 struct kiwmi_keyboard *

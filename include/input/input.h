@@ -15,6 +15,10 @@ struct kiwmi_input {
     struct wl_listener new_input;
     struct kiwmi_cursor *cursor;
     struct wlr_seat *seat;
+
+    struct {
+        struct wl_signal keyboard_new;
+    } events;
 };
 
 bool input_init(struct kiwmi_input *input);

@@ -18,6 +18,7 @@
 
 #include "desktop/view.h"
 #include "input/cursor.h"
+#include "luak/kiwmi_keyboard.h"
 #include "luak/kiwmi_lua_callback.h"
 #include "luak/kiwmi_view.h"
 #include "server.h"
@@ -119,6 +120,30 @@ static const luaL_Reg kiwmi_server_methods[] = {
 };
 
 static void
+kiwmi_server_on_keyboard_notify(struct wl_listener *listener, void *data)
+{
+    struct kiwmi_lua_callback *lc   = wl_container_of(listener, lc, listener);
+    struct kiwmi_server *server     = lc->server;
+    lua_State *L                    = server->lua->L;
+    struct kiwmi_keyboard *keyboard = data;
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lc->callback_ref);
+
+    lua_pushcfunction(L, luaK_kiwmi_keyboard_new);
+    lua_pushlightuserdata(L, keyboard);
+    if (lua_pcall(L, 1, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+        return;
+    }
+
+    if (lua_pcall(L, 1, 0, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+}
+
+static void
 kiwmi_server_on_view_notify(struct wl_listener *listener, void *data)
 {
     struct kiwmi_lua_callback *lc = wl_container_of(listener, lc, listener);
@@ -132,11 +157,35 @@ kiwmi_server_on_view_notify(struct wl_listener *listener, void *data)
     lua_pushlightuserdata(L, view);
     if (lua_pcall(L, 1, 1, 0)) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+        return;
     }
 
     if (lua_pcall(L, 1, 0, 0)) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        lua_pop(L, 1);
     }
+}
+
+static int
+l_kiwmi_server_on_keyboard(lua_State *L)
+{
+    struct kiwmi_server *server =
+        *(struct kiwmi_server **)luaL_checkudata(L, 1, "kiwmi_server");
+    luaL_checktype(L, 2, LUA_TFUNCTION);
+
+    lua_pushcfunction(L, luaK_kiwmi_lua_callback_new);
+    lua_pushlightuserdata(L, server);
+    lua_pushvalue(L, 2);
+    lua_pushlightuserdata(L, kiwmi_server_on_keyboard_notify);
+    lua_pushlightuserdata(L, &server->input.events.keyboard_new);
+
+    if (lua_pcall(L, 4, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        return 0;
+    }
+
+    return 1;
 }
 
 static int
@@ -161,6 +210,7 @@ l_kiwmi_server_on_view(lua_State *L)
 }
 
 static const luaL_Reg kiwmi_server_events[] = {
+    {"keyboard", l_kiwmi_server_on_keyboard},
     {"view", l_kiwmi_server_on_view},
     {NULL, NULL},
 };

@@ -32,6 +32,7 @@ ipc_eval(
         wlr_log(WLR_ERROR, "Error running IPC command: %s", error);
         kiwmi_command_send_done(
             command_resource, KIWMI_COMMAND_ERROR_FAILURE, error);
+        lua_pop(L, 1);
         return;
     }
 
@@ -44,6 +45,8 @@ ipc_eval(
         kiwmi_command_send_done(
             command_resource, KIWMI_COMMAND_ERROR_SUCCESS, lua_tostring(L, -1));
     }
+
+    lua_pop(L, results);
 }
 
 static const struct kiwmi_ipc_interface kiwmi_ipc_implementation = {

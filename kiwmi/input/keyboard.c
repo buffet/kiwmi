@@ -62,25 +62,28 @@ keyboard_key_notify(struct wl_listener *listener, void *data)
     const xkb_keysym_t *syms;
     int nsyms = xkb_state_key_get_syms(
         keyboard->device->keyboard->xkb_state, keycode, &syms);
-    uint32_t modifiers = wlr_keyboard_get_modifiers(keyboard->device->keyboard);
 
     bool handled = false;
 
     if (event->state == WLR_KEY_PRESSED) {
         handled = switch_vt(syms, nsyms, server->backend);
+    }
 
-        if (!handled && (modifiers & WLR_MODIFIER_LOGO)) {
-            for (int i = 0; i < nsyms; ++i) {
-                xkb_keysym_t sym = syms[i];
+    if (!handled) {
+        struct kiwmi_keyboard_key_event data = {
+            .syms     = syms,
+            .nsyms    = nsyms,
+            .keyboard = keyboard,
+            .handled  = false,
+        };
 
-                switch (sym) {
-                case XKB_KEY_Escape:
-                    wl_display_terminate(server->wl_display);
-                    handled = true;
-                    break;
-                }
-            }
+        if (event->state == WLR_KEY_PRESSED) {
+            wl_signal_emit(&keyboard->events.key_down, &data);
+        } else {
+            wl_signal_emit(&keyboard->events.key_up, &data);
         }
+
+        handled = data.handled;
     }
 
     if (!handled) {
@@ -120,6 +123,11 @@ keyboard_create(struct kiwmi_server *server, struct wlr_input_device *device)
     wlr_keyboard_set_repeat_info(device->keyboard, 25, 600);
 
     wlr_seat_set_keyboard(server->input.seat, device);
+
+    wl_signal_init(&keyboard->events.key_down);
+    wl_signal_init(&keyboard->events.key_up);
+
+    wl_signal_emit(&server->input.events.keyboard_new, keyboard);
 
     return keyboard;
 }

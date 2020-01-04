@@ -14,6 +14,7 @@
 #include <wlr/util/log.h>
 
 #include "luak/ipc.h"
+#include "luak/kiwmi_keyboard.h"
 #include "luak/kiwmi_lua_callback.h"
 #include "luak/kiwmi_server.h"
 #include "luak/kiwmi_view.h"
@@ -64,11 +65,13 @@ luaK_create(struct kiwmi_server *server)
     // register types
     int error = 0;
 
+    lua_pushcfunction(L, luaK_kiwmi_keyboard_register);
+    error |= lua_pcall(L, 0, 0, 0);
     lua_pushcfunction(L, luaK_kiwmi_lua_callback_register);
     error |= lua_pcall(L, 0, 0, 0);
-    lua_pushcfunction(L, luaK_kiwmi_view_register);
-    error |= lua_pcall(L, 0, 0, 0);
     lua_pushcfunction(L, luaK_kiwmi_server_register);
+    error |= lua_pcall(L, 0, 0, 0);
+    lua_pushcfunction(L, luaK_kiwmi_view_register);
     error |= lua_pcall(L, 0, 0, 0);
 
     if (error) {
@@ -106,11 +109,15 @@ luaK_create(struct kiwmi_server *server)
 bool
 luaK_dofile(struct kiwmi_lua *lua, const char *config_path)
 {
+    int top = lua_gettop(lua->L);
+
     if (luaL_dofile(lua->L, config_path)) {
         wlr_log(
             WLR_ERROR, "Error running config: %s", lua_tostring(lua->L, -1));
         return false;
     }
+
+    lua_pop(lua->L, top - lua_gettop(lua->L));
 
     return true;
 }
