@@ -74,6 +74,34 @@ l_kiwmi_view_move(lua_State *L)
 }
 
 static int
+l_kiwmi_view_pos(lua_State *L)
+{
+    struct kiwmi_view *view =
+        *(struct kiwmi_view **)luaL_checkudata(L, 1, "kiwmi_view");
+
+    lua_pushnumber(L, view->x);
+    lua_pushnumber(L, view->y);
+
+    return 2;
+}
+
+static int
+l_kiwmi_view_resize(lua_State *L)
+{
+    struct kiwmi_view *view =
+        *(struct kiwmi_view **)luaL_checkudata(L, 1, "kiwmi_view");
+    luaL_checktype(L, 2, LUA_TNUMBER); // w
+    luaL_checktype(L, 3, LUA_TNUMBER); // h
+
+    double w = lua_tonumber(L, 2);
+    double h = lua_tonumber(L, 3);
+
+    view_resize(view, w, h);
+
+    return 0;
+}
+
+static int
 l_kiwmi_view_show(lua_State *L)
 {
     struct kiwmi_view *view =
@@ -91,6 +119,8 @@ static const luaL_Reg kiwmi_view_methods[] = {
     {"hide", l_kiwmi_view_hide},
     {"move", l_kiwmi_view_move},
     {"on", luaK_callback_register_dispatch},
+    {"pos", l_kiwmi_view_pos},
+    {"resize", l_kiwmi_view_resize},
     {"show", l_kiwmi_view_show},
     {NULL, NULL},
 };
