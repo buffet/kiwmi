@@ -84,5 +84,7 @@ input_init(struct kiwmi_input *input)
     input->new_input.notify = new_input_notify;
     wl_signal_add(&server->backend->events.new_input, &input->new_input);
 
+    wl_signal_init(&input->events.keyboard_new);
+
     return true;
 }
