@@ -10,7 +10,7 @@
 #include <lauxlib.h>
 #include <wlr/util/log.h>
 
-#include "kiwmi-ipc-server-protocol.h"
+#include "kiwmi-ipc-protocol.h"
 #include "luak/luak.h"
 
 static void
