@@ -13,14 +13,14 @@ foreach protocol : protocols_server
   protocols_server_src += custom_target(
     protocol.underscorify() + '_server_c',
     input: protocol,
-    output: '@BASENAME@-server-protocol.c',
+    output: '@BASENAME@-protocol.c',
     command: [wayland_scanner_bin, 'private-code', '@INPUT@', '@OUTPUT@'],
   )
 
   protocols_server_inc += custom_target(
     protocol.underscorify() + '_server_h',
     input: protocol,
-    output: '@BASENAME@-server-protocol.h',
+    output: '@BASENAME@-protocol.h',
     command: [wayland_scanner_bin, 'server-header', '@INPUT@', '@OUTPUT@'],
   )
 endforeach
