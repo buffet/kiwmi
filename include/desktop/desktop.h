@@ -24,6 +24,7 @@ struct kiwmi_desktop {
     struct wl_listener new_output;
 
     struct {
+        struct wl_signal new_output;
         struct wl_signal view_map;
     } events;
 };

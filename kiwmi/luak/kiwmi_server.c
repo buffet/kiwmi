@@ -20,6 +20,7 @@
 #include "input/cursor.h"
 #include "luak/kiwmi_keyboard.h"
 #include "luak/kiwmi_lua_callback.h"
+#include "luak/kiwmi_output.h"
 #include "luak/kiwmi_view.h"
 #include "server.h"
 
@@ -144,6 +145,30 @@ kiwmi_server_on_keyboard_notify(struct wl_listener *listener, void *data)
 }
 
 static void
+kiwmi_server_on_output_notify(struct wl_listener *listener, void *data)
+{
+    struct kiwmi_lua_callback *lc = wl_container_of(listener, lc, listener);
+    struct kiwmi_server *server   = lc->server;
+    lua_State *L                  = server->lua->L;
+    struct kiwmi_output *output   = data;
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lc->callback_ref);
+
+    lua_pushcfunction(L, luaK_kiwmi_output_new);
+    lua_pushlightuserdata(L, output);
+    if (lua_pcall(L, 1, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+        return;
+    }
+
+    if (lua_pcall(L, 1, 0, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+}
+
+static void
 kiwmi_server_on_view_notify(struct wl_listener *listener, void *data)
 {
     struct kiwmi_lua_callback *lc = wl_container_of(listener, lc, listener);
@@ -189,6 +214,27 @@ l_kiwmi_server_on_keyboard(lua_State *L)
 }
 
 static int
+l_kiwmi_server_on_output(lua_State *L)
+{
+    struct kiwmi_server *server =
+        *(struct kiwmi_server **)luaL_checkudata(L, 1, "kiwmi_server");
+    luaL_checktype(L, 2, LUA_TFUNCTION);
+
+    lua_pushcfunction(L, luaK_kiwmi_lua_callback_new);
+    lua_pushlightuserdata(L, server);
+    lua_pushvalue(L, 2);
+    lua_pushlightuserdata(L, kiwmi_server_on_output_notify);
+    lua_pushlightuserdata(L, &server->desktop.events.new_output);
+
+    if (lua_pcall(L, 4, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        return 0;
+    }
+
+    return 1;
+}
+
+static int
 l_kiwmi_server_on_view(lua_State *L)
 {
     struct kiwmi_server *server =
@@ -211,6 +257,7 @@ l_kiwmi_server_on_view(lua_State *L)
 
 static const luaL_Reg kiwmi_server_events[] = {
     {"keyboard", l_kiwmi_server_on_keyboard},
+    {"output", l_kiwmi_server_on_output},
     {"view", l_kiwmi_server_on_view},
     {NULL, NULL},
 };

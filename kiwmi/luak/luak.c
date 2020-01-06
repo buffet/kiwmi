@@ -16,6 +16,7 @@
 #include "luak/ipc.h"
 #include "luak/kiwmi_keyboard.h"
 #include "luak/kiwmi_lua_callback.h"
+#include "luak/kiwmi_output.h"
 #include "luak/kiwmi_server.h"
 #include "luak/kiwmi_view.h"
 
@@ -68,6 +69,8 @@ luaK_create(struct kiwmi_server *server)
     lua_pushcfunction(L, luaK_kiwmi_keyboard_register);
     error |= lua_pcall(L, 0, 0, 0);
     lua_pushcfunction(L, luaK_kiwmi_lua_callback_register);
+    error |= lua_pcall(L, 0, 0, 0);
+    lua_pushcfunction(L, luaK_kiwmi_output_register);
     error |= lua_pcall(L, 0, 0, 0);
     lua_pushcfunction(L, luaK_kiwmi_server_register);
     error |= lua_pcall(L, 0, 0, 0);
