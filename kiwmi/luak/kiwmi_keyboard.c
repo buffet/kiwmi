@@ -78,8 +78,10 @@ kiwmi_keyboard_on_key_down_or_up_notify(
     for (int i = 0; i < nsyms; ++i) {
         xkb_keysym_t sym = syms[i];
 
-        int namelen =
+        size_t namelen =
             xkb_keysym_get_name(sym, keysym_name, sizeof(keysym_name));
+
+        namelen = namelen > sizeof(keysym_name) ? sizeof(keysym_name) : namelen;
 
         lua_rawgeti(L, LUA_REGISTRYINDEX, lc->callback_ref);
 
