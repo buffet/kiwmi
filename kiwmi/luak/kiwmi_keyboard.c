@@ -95,12 +95,14 @@ kiwmi_keyboard_on_key_down_or_up_notify(
         if (lua_pcall(L, 1, 1, 0)) {
             wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
             lua_pop(L, 1);
+            return;
         }
         lua_setfield(L, -2, "keyboard");
 
         if (lua_pcall(L, 1, 1, 0)) {
             wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
             lua_pop(L, 1);
+            return;
         }
 
         event->handled |= lua_toboolean(L, -1);
