@@ -125,6 +125,8 @@ output_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
     wlr_output_layout_remove(
         output->desktop->output_layout, output->wlr_output);
 
+    wl_signal_emit(&output->events.destroy, output);
+
     wl_list_remove(&output->link);
     wl_list_remove(&output->frame.link);
     wl_list_remove(&output->destroy.link);
@@ -183,4 +185,8 @@ new_output_notify(struct wl_listener *listener, void *data)
     wlr_output_layout_add_auto(desktop->output_layout, wlr_output);
 
     wlr_output_create_global(wlr_output);
+
+    wl_signal_init(&output->events.destroy);
+
+    wl_signal_emit(&desktop->events.new_output, output);
 }

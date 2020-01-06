@@ -16,6 +16,10 @@ struct kiwmi_output {
     struct wlr_output *wlr_output;
     struct wl_listener frame;
     struct wl_listener destroy;
+
+    struct {
+        struct wl_signal destroy;
+    } events;
 };
 
 void new_output_notify(struct wl_listener *listener, void *data);
