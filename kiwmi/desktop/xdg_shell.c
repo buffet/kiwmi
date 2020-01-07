@@ -8,6 +8,7 @@
 #include "desktop/xdg_shell.h"
 
 #include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/util/edges.h>
 #include <wlr/util/log.h>
 
 #include "desktop/desktop.h"
@@ -81,6 +82,20 @@ xdg_shell_view_set_activated(struct kiwmi_view *view, bool activated)
     wlr_xdg_toplevel_set_activated(view->xdg_surface, activated);
 }
 
+static void
+xdg_shell_view_set_tiled(struct kiwmi_view *view, bool tiled)
+{
+    enum wlr_edges edges;
+
+    if (tiled) {
+        edges = WLR_EDGE_TOP | WLR_EDGE_BOTTOM | WLR_EDGE_LEFT | WLR_EDGE_RIGHT;
+    } else {
+        edges = WLR_EDGE_NONE;
+    }
+
+    wlr_xdg_toplevel_set_tiled(view->xdg_surface, edges);
+}
+
 struct wlr_surface *
 xdg_shell_view_surface_at(
     struct kiwmi_view *view,
@@ -97,6 +112,7 @@ static const struct kiwmi_view_impl xdg_shell_view_impl = {
     .for_each_surface = xdg_shell_view_for_each_surface,
     .resize           = xdg_shell_view_resize,
     .set_activated    = xdg_shell_view_set_activated,
+    .set_tiled        = xdg_shell_view_set_tiled,
     .surface_at       = xdg_shell_view_surface_at,
 };
 

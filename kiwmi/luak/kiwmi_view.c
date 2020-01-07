@@ -112,6 +112,20 @@ l_kiwmi_view_show(lua_State *L)
     return 0;
 }
 
+static int
+l_kiwmi_view_tiled(lua_State *L)
+{
+    struct kiwmi_view *view =
+        *(struct kiwmi_view **)luaL_checkudata(L, 1, "kiwmi_view");
+    luaL_checktype(L, 2, LUA_TBOOLEAN);
+
+    bool tiled = lua_toboolean(L, 2);
+
+    view_set_tiled(view, tiled);
+
+    return 0;
+}
+
 static const luaL_Reg kiwmi_view_methods[] = {
     {"close", l_kiwmi_view_close},
     {"focus", l_kiwmi_view_focus},
@@ -122,6 +136,7 @@ static const luaL_Reg kiwmi_view_methods[] = {
     {"pos", l_kiwmi_view_pos},
     {"resize", l_kiwmi_view_resize},
     {"show", l_kiwmi_view_show},
+    {"tiled", l_kiwmi_view_tiled},
     {NULL, NULL},
 };
 
