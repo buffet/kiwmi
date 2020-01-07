@@ -47,6 +47,14 @@ view_set_activated(struct kiwmi_view *view, bool activated)
     }
 }
 
+void
+view_set_tiled(struct kiwmi_view *view, bool tiled)
+{
+    if (view->impl->set_tiled) {
+        view->impl->set_tiled(view, tiled);
+    }
+}
+
 struct wlr_surface *
 view_surface_at(
     struct kiwmi_view *view,
