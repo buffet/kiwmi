@@ -18,11 +18,28 @@
 
 #include "desktop/view.h"
 #include "input/cursor.h"
+#include "luak/kiwmi_cursor.h"
 #include "luak/kiwmi_keyboard.h"
 #include "luak/kiwmi_lua_callback.h"
 #include "luak/kiwmi_output.h"
 #include "luak/kiwmi_view.h"
 #include "server.h"
+
+static int
+l_kiwmi_server_cursor(lua_State *L)
+{
+    struct kiwmi_server *server =
+        *(struct kiwmi_server **)luaL_checkudata(L, 1, "kiwmi_server");
+
+    lua_pushcfunction(L, luaK_kiwmi_cursor_new);
+    lua_pushlightuserdata(L, server->input.cursor);
+    if (lua_pcall(L, 1, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        return 0;
+    }
+
+    return 1;
+}
 
 static int
 l_kiwmi_server_focused_view(lua_State *L)
@@ -77,46 +94,12 @@ l_kiwmi_server_spawn(lua_State *L)
     return 0;
 }
 
-static int
-l_kiwmi_server_view_under_cursor(lua_State *L)
-{
-    struct kiwmi_server *server =
-        *(struct kiwmi_server **)luaL_checkudata(L, 1, "kiwmi_server");
-
-    struct kiwmi_cursor *cursor = server->input.cursor;
-
-    struct wlr_surface *surface;
-    double sx;
-    double sy;
-
-    struct kiwmi_view *view = view_at(
-        &server->desktop,
-        cursor->cursor->x,
-        cursor->cursor->y,
-        &surface,
-        &sx,
-        &sy);
-
-    if (view) {
-        lua_pushcfunction(L, luaK_kiwmi_view_new);
-        lua_pushlightuserdata(L, view);
-        if (lua_pcall(L, 1, 1, 0)) {
-            wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
-            return 0;
-        }
-    } else {
-        lua_pushnil(L);
-    }
-
-    return 1;
-}
-
 static const luaL_Reg kiwmi_server_methods[] = {
+    {"cursor", l_kiwmi_server_cursor},
     {"focused_view", l_kiwmi_server_focused_view},
     {"on", luaK_callback_register_dispatch},
     {"quit", l_kiwmi_server_quit},
     {"spawn", l_kiwmi_server_spawn},
-    {"view_under_cursor", l_kiwmi_server_view_under_cursor},
     {NULL, NULL},
 };
 

@@ -62,8 +62,18 @@ cursor_motion_notify(struct wl_listener *listener, void *data)
     struct kiwmi_server *server            = cursor->server;
     struct wlr_event_pointer_motion *event = data;
 
+    struct kiwmi_cursor_motion_event new_event = {
+        .oldx = cursor->cursor->x,
+        .oldy = cursor->cursor->y,
+    };
+
     wlr_cursor_move(
         cursor->cursor, event->device, event->delta_x, event->delta_y);
+
+    new_event.newx = cursor->cursor->x;
+    new_event.newy = cursor->cursor->y;
+
+    wl_signal_emit(&cursor->events.motion, &new_event);
 
     process_cursor_motion(server, event->time_msec);
 }
@@ -76,7 +86,17 @@ cursor_motion_absolute_notify(struct wl_listener *listener, void *data)
     struct kiwmi_server *server                     = cursor->server;
     struct wlr_event_pointer_motion_absolute *event = data;
 
+    struct kiwmi_cursor_motion_event new_event = {
+        .oldx = cursor->cursor->x,
+        .oldy = cursor->cursor->y,
+    };
+
     wlr_cursor_warp_absolute(cursor->cursor, event->device, event->x, event->y);
+
+    new_event.newx = cursor->cursor->x;
+    new_event.newy = cursor->cursor->y;
+
+    wl_signal_emit(&cursor->events.motion, &new_event);
 
     process_cursor_motion(server, event->time_msec);
 }
@@ -90,8 +110,21 @@ cursor_button_notify(struct wl_listener *listener, void *data)
     struct kiwmi_input *input              = &server->input;
     struct wlr_event_pointer_button *event = data;
 
-    wlr_seat_pointer_notify_button(
-        input->seat, event->time_msec, event->button, event->state);
+    struct kiwmi_cursor_button_event new_event = {
+        .wlr_event = event,
+        .handled   = false,
+    };
+
+    if (event->state == WLR_BUTTON_PRESSED) {
+        wl_signal_emit(&cursor->events.button_down, &new_event);
+    } else {
+        wl_signal_emit(&cursor->events.button_up, &new_event);
+    }
+
+    if (!new_event.handled) {
+        wlr_seat_pointer_notify_button(
+            input->seat, event->time_msec, event->button, event->state);
+    }
 }
 
 static void
@@ -195,6 +228,10 @@ cursor_create(
     wl_signal_add(
         &server->input.seat->events.request_set_cursor,
         &cursor->seat_request_set_cursor);
+
+    wl_signal_init(&cursor->events.button_down);
+    wl_signal_init(&cursor->events.button_up);
+    wl_signal_init(&cursor->events.motion);
 
     return cursor;
 }
