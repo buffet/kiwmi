@@ -15,12 +15,31 @@ struct kiwmi_cursor {
     struct kiwmi_server *server;
     struct wlr_cursor *cursor;
     struct wlr_xcursor_manager *xcursor_manager;
+
     struct wl_listener cursor_motion;
     struct wl_listener cursor_motion_absolute;
     struct wl_listener cursor_button;
     struct wl_listener cursor_axis;
     struct wl_listener cursor_frame;
     struct wl_listener seat_request_set_cursor;
+
+    struct {
+        struct wl_signal button_down;
+        struct wl_signal button_up;
+        struct wl_signal motion;
+    } events;
+};
+
+struct kiwmi_cursor_button_event {
+    struct wlr_event_pointer_button *wlr_event;
+    bool handled;
+};
+
+struct kiwmi_cursor_motion_event {
+    double oldx;
+    double oldy;
+    double newx;
+    double newy;
 };
 
 struct kiwmi_cursor *cursor_create(
