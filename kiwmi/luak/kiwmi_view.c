@@ -125,7 +125,8 @@ l_kiwmi_view_tiled(lua_State *L)
         enum wlr_edges edges = WLR_EDGE_NONE;
 
         if (lua_toboolean(L, 2)) {
-            edges = WLR_EDGE_TOP | WLR_EDGE_BOTTOM | WLR_EDGE_LEFT | WLR_EDGE_RIGHT;
+            edges =
+                WLR_EDGE_TOP | WLR_EDGE_BOTTOM | WLR_EDGE_LEFT | WLR_EDGE_RIGHT;
         }
 
         view_set_tiled(view, edges);
@@ -147,16 +148,16 @@ l_kiwmi_view_tiled(lua_State *L)
 
             switch (edge[0]) {
             case 't':
-                edges  |= WLR_EDGE_TOP;
+                edges |= WLR_EDGE_TOP;
                 break;
             case 'b':
-                edges  |= WLR_EDGE_BOTTOM;
+                edges |= WLR_EDGE_BOTTOM;
                 break;
             case 'l':
-                edges  |= WLR_EDGE_LEFT;
+                edges |= WLR_EDGE_LEFT;
                 break;
             case 'r':
-                edges  |= WLR_EDGE_RIGHT;
+                edges |= WLR_EDGE_RIGHT;
                 break;
             }
 
