@@ -48,10 +48,10 @@ view_set_size(struct kiwmi_view *view, uint32_t width, uint32_t height)
 }
 
 void
-view_set_tiled(struct kiwmi_view *view, bool tiled)
+view_set_tiled(struct kiwmi_view *view, enum wlr_edges edges)
 {
     if (view->impl->set_tiled) {
-        view->impl->set_tiled(view, tiled);
+        view->impl->set_tiled(view, edges);
     }
 }
 

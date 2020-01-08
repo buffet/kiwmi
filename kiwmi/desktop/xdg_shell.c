@@ -83,16 +83,8 @@ xdg_shell_view_set_size(struct kiwmi_view *view, uint32_t width, uint32_t height
 }
 
 static void
-xdg_shell_view_set_tiled(struct kiwmi_view *view, bool tiled)
+xdg_shell_view_set_tiled(struct kiwmi_view *view, enum wlr_edges edges)
 {
-    enum wlr_edges edges;
-
-    if (tiled) {
-        edges = WLR_EDGE_TOP | WLR_EDGE_BOTTOM | WLR_EDGE_LEFT | WLR_EDGE_RIGHT;
-    } else {
-        edges = WLR_EDGE_NONE;
-    }
-
     wlr_xdg_toplevel_set_tiled(view->xdg_surface, edges);
 }
 
