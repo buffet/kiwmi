@@ -7,7 +7,10 @@
 
 #include "luak/kiwmi_view.h"
 
+#include <string.h>
+
 #include <lauxlib.h>
+#include <wlr/util/edges.h>
 #include <wlr/util/log.h>
 
 #include "desktop/view.h"
@@ -117,13 +120,55 @@ l_kiwmi_view_tiled(lua_State *L)
 {
     struct kiwmi_view *view =
         *(struct kiwmi_view **)luaL_checkudata(L, 1, "kiwmi_view");
-    luaL_checktype(L, 2, LUA_TBOOLEAN);
 
-    bool tiled = lua_toboolean(L, 2);
+    if (lua_isboolean(L, 2)) {
+        enum wlr_edges edges = WLR_EDGE_NONE;
 
-    view_set_tiled(view, tiled);
+        if (lua_toboolean(L, 2)) {
+            edges = WLR_EDGE_TOP | WLR_EDGE_BOTTOM | WLR_EDGE_LEFT | WLR_EDGE_RIGHT;
+        }
 
-    return 0;
+        view_set_tiled(view, edges);
+
+        return 0;
+    }
+
+    if (lua_istable(L, 2)) {
+        enum wlr_edges edges = WLR_EDGE_NONE;
+
+        lua_pushnil(L);
+        while (lua_next(L, 2)) {
+            if (!lua_isstring(L, -1)) {
+                lua_pop(L, 1);
+                continue;
+            }
+
+            const char *edge = lua_tostring(L, -1);
+
+            switch (edge[0]) {
+            case 't':
+                edges  |= WLR_EDGE_TOP;
+                break;
+            case 'b':
+                edges  |= WLR_EDGE_BOTTOM;
+                break;
+            case 'l':
+                edges  |= WLR_EDGE_LEFT;
+                break;
+            case 'r':
+                edges  |= WLR_EDGE_RIGHT;
+                break;
+            }
+
+            lua_pop(L, 1);
+        }
+
+        view_set_tiled(view, edges);
+
+        return 0;
+    }
+
+    return luaL_argerror(L, 2, "expected bool or table");
 }
 
 static const luaL_Reg kiwmi_view_methods[] = {

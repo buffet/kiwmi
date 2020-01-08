@@ -13,6 +13,7 @@
 
 #include <wayland-server.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/util/edges.h>
 
 enum kiwmi_view_type {
     KIWMI_VIEW_XDG_SHELL,
@@ -55,7 +56,7 @@ struct kiwmi_view_impl {
         void *user_data);
     void (*set_activated)(struct kiwmi_view *view, bool activated);
     void (*set_size)(struct kiwmi_view *view, uint32_t width, uint32_t height);
-    void (*set_tiled)(struct kiwmi_view *view, bool tiled);
+    void (*set_tiled)(struct kiwmi_view *view, enum wlr_edges edges);
     struct wlr_surface *(*surface_at)(
         struct kiwmi_view *view,
         double sx,
@@ -71,7 +72,7 @@ void view_for_each_surface(
     void *user_data);
 void view_set_activated(struct kiwmi_view *view, bool activated);
 void view_set_size(struct kiwmi_view *view, uint32_t width, uint32_t height);
-void view_set_tiled(struct kiwmi_view *view, bool tiled);
+void view_set_tiled(struct kiwmi_view *view, enum wlr_edges edges);
 struct wlr_surface *view_surface_at(
     struct kiwmi_view *view,
     double sx,
