@@ -71,15 +71,15 @@ xdg_shell_view_for_each_surface(
 }
 
 static void
-xdg_shell_view_resize(struct kiwmi_view *view, uint32_t width, uint32_t height)
-{
-    wlr_xdg_toplevel_set_size(view->xdg_surface, width, height);
-}
-
-static void
 xdg_shell_view_set_activated(struct kiwmi_view *view, bool activated)
 {
     wlr_xdg_toplevel_set_activated(view->xdg_surface, activated);
+}
+
+static void
+xdg_shell_view_set_size(struct kiwmi_view *view, uint32_t width, uint32_t height)
+{
+    wlr_xdg_toplevel_set_size(view->xdg_surface, width, height);
 }
 
 static void
@@ -110,8 +110,8 @@ xdg_shell_view_surface_at(
 static const struct kiwmi_view_impl xdg_shell_view_impl = {
     .close            = xdg_shell_view_close,
     .for_each_surface = xdg_shell_view_for_each_surface,
-    .resize           = xdg_shell_view_resize,
     .set_activated    = xdg_shell_view_set_activated,
+    .set_size         = xdg_shell_view_set_size,
     .set_tiled        = xdg_shell_view_set_tiled,
     .surface_at       = xdg_shell_view_surface_at,
 };

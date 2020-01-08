@@ -32,18 +32,18 @@ view_for_each_surface(
 }
 
 void
-view_resize(struct kiwmi_view *view, uint32_t width, uint32_t height)
-{
-    if (view->impl->resize) {
-        view->impl->resize(view, width, height);
-    }
-}
-
-void
 view_set_activated(struct kiwmi_view *view, bool activated)
 {
     if (view->impl->set_activated) {
         view->impl->set_activated(view, activated);
+    }
+}
+
+void
+view_set_size(struct kiwmi_view *view, uint32_t width, uint32_t height)
+{
+    if (view->impl->set_size) {
+        view->impl->set_size(view, width, height);
     }
 }
 

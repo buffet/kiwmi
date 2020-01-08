@@ -96,7 +96,7 @@ l_kiwmi_view_resize(lua_State *L)
     double w = lua_tonumber(L, 2);
     double h = lua_tonumber(L, 3);
 
-    view_resize(view, w, h);
+    view_set_size(view, w, h);
 
     return 0;
 }
