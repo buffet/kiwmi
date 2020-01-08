@@ -77,7 +77,10 @@ xdg_shell_view_set_activated(struct kiwmi_view *view, bool activated)
 }
 
 static void
-xdg_shell_view_set_size(struct kiwmi_view *view, uint32_t width, uint32_t height)
+xdg_shell_view_set_size(
+    struct kiwmi_view *view,
+    uint32_t width,
+    uint32_t height)
 {
     wlr_xdg_toplevel_set_size(view->xdg_surface, width, height);
 }
