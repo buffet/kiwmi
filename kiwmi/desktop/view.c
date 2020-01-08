@@ -32,6 +32,14 @@ view_for_each_surface(
 }
 
 void
+view_get_size(struct kiwmi_view *view, uint32_t *width, uint32_t *height)
+{
+    if (view->impl->get_size) {
+        view->impl->get_size(view, width, height);
+    }
+}
+
+void
 view_set_activated(struct kiwmi_view *view, bool activated)
 {
     if (view->impl->set_activated) {
