@@ -94,12 +94,45 @@ l_kiwmi_server_spawn(lua_State *L)
     return 0;
 }
 
+static int
+l_kiwmi_server_view_at(lua_State *L)
+{
+    struct kiwmi_server *server =
+        *(struct kiwmi_server **)luaL_checkudata(L, 1, "kiwmi_server");
+    luaL_checktype(L, 2, LUA_TNUMBER); // x
+    luaL_checktype(L, 3, LUA_TNUMBER); // y
+
+    double x = lua_tonumber(L, 2);
+    double y = lua_tonumber(L, 3);
+
+    struct wlr_surface *surface;
+    double sx;
+    double sy;
+
+    struct kiwmi_view *view =
+        view_at(&server->desktop, x, y, &surface, &sx, &sy);
+
+    if (view) {
+        lua_pushcfunction(L, luaK_kiwmi_view_new);
+        lua_pushlightuserdata(L, view);
+        if (lua_pcall(L, 1, 1, 0)) {
+            wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+            return 0;
+        }
+    } else {
+        lua_pushnil(L);
+    }
+
+    return 1;
+}
+
 static const luaL_Reg kiwmi_server_methods[] = {
     {"cursor", l_kiwmi_server_cursor},
     {"focused_view", l_kiwmi_server_focused_view},
     {"on", luaK_callback_register_dispatch},
     {"quit", l_kiwmi_server_quit},
     {"spawn", l_kiwmi_server_spawn},
+    {"view_at", l_kiwmi_server_view_at},
     {NULL, NULL},
 };
 
