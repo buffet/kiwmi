@@ -92,6 +92,7 @@ static const luaL_Reg kiwmi_output_methods[] = {
     {"auto", l_kiwmi_output_auto},
     {"move", l_kiwmi_output_move},
     {"name", l_kiwmi_output_name},
+    {"on", luaK_callback_register_dispatch},
     {"pos", l_kiwmi_output_pos},
     {"size", l_kiwmi_output_size},
     {NULL, NULL},
@@ -115,6 +116,45 @@ kiwmi_output_on_destroy_notify(struct wl_listener *listener, void *data)
         lua_pop(L, 1);
         return;
     }
+
+    if (lua_pcall(L, 1, 0, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+}
+
+static void
+kiwmi_output_on_resize_notify(struct wl_listener *listener, void *data)
+{
+    struct kiwmi_lua_callback *lc = wl_container_of(listener, lc, listener);
+    struct kiwmi_server *server   = lc->server;
+    lua_State *L                  = server->lua->L;
+    struct kiwmi_output *output   = data;
+
+    int width;
+    int height;
+    wlr_output_transformed_resolution(output->wlr_output, &width, &height);
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lc->callback_ref);
+
+    lua_newtable(L);
+
+    lua_pushcfunction(L, luaK_kiwmi_output_new);
+    lua_pushlightuserdata(L, output);
+
+    if (lua_pcall(L, 1, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+        return;
+    }
+
+    lua_setfield(L, -2, "output");
+
+    lua_pushinteger(L, width);
+    lua_setfield(L, -2, "width");
+
+    lua_pushinteger(L, height);
+    lua_setfield(L, -2, "height");
 
     if (lua_pcall(L, 1, 0, 0)) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
@@ -146,8 +186,33 @@ l_kiwmi_output_on_destroy(lua_State *L)
     return 1;
 }
 
+static int
+l_kiwmi_output_on_resize(lua_State *L)
+{
+    struct kiwmi_output *output =
+        *(struct kiwmi_output **)luaL_checkudata(L, 1, "kiwmi_output");
+    luaL_checktype(L, 2, LUA_TFUNCTION);
+
+    struct kiwmi_desktop *desktop = output->desktop;
+    struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
+
+    lua_pushcfunction(L, luaK_kiwmi_lua_callback_new);
+    lua_pushlightuserdata(L, server);
+    lua_pushvalue(L, 2);
+    lua_pushlightuserdata(L, kiwmi_output_on_resize_notify);
+    lua_pushlightuserdata(L, &output->events.resize);
+
+    if (lua_pcall(L, 4, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        return 0;
+    }
+
+    return 1;
+}
+
 static const luaL_Reg kiwmi_output_events[] = {
     {"destroy", l_kiwmi_output_on_destroy},
+    {"resize", l_kiwmi_output_on_resize},
     {NULL, NULL},
 };
 

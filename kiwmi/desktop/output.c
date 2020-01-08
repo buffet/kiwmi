@@ -134,6 +134,22 @@ output_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
     free(output);
 }
 
+static void
+output_mode_notify(struct wl_listener *listener, void *UNUSED(data))
+{
+    struct kiwmi_output *output = wl_container_of(listener, output, mode);
+
+    wl_signal_emit(&output->events.resize, output);
+}
+
+static void
+output_transform_notify(struct wl_listener *listener, void *UNUSED(data))
+{
+    struct kiwmi_output *output = wl_container_of(listener, output, transform);
+
+    wl_signal_emit(&output->events.resize, output);
+}
+
 static struct kiwmi_output *
 output_create(struct wlr_output *wlr_output, struct kiwmi_desktop *desktop)
 {
@@ -150,6 +166,12 @@ output_create(struct wlr_output *wlr_output, struct kiwmi_desktop *desktop)
 
     output->destroy.notify = output_destroy_notify;
     wl_signal_add(&wlr_output->events.destroy, &output->destroy);
+
+    output->mode.notify = output_mode_notify;
+    wl_signal_add(&wlr_output->events.mode, &output->mode);
+
+    output->transform.notify = output_transform_notify;
+    wl_signal_add(&wlr_output->events.transform, &output->transform);
 
     return output;
 }
@@ -187,6 +209,7 @@ new_output_notify(struct wl_listener *listener, void *data)
     wlr_output_create_global(wlr_output);
 
     wl_signal_init(&output->events.destroy);
+    wl_signal_init(&output->events.resize);
 
     wl_signal_emit(&desktop->events.new_output, output);
 }
