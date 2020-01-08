@@ -53,8 +53,8 @@ struct kiwmi_view_impl {
         struct kiwmi_view *view,
         wlr_surface_iterator_func_t iterator,
         void *user_data);
-    void (*resize)(struct kiwmi_view *view, uint32_t width, uint32_t height);
     void (*set_activated)(struct kiwmi_view *view, bool activated);
+    void (*set_size)(struct kiwmi_view *view, uint32_t width, uint32_t height);
     void (*set_tiled)(struct kiwmi_view *view, bool tiled);
     struct wlr_surface *(*surface_at)(
         struct kiwmi_view *view,
@@ -69,8 +69,8 @@ void view_for_each_surface(
     struct kiwmi_view *view,
     wlr_surface_iterator_func_t iterator,
     void *user_data);
-void view_resize(struct kiwmi_view *view, uint32_t width, uint32_t height);
 void view_set_activated(struct kiwmi_view *view, bool activated);
+void view_set_size(struct kiwmi_view *view, uint32_t width, uint32_t height);
 void view_set_tiled(struct kiwmi_view *view, bool tiled);
 struct wlr_surface *view_surface_at(
     struct kiwmi_view *view,
