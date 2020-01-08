@@ -273,5 +273,8 @@ luaK_kiwmi_server_register(lua_State *L)
     luaL_newlib(L, kiwmi_server_events);
     lua_setfield(L, -2, "__events");
 
+    lua_pushcfunction(L, luaK_usertype_ref_equal);
+    lua_setfield(L, -2, "__eq");
+
     return 0;
 }
