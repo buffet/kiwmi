@@ -76,6 +76,9 @@ luaK_kiwmi_lua_callback_register(lua_State *L)
     lua_setfield(L, -2, "__index");
     luaL_setfuncs(L, kiwmi_lua_callback_methods, 0);
 
+    lua_pushcfunction(L, luaK_usertype_ref_equal);
+    lua_setfield(L, -2, "__eq");
+
     return 0;
 }
 

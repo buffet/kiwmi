@@ -47,6 +47,20 @@ luaK_callback_register_dispatch(lua_State *L)
     return 1;
 }
 
+int
+luaK_usertype_ref_equal(lua_State *L)
+{
+    luaL_checktype(L, 1, LUA_TUSERDATA);
+    luaL_checktype(L, 2, LUA_TUSERDATA);
+
+    void *a = *(void **)lua_touserdata(L, 1);
+    void *b = *(void **)lua_touserdata(L, 2);
+
+    lua_pushboolean(L, a == b);
+
+    return 1;
+}
+
 struct kiwmi_lua *
 luaK_create(struct kiwmi_server *server)
 {
