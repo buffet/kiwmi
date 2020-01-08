@@ -116,6 +116,22 @@ l_kiwmi_view_show(lua_State *L)
 }
 
 static int
+l_kiwmi_view_size(lua_State *L)
+{
+    struct kiwmi_view *view =
+        *(struct kiwmi_view **)luaL_checkudata(L, 1, "kiwmi_view");
+
+    uint32_t width;
+    uint32_t height;
+    view_get_size(view, &width, &height);
+
+    lua_pushinteger(L, width);
+    lua_pushinteger(L, height);
+
+    return 2;
+}
+
+static int
 l_kiwmi_view_tiled(lua_State *L)
 {
     struct kiwmi_view *view =
@@ -182,6 +198,7 @@ static const luaL_Reg kiwmi_view_methods[] = {
     {"pos", l_kiwmi_view_pos},
     {"resize", l_kiwmi_view_resize},
     {"show", l_kiwmi_view_show},
+    {"size", l_kiwmi_view_size},
     {"tiled", l_kiwmi_view_tiled},
     {NULL, NULL},
 };
