@@ -21,7 +21,7 @@ Returns a reference to the cursor object.
 
 Returns the currently focused view.
 
-#### kiwmi:on(type, callback)
+#### kiwmi:on(event, callback)
 
 Used to register event listeners.
 
@@ -61,7 +61,7 @@ A reference to the cursor object.
 
 ### Methods
 
-#### cursor:on(type, callback)
+#### cursor:on(event, callback)
 
 Used to register event listeners.
 
@@ -102,7 +102,7 @@ A handle to a keyboard.
 Returns a table with the state of all modifiers.
 These are: `shift`, `caps`, `ctrl`, `alt`, `mod2`, `mod3`, `super`, and `mod5`.
 
-#### keyboard:on(type, callback)
+#### keyboard:on(event, callback)
 
 Used to register event listeners.
 
@@ -147,7 +147,7 @@ This is referring to the top-left corner.
 
 The name of the output.
 
-#### output:on(type, callbacks)
+#### output:on(event, callbacks)
 
 Used to register event listeners.
 
@@ -199,7 +199,7 @@ Hides the view.
 
 Moves the view to the specified position.
 
-#### view:on(type, callback)
+#### view:on(event, callback)
 
 Used to register event listeners.
 
@@ -219,7 +219,7 @@ Unhides the view.
 
 Returns the size of the view.
 
-#### view:tiles(edges)
+#### view:tiled(edges)
 
 Takes a table containing all edges that are tiled, or a bool to indicate all 4 edges.
 
