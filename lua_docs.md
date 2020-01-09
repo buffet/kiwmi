@@ -81,10 +81,16 @@ Returns the view at the cursor position, or `nil` if there is none.
 A mouse button got pressed.
 Callback receives the ID of the button (i.e. LMB is 1, RMB is 2, ...).
 
+The callback is supposed to return `true` if the event was handled.
+The compositor will not forward it to the view under the cursor.
+
 #### button_up
 
 A mouse button got released.
 Callback receives the ID of the button (i.e. LMB is 1, RMB is 2, ...).
+
+The callback is supposed to return `true` if the event was handled.
+The compositor will not forward it to the view under the cursor.
 
 #### motion
 
@@ -113,10 +119,16 @@ Used to register event listeners.
 A key got pressed.
 Callback receives a table containing the `key` and the `keyboard`).
 
+The callback is supposed to return `true` if the event was handled.
+The compositor will not forward it to the focused view in that case.
+
 #### key_up
 
 A key got released.
 Callback receives a table containing the `key` and the `keyboard`).
+
+The callback is supposed to return `true` if the event was handled.
+The compositor will not forward it to the focused view in that case.
 
 ## kiwmi_lua_callback
 
@@ -218,6 +230,8 @@ Unhides the view.
 #### view:size()
 
 Returns the size of the view.
+
+**NOTE**: Used directly after `view:resize()`, this still returns the old size.
 
 #### view:tiled(edges)
 
