@@ -17,7 +17,10 @@ add_project_arguments(
 )
 
 git               = find_program('git', required: false)
-lua               = dependency('lua')
+lua               = dependency('lua', required: false)
+if not lua.found()
+  lua = dependency('luajit')
+endif
 wayland_client    = dependency('wayland-client')
 wayland_protocols = dependency('wayland-protocols')
 wayland_scanner   = dependency('wayland-scanner')
