@@ -71,11 +71,14 @@ xdg_shell_view_for_each_surface(
 }
 
 static void
-xdg_shell_view_get_size(struct kiwmi_view *view, uint32_t *width, uint32_t *height)
+xdg_shell_view_get_size(
+    struct kiwmi_view *view,
+    uint32_t *width,
+    uint32_t *height)
 {
     struct wlr_box *geom = &view->xdg_surface->geometry;
 
-    *width = geom->width;
+    *width  = geom->width;
     *height = geom->height;
 }
 

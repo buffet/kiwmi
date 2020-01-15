@@ -14,10 +14,12 @@
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_data_device.h>
 #include <wlr/types/wlr_export_dmabuf_v1.h>
+#include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
 
+#include "desktop/layer_shell.h"
 #include "desktop/output.h"
 #include "desktop/xdg_shell.h"
 #include "server.h"
@@ -40,6 +42,12 @@ desktop_init(struct kiwmi_desktop *desktop, struct wlr_renderer *renderer)
     wl_signal_add(
         &desktop->xdg_shell->events.new_surface,
         &desktop->xdg_shell_new_surface);
+
+    desktop->layer_shell = wlr_layer_shell_v1_create(server->wl_display);
+    desktop->layer_shell_new_surface.notify = layer_shell_new_surface_notify;
+    wl_signal_add(
+        &desktop->layer_shell->events.new_surface,
+        &desktop->layer_shell_new_surface);
 
     desktop->focused_view = NULL;
 

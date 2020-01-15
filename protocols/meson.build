@@ -4,6 +4,7 @@ wayland_scanner_bin   = wayland_scanner.get_pkgconfig_variable('wayland_scanner'
 protocols_server = [
   wayland_protocols_dir / 'stable/xdg-shell/xdg-shell.xml',
   'kiwmi-ipc.xml',
+  'wlr-layer-shell-unstable-v1.xml',
 ]
 
 protocols_server_src = []

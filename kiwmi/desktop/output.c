@@ -12,6 +12,7 @@
 #include <wayland-server.h>
 #include <wlr/backend.h>
 #include <wlr/render/wlr_renderer.h>
+#include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_matrix.h>
 #include <wlr/types/wlr_output.h>
 #include <wlr/types/wlr_output_layout.h>
@@ -20,23 +21,76 @@
 #include <wlr/util/log.h>
 
 #include "desktop/desktop.h"
+#include "desktop/layer_shell.h"
 #include "desktop/view.h"
 #include "input/cursor.h"
 #include "input/input.h"
 #include "server.h"
+#include "wayland-util.h"
 
 struct render_data {
     struct wlr_output *output;
-    struct kiwmi_view *view;
     struct wlr_renderer *renderer;
     struct timespec *when;
+    struct wlr_output_layout *output_layout;
+    void *data;
 };
+
+static void
+render_layer_surface(struct wlr_surface *surface, int x, int y, void *data)
+{
+    struct render_data *rdata               = data;
+    struct wlr_output *output               = rdata->output;
+    struct wlr_output_layout *output_layout = rdata->output_layout;
+    struct wlr_box *geom                    = rdata->data;
+
+    struct wlr_texture *texture = wlr_surface_get_texture(surface);
+    if (!texture) {
+        return;
+    }
+
+    double ox = 0;
+    double oy = 0;
+    wlr_output_layout_output_coords(output_layout, output, &ox, &oy);
+
+    ox += x + geom->x;
+    oy += y + geom->y;
+
+    struct wlr_box box = {
+        .x      = ox * output->scale,
+        .y      = oy * output->scale,
+        .width  = surface->current.width * output->scale,
+        .height = surface->current.height * output->scale,
+    };
+
+    float matrix[9];
+    enum wl_output_transform transform =
+        wlr_output_transform_invert(surface->current.transform);
+    wlr_matrix_project_box(
+        matrix, &box, transform, 0, output->transform_matrix);
+
+    wlr_render_texture_with_matrix(rdata->renderer, texture, matrix, 1);
+
+    wlr_surface_send_frame_done(surface, rdata->when);
+}
+
+static void
+render_layer(struct wl_list *layer, struct render_data *rdata)
+{
+    struct kiwmi_layer *surface;
+    wl_list_for_each (surface, layer, link) {
+        rdata->data = &surface->geom;
+
+        wlr_layer_surface_v1_for_each_surface(
+            surface->layer_surface, render_layer_surface, rdata);
+    }
+}
 
 static void
 render_surface(struct wlr_surface *surface, int sx, int sy, void *data)
 {
     struct render_data *rdata = data;
-    struct kiwmi_view *view   = rdata->view;
+    struct kiwmi_view *view   = rdata->data;
     struct wlr_output *output = rdata->output;
 
     struct wlr_texture *texture = wlr_surface_get_texture(surface);
@@ -76,6 +130,7 @@ output_frame_notify(struct wl_listener *listener, void *data)
     struct kiwmi_output *output   = wl_container_of(listener, output, frame);
     struct wlr_output *wlr_output = data;
     struct kiwmi_desktop *desktop = output->desktop;
+    struct wlr_output_layout *output_layout = desktop->output_layout;
     struct wlr_renderer *renderer =
         wlr_backend_get_renderer(wlr_output->backend);
 
@@ -95,21 +150,29 @@ output_frame_notify(struct wl_listener *listener, void *data)
     wlr_renderer_begin(renderer, width, height);
     wlr_renderer_clear(renderer, (float[]){0.0f, 1.0f, 0.0f, 1.0f});
 
+    struct render_data rdata = {
+        .output        = output->wlr_output,
+        .renderer      = renderer,
+        .when          = &now,
+        .output_layout = output_layout,
+    };
+
+    render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND], &rdata);
+    render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM], &rdata);
+
     struct kiwmi_view *view;
     wl_list_for_each_reverse (view, &desktop->views, link) {
         if (view->hidden || !view->mapped) {
             continue;
         }
 
-        struct render_data rdata = {
-            .output   = output->wlr_output,
-            .view     = view,
-            .renderer = renderer,
-            .when     = &now,
-        };
+        rdata.data = view;
 
         view_for_each_surface(view, render_surface, &rdata);
     }
+
+    render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], &rdata);
+    render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], &rdata);
 
     wlr_output_render_software_cursors(wlr_output, NULL);
     wlr_renderer_end(renderer);
@@ -139,6 +202,8 @@ output_mode_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_output *output = wl_container_of(listener, output, mode);
 
+    arrange_layers(output);
+
     wl_signal_emit(&output->events.resize, output);
 }
 
@@ -146,6 +211,8 @@ static void
 output_transform_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_output *output = wl_container_of(listener, output, transform);
+
+    arrange_layers(output);
 
     wl_signal_emit(&output->events.resize, output);
 }
@@ -198,6 +265,8 @@ new_output_notify(struct wl_listener *listener, void *data)
         return;
     }
 
+    wlr_output->data = output;
+
     struct kiwmi_cursor *cursor = server->input.cursor;
 
     wlr_xcursor_manager_load(cursor->xcursor_manager, wlr_output->scale);
@@ -207,6 +276,11 @@ new_output_notify(struct wl_listener *listener, void *data)
     wlr_output_layout_add_auto(desktop->output_layout, wlr_output);
 
     wlr_output_create_global(wlr_output);
+
+    size_t len_outputs = sizeof(output->layers) / sizeof(output->layers[0]);
+    for (size_t i = 0; i < len_outputs; ++i) {
+        wl_list_init(&output->layers[i]);
+    }
 
     wl_signal_init(&output->events.destroy);
     wl_signal_init(&output->events.resize);

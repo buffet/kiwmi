@@ -54,7 +54,8 @@ struct kiwmi_view_impl {
         struct kiwmi_view *view,
         wlr_surface_iterator_func_t iterator,
         void *user_data);
-    void (*get_size)(struct kiwmi_view *view, uint32_t *width, uint32_t *height);
+    void (
+        *get_size)(struct kiwmi_view *view, uint32_t *width, uint32_t *height);
     void (*set_activated)(struct kiwmi_view *view, bool activated);
     void (*set_size)(struct kiwmi_view *view, uint32_t width, uint32_t height);
     void (*set_tiled)(struct kiwmi_view *view, enum wlr_edges edges);

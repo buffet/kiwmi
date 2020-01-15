@@ -1,0 +1,353 @@
+/* Copyright (c), Niclas Meyer <niclas@countingsort.com>
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+#include "desktop/layer_shell.h"
+
+#include <stdlib.h>
+
+#include <wayland-server.h>
+#include <wlr/types/wlr_layer_shell_v1.h>
+#include <wlr/util/log.h>
+
+#include "desktop/desktop.h"
+#include "wayland-util.h"
+#include "wlr-layer-shell-unstable-v1-protocol.h"
+
+static void
+kiwmi_layer_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
+{
+    struct kiwmi_layer *layer = wl_container_of(listener, layer, destroy);
+
+    wl_list_remove(&layer->link);
+    wl_list_remove(&layer->destroy.link);
+
+    wlr_layer_surface_v1_close(layer->layer_surface);
+
+    free(layer);
+}
+
+static void
+kiwmi_layer_commit_notify(struct wl_listener *listener, void *UNUSED(data))
+{
+    struct kiwmi_layer *surface = wl_container_of(listener, surface, commit);
+    struct kiwmi_output *output = surface->output;
+
+    arrange_layers(output);
+}
+
+static void
+apply_exclusive(
+    struct wlr_box *usable_area,
+    uint32_t anchor,
+    int32_t exclusive,
+    int32_t margin_top,
+    int32_t margin_bottom,
+    int32_t margin_left,
+    int32_t margin_right)
+{
+    if (exclusive <= 0) {
+        return;
+    }
+
+    struct {
+        uint32_t anchors;
+        int *positive_axis;
+        int *negative_axis;
+        int margin;
+    } edges[] = {
+        {
+            .anchors = ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
+                | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT
+                | ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP,
+            .positive_axis = &usable_area->y,
+            .negative_axis = &usable_area->height,
+            .margin        = margin_top,
+        },
+        {
+            .anchors = ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
+                | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT
+                | ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM,
+            .positive_axis = NULL,
+            .negative_axis = &usable_area->height,
+            .margin        = margin_bottom,
+        },
+        {
+            .anchors = ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
+                | ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP
+                | ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM,
+            .positive_axis = &usable_area->x,
+            .negative_axis = &usable_area->width,
+            .margin        = margin_left,
+        },
+        {
+            .anchors = ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT
+                | ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP
+                | ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM,
+            .positive_axis = NULL,
+            .negative_axis = &usable_area->width,
+            .margin        = margin_right,
+        },
+    };
+
+    size_t nedges = sizeof(edges) / sizeof(edges[0]);
+    for (size_t i = 0; i < nedges; ++i) {
+        if ((anchor & edges[i].anchors) == edges[i].anchors
+            && exclusive + edges[i].margin > 0) {
+            if (edges[i].positive_axis) {
+                *edges[i].positive_axis += exclusive + edges[i].margin;
+            }
+            if (edges[i].negative_axis) {
+                *edges[i].negative_axis -= exclusive + edges[i].margin;
+            }
+        }
+    }
+}
+
+static void
+arrange_layer(
+    struct kiwmi_output *output,
+    struct wl_list *layers,
+    struct wlr_box *usable_area,
+    bool exclusive)
+{
+    struct wlr_box full_area = {0};
+
+    wlr_output_effective_resolution(
+        output->wlr_output, &full_area.width, &full_area.height);
+
+    struct kiwmi_layer *layer;
+    wl_list_for_each_reverse (layer, layers, link) {
+        struct wlr_layer_surface_v1 *layer_surface = layer->layer_surface;
+        struct wlr_layer_surface_v1_state *state   = &layer_surface->current;
+
+        if (exclusive != (state->exclusive_zone >= 0)) {
+            continue;
+        }
+
+        struct wlr_box bounds;
+
+        if (state->exclusive_zone == -1) {
+            bounds = full_area;
+        } else {
+            bounds = *usable_area;
+        }
+
+        struct wlr_box arranged_area = {
+            .width  = state->desired_width,
+            .height = state->desired_height,
+        };
+
+        // horizontal
+        const uint32_t both_horiz = ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT
+            | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+
+        if ((state->anchor & both_horiz) && arranged_area.width == 0) {
+            arranged_area.x     = bounds.x;
+            arranged_area.width = bounds.width;
+        } else if (state->anchor & ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT) {
+            arranged_area.x = bounds.x;
+        } else if (state->anchor & ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT) {
+            arranged_area.x = bounds.x + (bounds.width - arranged_area.width);
+        } else {
+            arranged_area.x =
+                bounds.x + ((bounds.width / 2) - (arranged_area.width / 2));
+        }
+
+        // vertical
+        const uint32_t both_vert = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP
+            | ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM;
+        if ((state->anchor & both_vert) && arranged_area.height == 0) {
+            arranged_area.y      = bounds.y;
+            arranged_area.height = bounds.height;
+        } else if (state->anchor & ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP) {
+            arranged_area.y = bounds.y;
+        } else if (state->anchor & ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM) {
+            arranged_area.y = bounds.y + (bounds.height - arranged_area.height);
+        } else {
+            arranged_area.y =
+                bounds.y + ((bounds.height / 2) - (arranged_area.height / 2));
+        }
+
+        // left and right margin
+        if ((state->anchor & both_horiz) == both_horiz) {
+            arranged_area.x += state->margin.left;
+            arranged_area.width -= state->margin.left + state->margin.right;
+        } else if (state->anchor & ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT) {
+            arranged_area.x += state->margin.left;
+        } else if (state->anchor & ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT) {
+            arranged_area.x -= state->margin.right;
+        }
+
+        // top and bottom margin
+        if ((state->anchor & both_vert) == both_vert) {
+            arranged_area.y += state->margin.top;
+            arranged_area.height -= state->margin.top + state->margin.bottom;
+        } else if (state->anchor & ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP) {
+            arranged_area.y += state->margin.top;
+        } else if (state->anchor & ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM) {
+            arranged_area.y -= state->margin.bottom;
+        }
+
+        if (arranged_area.width < 0 || arranged_area.height < 0) {
+            wlr_log(
+                WLR_ERROR,
+                "Bad width/height: %d, %d",
+                arranged_area.width,
+                arranged_area.height);
+            wlr_layer_surface_v1_close(layer_surface);
+            continue;
+        }
+
+        layer->geom = arranged_area;
+
+        apply_exclusive(
+            usable_area,
+            state->anchor,
+            state->exclusive_zone,
+            state->margin.top,
+            state->margin.bottom,
+            state->margin.left,
+            state->margin.right);
+
+        wlr_layer_surface_v1_configure(
+            layer_surface, arranged_area.width, arranged_area.height);
+    }
+}
+
+void
+arrange_layers(struct kiwmi_output *output)
+{
+    struct wlr_box usable_area = {0};
+
+    wlr_output_effective_resolution(
+        output->wlr_output, &usable_area.width, &usable_area.height);
+
+    // arrange exclusive layers
+    arrange_layer(
+        output,
+        &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
+        &usable_area,
+        true);
+    arrange_layer(
+        output,
+        &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
+        &usable_area,
+        true);
+    arrange_layer(
+        output,
+        &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM],
+        &usable_area,
+        true);
+    arrange_layer(
+        output,
+        &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND],
+        &usable_area,
+        true);
+
+    // arrange non-exclusive layers
+    arrange_layer(
+        output,
+        &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
+        &usable_area,
+        false);
+    arrange_layer(
+        output,
+        &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
+        &usable_area,
+        false);
+    arrange_layer(
+        output,
+        &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM],
+        &usable_area,
+        false);
+    arrange_layer(
+        output,
+        &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND],
+        &usable_area,
+        false);
+
+    uint32_t layers_above_shell[] = {
+        ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY,
+        ZWLR_LAYER_SHELL_V1_LAYER_TOP,
+    };
+    size_t nlayers = sizeof(layers_above_shell) / sizeof(layers_above_shell[0]);
+    struct kiwmi_layer *layer;
+    struct kiwmi_layer *topmost = NULL;
+    for (size_t i = 0; i < nlayers; ++i) {
+        wl_list_for_each_reverse (
+            layer, &output->layers[layers_above_shell[i]], link) {
+            if (layer->layer_surface->current.keyboard_interactive) {
+                topmost = layer;
+                break;
+            }
+        }
+
+        if (topmost) {
+            break;
+        }
+    }
+
+    // TODO: focus topmost
+}
+
+void
+layer_shell_new_surface_notify(struct wl_listener *listener, void *data)
+{
+    struct kiwmi_desktop *desktop =
+        wl_container_of(listener, desktop, layer_shell_new_surface);
+    struct wlr_layer_surface_v1 *layer_surface = data;
+
+    wlr_log(
+        WLR_DEBUG,
+        "New layer_shell surface namespace='%s'",
+        layer_surface->namespace);
+
+    if (!layer_surface->output) {
+        // TODO: assign active output
+        wlr_log(WLR_ERROR, "TODO: assign active output");
+        struct kiwmi_output *output;
+        wl_list_for_each (output, &desktop->outputs, link) {
+            layer_surface->output = output->wlr_output;
+            break;
+        }
+    }
+
+    struct kiwmi_layer *layer = malloc(sizeof(*layer));
+    if (!layer) {
+        wlr_log(WLR_ERROR, "Failed too allocate kiwmi_layer_shell");
+        return;
+    }
+
+    struct kiwmi_output *output = layer_surface->output->data;
+
+    size_t len = sizeof(output->layers) / sizeof(output->layers[0]);
+    if (layer_surface->layer >= len) {
+        wlr_log(
+            WLR_ERROR, "Bad layer surface layer '%d'", layer_surface->layer);
+        wlr_layer_surface_v1_close(layer_surface);
+        free(layer);
+        return;
+    }
+
+    layer->layer_surface = layer_surface;
+    layer->output        = output;
+
+    layer->destroy.notify = kiwmi_layer_destroy_notify;
+    wl_signal_add(&layer_surface->events.destroy, &layer->destroy);
+
+    layer->commit.notify = kiwmi_layer_commit_notify;
+    wl_signal_add(&layer_surface->surface->events.commit, &layer->commit);
+
+    wl_list_insert(&output->layers[layer_surface->layer], &layer->link);
+
+    // Temporarily set the layer's current state to client_pending
+    // So that we can easily arrange it
+    struct wlr_layer_surface_v1_state old_state = layer_surface->current;
+    layer_surface->current                      = layer_surface->client_pending;
+    arrange_layers(output);
+    layer_surface->current = old_state;
+}
