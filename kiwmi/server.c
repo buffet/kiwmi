@@ -128,6 +128,9 @@ server_fini(struct kiwmi_server *server)
     wl_display_destroy_clients(server->wl_display);
     wl_display_destroy(server->wl_display);
 
+    desktop_fini(&server->desktop);
+    input_fini(&server->input);
+
     luaK_destroy(server->lua);
 
     free(server->config_path);

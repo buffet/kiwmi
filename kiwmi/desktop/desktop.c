@@ -62,3 +62,9 @@ desktop_init(struct kiwmi_desktop *desktop, struct wlr_renderer *renderer)
 
     return true;
 }
+
+void
+desktop_fini(struct kiwmi_desktop *desktop)
+{
+    wlr_output_layout_destroy(desktop->output_layout);
+}

@@ -32,5 +32,6 @@ struct kiwmi_desktop {
 };
 
 bool desktop_init(struct kiwmi_desktop *desktop, struct wlr_renderer *renderer);
+void desktop_fini(struct kiwmi_desktop *desktop);
 
 #endif /* KIWMI_DESKTOP_DESKTOP_H */

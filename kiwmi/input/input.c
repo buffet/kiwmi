@@ -7,6 +7,8 @@
 
 #include "input/input.h"
 
+#include <stdlib.h>
+
 #include <wayland-server.h>
 #include <wlr/backend.h>
 #include <wlr/types/wlr_cursor.h>
@@ -87,4 +89,16 @@ input_init(struct kiwmi_input *input)
     wl_signal_init(&input->events.keyboard_new);
 
     return true;
+}
+
+void
+input_fini(struct kiwmi_input *input)
+{
+    struct kiwmi_keyboard *keyboard;
+    struct kiwmi_keyboard *tmp;
+    wl_list_for_each_safe (keyboard, tmp, &input->keyboards, link) {
+        free(keyboard);
+    }
+
+    cursor_destroy(input->cursor);
 }

@@ -22,5 +22,6 @@ struct kiwmi_input {
 };
 
 bool input_init(struct kiwmi_input *input);
+void input_fini(struct kiwmi_input *input);
 
 #endif /* KIWMI_INPUT_INPUT_H */
