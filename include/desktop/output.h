@@ -19,6 +19,8 @@ struct kiwmi_output {
     struct wl_listener mode;
     struct wl_listener transform;
 
+    struct wl_list layers[4]; // struct kiwmi_layer_surface::link
+
     struct {
         struct wl_signal destroy;
         struct wl_signal resize;
