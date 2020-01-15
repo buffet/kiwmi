@@ -17,10 +17,12 @@ struct kiwmi_keyboard {
     struct wlr_input_device *device;
     struct wl_listener modifiers;
     struct wl_listener key;
+    struct wl_listener device_destroy;
 
     struct {
         struct wl_signal key_down;
         struct wl_signal key_up;
+        struct wl_signal destroy;
     } events;
 };
 

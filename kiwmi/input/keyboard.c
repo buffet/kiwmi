@@ -93,6 +93,21 @@ keyboard_key_notify(struct wl_listener *listener, void *data)
     }
 }
 
+static void
+keyboard_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
+{
+    struct kiwmi_keyboard *keyboard = wl_container_of(listener, keyboard, device_destroy);
+
+    wl_list_remove(&keyboard->link);
+    wl_list_remove(&keyboard->modifiers.link);
+    wl_list_remove(&keyboard->key.link);
+    wl_list_remove(&keyboard->device_destroy.link);
+
+    wl_signal_emit(&keyboard->events.destroy, keyboard);
+
+    free(keyboard);
+}
+
 struct kiwmi_keyboard *
 keyboard_create(struct kiwmi_server *server, struct wlr_input_device *device)
 {
@@ -117,6 +132,9 @@ keyboard_create(struct kiwmi_server *server, struct wlr_input_device *device)
     keyboard->key.notify = keyboard_key_notify;
     wl_signal_add(&device->keyboard->events.key, &keyboard->key);
 
+    keyboard->device_destroy.notify = keyboard_destroy_notify;
+    wl_signal_add(&device->events.destroy, &keyboard->device_destroy);
+
     wlr_keyboard_set_keymap(device->keyboard, keymap);
     xkb_keymap_unref(keymap);
     xkb_context_unref(context);
@@ -126,6 +144,7 @@ keyboard_create(struct kiwmi_server *server, struct wlr_input_device *device)
 
     wl_signal_init(&keyboard->events.key_down);
     wl_signal_init(&keyboard->events.key_up);
+    wl_signal_init(&keyboard->events.destroy);
 
     wl_signal_emit(&server->input.events.keyboard_new, keyboard);
 
