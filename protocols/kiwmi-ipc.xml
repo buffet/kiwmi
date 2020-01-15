@@ -24,7 +24,7 @@
     </enum>
 
     <event name="done">
-      <arg name="error" type="uint" />
+      <arg name="error" type="uint" enum="error" />
       <arg name="message" type="string" summary="error message or return value" />
     </event>
   </interface>
