@@ -114,6 +114,11 @@ Used to register event listeners.
 
 ### Events
 
+#### destroy
+
+The keyboard is getting destroyed.
+Callback receives the keyboard.
+
 #### key_down
 
 A key got pressed.
