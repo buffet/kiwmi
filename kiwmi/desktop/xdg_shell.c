@@ -47,8 +47,29 @@ xdg_surface_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
     wl_list_remove(&view->map.link);
     wl_list_remove(&view->unmap.link);
     wl_list_remove(&view->destroy.link);
+    wl_list_remove(&view->request_move.link);
+    wl_list_remove(&view->request_resize.link);
 
     free(view);
+}
+
+static void
+xdg_toplevel_request_move_notify(
+    struct wl_listener *listener,
+    void *UNUSED(data))
+{
+    struct kiwmi_view *view = wl_container_of(listener, view, request_move);
+
+    view_move(view);
+}
+
+static void
+xdg_toplevel_request_resize_notify(struct wl_listener *listener, void *data)
+{
+    struct kiwmi_view *view = wl_container_of(listener, view, request_resize);
+    struct wlr_xdg_toplevel_resize_event *event = data;
+
+    view_resize(view, event->edges);
 }
 
 static void
@@ -161,6 +182,14 @@ xdg_shell_new_surface_notify(struct wl_listener *listener, void *data)
 
     view->destroy.notify = xdg_surface_destroy_notify;
     wl_signal_add(&xdg_surface->events.destroy, &view->destroy);
+
+    view->request_move.notify = xdg_toplevel_request_move_notify;
+    wl_signal_add(
+        &xdg_surface->toplevel->events.request_move, &view->request_move);
+
+    view->request_resize.notify = xdg_toplevel_request_resize_notify;
+    wl_signal_add(
+        &xdg_surface->toplevel->events.request_resize, &view->request_resize);
 
     wl_list_insert(&desktop->views, &view->link);
 }

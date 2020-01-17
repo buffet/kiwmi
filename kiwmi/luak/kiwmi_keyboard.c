@@ -62,9 +62,9 @@ static const luaL_Reg kiwmi_keyboard_methods[] = {
 static void
 kiwmi_keyboard_on_destroy_notify(struct wl_listener *listener, void *data)
 {
-    struct kiwmi_lua_callback *lc = wl_container_of(listener, lc, listener);
-    struct kiwmi_server *server   = lc->server;
-    lua_State *L                  = server->lua->L;
+    struct kiwmi_lua_callback *lc   = wl_container_of(listener, lc, listener);
+    struct kiwmi_server *server     = lc->server;
+    lua_State *L                    = server->lua->L;
     struct kiwmi_keyboard *keyboard = data;
 
     lua_rawgeti(L, LUA_REGISTRYINDEX, lc->callback_ref);
