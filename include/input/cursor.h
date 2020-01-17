@@ -11,10 +11,28 @@
 #include <wayland-server.h>
 #include <wlr/types/wlr_output_layout.h>
 
+#include "desktop/view.h"
+
+enum kiwmi_cursor_mode {
+    KIWMI_CURSOR_PASSTHROUGH,
+    KIWMI_CURSOR_MOVE,
+    KIWMI_CURSOR_RESIZE,
+};
+
 struct kiwmi_cursor {
     struct kiwmi_server *server;
     struct wlr_cursor *cursor;
     struct wlr_xcursor_manager *xcursor_manager;
+
+    enum kiwmi_cursor_mode cursor_mode;
+
+    struct {
+        struct kiwmi_view *view;
+        int orig_x;
+        int orig_y;
+        struct wlr_box orig_geom;
+        uint32_t resize_edges;
+    } grabbed;
 
     struct wl_listener cursor_motion;
     struct wl_listener cursor_motion_absolute;

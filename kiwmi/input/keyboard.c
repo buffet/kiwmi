@@ -96,7 +96,8 @@ keyboard_key_notify(struct wl_listener *listener, void *data)
 static void
 keyboard_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
 {
-    struct kiwmi_keyboard *keyboard = wl_container_of(listener, keyboard, device_destroy);
+    struct kiwmi_keyboard *keyboard =
+        wl_container_of(listener, keyboard, device_destroy);
 
     wl_list_remove(&keyboard->link);
     wl_list_remove(&keyboard->modifiers.link);

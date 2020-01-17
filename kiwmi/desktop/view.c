@@ -7,9 +7,11 @@
 
 #include "desktop/view.h"
 
+#include <wlr/types/wlr_cursor.h>
 #include <wlr/util/log.h>
 
 #include "desktop/output.h"
+#include "input/cursor.h"
 #include "server.h"
 
 void
@@ -74,6 +76,7 @@ view_surface_at(
     if (view->impl->surface_at) {
         return view->impl->surface_at(view, sx, sy, sub_x, sub_y);
     }
+
     return NULL;
 }
 
@@ -159,6 +162,57 @@ view_at(
     }
 
     return NULL;
+}
+
+static void
+view_begin_interactive(
+    struct kiwmi_view *view,
+    enum kiwmi_cursor_mode mode,
+    uint32_t edges)
+{
+    struct kiwmi_desktop *desktop = view->desktop;
+    struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
+    struct kiwmi_cursor *cursor   = server->input.cursor;
+    struct wlr_surface *focused_surface =
+        server->input.seat->pointer_state.focused_surface;
+    struct wlr_surface *wlr_surface = view->wlr_surface;
+
+    if (wlr_surface != focused_surface) {
+        return;
+    }
+
+    uint32_t width;
+    uint32_t height;
+    view_get_size(view, &width, &height);
+
+    cursor->cursor_mode  = mode;
+    cursor->grabbed.view = view;
+
+    if (mode == KIWMI_CURSOR_MOVE) {
+        cursor->grabbed.orig_x = cursor->cursor->x - view->x;
+        cursor->grabbed.orig_y = cursor->cursor->y - view->y;
+    } else {
+        cursor->grabbed.orig_x       = cursor->cursor->x;
+        cursor->grabbed.orig_y       = cursor->cursor->y;
+        cursor->grabbed.resize_edges = edges;
+    }
+
+    cursor->grabbed.orig_geom.x      = view->x;
+    cursor->grabbed.orig_geom.y      = view->y;
+    cursor->grabbed.orig_geom.width  = width;
+    cursor->grabbed.orig_geom.height = height;
+}
+
+void
+view_move(struct kiwmi_view *view)
+{
+    view_begin_interactive(view, KIWMI_CURSOR_MOVE, 0);
+}
+
+void
+view_resize(struct kiwmi_view *view, uint32_t edges)
+{
+    view_begin_interactive(view, KIWMI_CURSOR_RESIZE, edges);
 }
 
 struct kiwmi_view *

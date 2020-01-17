@@ -36,6 +36,8 @@ struct kiwmi_view {
     struct wl_listener map;
     struct wl_listener unmap;
     struct wl_listener destroy;
+    struct wl_listener request_move;
+    struct wl_listener request_resize;
 
     double x;
     double y;
@@ -91,6 +93,8 @@ struct kiwmi_view *view_at(
     struct wlr_surface **surface,
     double *sx,
     double *sy);
+void view_move(struct kiwmi_view *view);
+void view_resize(struct kiwmi_view *view, uint32_t edges);
 struct kiwmi_view *view_create(
     struct kiwmi_desktop *desktop,
     enum kiwmi_view_type type,

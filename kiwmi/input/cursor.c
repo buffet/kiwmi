@@ -20,6 +20,7 @@
 #include "desktop/desktop.h"
 #include "desktop/view.h"
 #include "server.h"
+#include "wlr/util/edges.h"
 
 static void
 process_cursor_motion(struct kiwmi_server *server, uint32_t time)
@@ -28,6 +29,56 @@ process_cursor_motion(struct kiwmi_server *server, uint32_t time)
     struct kiwmi_input *input     = &server->input;
     struct kiwmi_cursor *cursor   = input->cursor;
     struct wlr_seat *seat         = input->seat;
+
+    switch (cursor->cursor_mode) {
+    case KIWMI_CURSOR_MOVE: {
+        struct kiwmi_view *view = cursor->grabbed.view;
+        view->x                 = cursor->cursor->x - cursor->grabbed.orig_x;
+        view->y                 = cursor->cursor->y - cursor->grabbed.orig_y;
+        return;
+    }
+    case KIWMI_CURSOR_RESIZE: {
+        struct kiwmi_view *view = cursor->grabbed.view;
+        double dx               = cursor->cursor->x - cursor->grabbed.orig_x;
+        double dy               = cursor->cursor->y - cursor->grabbed.orig_y;
+
+        struct wlr_box new_geom = {
+            .x      = view->x,
+            .y      = view->y,
+            .width  = cursor->grabbed.orig_geom.width,
+            .height = cursor->grabbed.orig_geom.height,
+        };
+
+        if (cursor->grabbed.resize_edges & WLR_EDGE_TOP) {
+            new_geom.y = cursor->grabbed.orig_y + dy;
+            new_geom.height -= dy;
+            if (new_geom.height < 1) {
+                new_geom.y += new_geom.height;
+            }
+        } else if (cursor->grabbed.resize_edges & WLR_EDGE_BOTTOM) {
+            new_geom.height += dy;
+        }
+
+        if (cursor->grabbed.resize_edges & WLR_EDGE_LEFT) {
+            new_geom.x = cursor->grabbed.orig_geom.x + dx;
+            new_geom.width -= dx;
+            if (new_geom.width < 1) {
+                new_geom.x += new_geom.width;
+            }
+        } else if (cursor->grabbed.resize_edges & WLR_EDGE_RIGHT) {
+            new_geom.width += dx;
+        }
+
+        view->x = new_geom.x;
+        view->y = new_geom.y;
+        view_set_size(view, new_geom.width, new_geom.height);
+
+        return;
+    }
+    default:
+        // EMPTY
+        break;
+    }
 
     struct wlr_surface *surface = NULL;
     double sx;
@@ -125,6 +176,8 @@ cursor_button_notify(struct wl_listener *listener, void *data)
         wlr_seat_pointer_notify_button(
             input->seat, event->time_msec, event->button, event->state);
     }
+
+    cursor->cursor_mode = KIWMI_CURSOR_PASSTHROUGH;
 }
 
 static void
@@ -194,7 +247,8 @@ cursor_create(
         return NULL;
     }
 
-    cursor->server = server;
+    cursor->server      = server;
+    cursor->cursor_mode = KIWMI_CURSOR_PASSTHROUGH;
 
     cursor->cursor = wlr_cursor_create();
     if (!cursor->cursor) {
