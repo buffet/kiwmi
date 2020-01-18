@@ -65,10 +65,10 @@ void
 seat_focus_layer(struct kiwmi_seat *seat, struct kiwmi_layer *layer)
 {
     if (!layer) {
-        if (seat->focused_layer) {
-            seat_focus_surface(seat, NULL);
-            seat_focus_surface(
-                seat, seat->focused_layer->layer_surface->surface);
+        seat->focused_layer = NULL;
+
+        if (seat->focused_view) {
+            seat_focus_surface(seat, seat->focused_view->wlr_surface);
         }
 
         return;
