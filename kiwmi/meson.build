@@ -9,6 +9,7 @@ kiwmi_sources = files(
   'input/cursor.c',
   'input/input.c',
   'input/keyboard.c',
+  'input/seat.c',
   'luak/ipc.c',
   'luak/kiwmi_cursor.c',
   'luak/kiwmi_keyboard.c',

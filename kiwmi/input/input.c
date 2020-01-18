@@ -19,6 +19,7 @@
 #include "desktop/desktop.h"
 #include "input/cursor.h"
 #include "input/keyboard.h"
+#include "input/seat.h"
 #include "server.h"
 
 static void
@@ -65,7 +66,7 @@ new_input_notify(struct wl_listener *listener, void *data)
         caps |= WL_SEAT_CAPABILITY_KEYBOARD;
     }
 
-    wlr_seat_set_capabilities(input->seat, caps);
+    wlr_seat_set_capabilities(input->seat->seat, caps);
 }
 
 bool
@@ -73,7 +74,10 @@ input_init(struct kiwmi_input *input)
 {
     struct kiwmi_server *server = wl_container_of(input, server, input);
 
-    input->seat = wlr_seat_create(server->wl_display, "seat-0");
+    input->seat = seat_create(input);
+    if (!input->seat) {
+        return false;
+    }
 
     input->cursor = cursor_create(server, server->desktop.output_layout);
     if (!input->cursor) {
@@ -99,6 +103,8 @@ input_fini(struct kiwmi_input *input)
     wl_list_for_each_safe (keyboard, tmp, &input->keyboards, link) {
         free(keyboard);
     }
+
+    seat_destroy(input->seat);
 
     cursor_destroy(input->cursor);
 }

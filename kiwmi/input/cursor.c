@@ -19,8 +19,8 @@
 
 #include "desktop/desktop.h"
 #include "desktop/view.h"
+#include "input/seat.h"
 #include "server.h"
-#include "wlr/util/edges.h"
 
 static void
 process_cursor_motion(struct kiwmi_server *server, uint32_t time)
@@ -28,7 +28,7 @@ process_cursor_motion(struct kiwmi_server *server, uint32_t time)
     struct kiwmi_desktop *desktop = &server->desktop;
     struct kiwmi_input *input     = &server->input;
     struct kiwmi_cursor *cursor   = input->cursor;
-    struct wlr_seat *seat         = input->seat;
+    struct wlr_seat *seat         = input->seat->seat;
 
     switch (cursor->cursor_mode) {
     case KIWMI_CURSOR_MOVE: {
@@ -174,7 +174,7 @@ cursor_button_notify(struct wl_listener *listener, void *data)
 
     if (!new_event.handled) {
         wlr_seat_pointer_notify_button(
-            input->seat, event->time_msec, event->button, event->state);
+            input->seat->seat, event->time_msec, event->button, event->state);
     }
 
     cursor->cursor_mode = KIWMI_CURSOR_PASSTHROUGH;
@@ -190,7 +190,7 @@ cursor_axis_notify(struct wl_listener *listener, void *data)
     struct wlr_event_pointer_axis *event = data;
 
     wlr_seat_pointer_notify_axis(
-        input->seat,
+        input->seat->seat,
         event->time_msec,
         event->orientation,
         event->delta,
@@ -206,32 +206,7 @@ cursor_frame_notify(struct wl_listener *listener, void *UNUSED(data))
     struct kiwmi_server *server = cursor->server;
     struct kiwmi_input *input   = &server->input;
 
-    wlr_seat_pointer_notify_frame(input->seat);
-}
-
-static void
-seat_request_set_cursor_notify(struct wl_listener *listener, void *data)
-{
-    struct kiwmi_cursor *cursor =
-        wl_container_of(listener, cursor, seat_request_set_cursor);
-    struct wlr_seat_pointer_request_set_cursor_event *event = data;
-
-    struct wlr_surface *focused_surface =
-        event->seat_client->seat->pointer_state.focused_surface;
-    struct wl_client *focused_client = NULL;
-
-    if (focused_surface && focused_surface->resource) {
-        focused_client = wl_resource_get_client(focused_surface->resource);
-    }
-
-    if (event->seat_client->client != focused_client) {
-        wlr_log(
-            WLR_DEBUG, "Ignoring request to set cursor on unfocused client");
-        return;
-    }
-
-    wlr_cursor_set_surface(
-        cursor->cursor, event->surface, event->hotspot_x, event->hotspot_y);
+    wlr_seat_pointer_notify_frame(input->seat->seat);
 }
 
 struct kiwmi_cursor *
@@ -278,11 +253,6 @@ cursor_create(
     cursor->cursor_frame.notify = cursor_frame_notify;
     wl_signal_add(&cursor->cursor->events.frame, &cursor->cursor_frame);
 
-    cursor->seat_request_set_cursor.notify = seat_request_set_cursor_notify;
-    wl_signal_add(
-        &server->input.seat->events.request_set_cursor,
-        &cursor->seat_request_set_cursor);
-
     wl_signal_init(&cursor->events.button_down);
     wl_signal_init(&cursor->events.button_up);
     wl_signal_init(&cursor->events.motion);
@@ -301,7 +271,6 @@ cursor_destroy(struct kiwmi_cursor *cursor)
     wl_list_remove(&cursor->cursor_button.link);
     wl_list_remove(&cursor->cursor_axis.link);
     wl_list_remove(&cursor->cursor_frame.link);
-    wl_list_remove(&cursor->seat_request_set_cursor.link);
 
     free(cursor);
 }

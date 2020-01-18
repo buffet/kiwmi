@@ -18,6 +18,7 @@
 #include <wlr/util/log.h>
 #include <xkbcommon/xkbcommon.h>
 
+#include "input/seat.h"
 #include "server.h"
 
 static bool
@@ -46,9 +47,10 @@ keyboard_modifiers_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_keyboard *keyboard =
         wl_container_of(listener, keyboard, modifiers);
-    wlr_seat_set_keyboard(keyboard->server->input.seat, keyboard->device);
+    wlr_seat_set_keyboard(keyboard->server->input.seat->seat, keyboard->device);
     wlr_seat_keyboard_notify_modifiers(
-        keyboard->server->input.seat, &keyboard->device->keyboard->modifiers);
+        keyboard->server->input.seat->seat,
+        &keyboard->device->keyboard->modifiers);
 }
 
 static void
@@ -87,9 +89,12 @@ keyboard_key_notify(struct wl_listener *listener, void *data)
     }
 
     if (!handled) {
-        wlr_seat_set_keyboard(server->input.seat, keyboard->device);
+        wlr_seat_set_keyboard(server->input.seat->seat, keyboard->device);
         wlr_seat_keyboard_notify_key(
-            server->input.seat, event->time_msec, event->keycode, event->state);
+            server->input.seat->seat,
+            event->time_msec,
+            event->keycode,
+            event->state);
     }
 }
 
@@ -141,7 +146,7 @@ keyboard_create(struct kiwmi_server *server, struct wlr_input_device *device)
     xkb_context_unref(context);
     wlr_keyboard_set_repeat_info(device->keyboard, 25, 600);
 
-    wlr_seat_set_keyboard(server->input.seat, device);
+    wlr_seat_set_keyboard(server->input.seat->seat, device);
 
     wl_signal_init(&keyboard->events.key_down);
     wl_signal_init(&keyboard->events.key_up);
