@@ -18,6 +18,8 @@
 
 #include "desktop/view.h"
 #include "input/cursor.h"
+#include "input/input.h"
+#include "input/seat.h"
 #include "luak/kiwmi_cursor.h"
 #include "luak/kiwmi_keyboard.h"
 #include "luak/kiwmi_lua_callback.h"
@@ -47,12 +49,12 @@ l_kiwmi_server_focused_view(lua_State *L)
     struct kiwmi_server *server =
         *(struct kiwmi_server **)luaL_checkudata(L, 1, "kiwmi_server");
 
-    if (!server->desktop.focused_view) {
+    if (!server->input.seat->focused_view) {
         return 0;
     }
 
     lua_pushcfunction(L, luaK_kiwmi_view_new);
-    lua_pushlightuserdata(L, server->desktop.focused_view);
+    lua_pushlightuserdata(L, server->input.seat->focused_view);
     if (lua_pcall(L, 1, 1, 0)) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
         return 0;

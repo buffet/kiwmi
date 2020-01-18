@@ -81,41 +81,6 @@ view_surface_at(
     return NULL;
 }
 
-void
-view_focus(struct kiwmi_view *view)
-{
-    if (!view) {
-        return;
-    }
-
-    struct kiwmi_desktop *desktop = view->desktop;
-    struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
-    struct wlr_seat *seat         = server->input.seat->seat;
-
-    if (view == desktop->focused_view) {
-        return;
-    }
-
-    if (desktop->focused_view) {
-        view_set_activated(desktop->focused_view, false);
-    }
-
-    struct wlr_keyboard *keyboard = wlr_seat_get_keyboard(seat);
-
-    // move view to front
-    wl_list_remove(&view->link);
-    wl_list_insert(&desktop->views, &view->link);
-
-    desktop->focused_view = view;
-    view_set_activated(view, true);
-    wlr_seat_keyboard_notify_enter(
-        seat,
-        view->wlr_surface,
-        keyboard->keycodes,
-        keyboard->num_keycodes,
-        &keyboard->modifiers);
-}
-
 static bool
 surface_at(
     struct kiwmi_view *view,

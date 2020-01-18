@@ -13,6 +13,8 @@
 
 #include "desktop/desktop.h"
 #include "desktop/view.h"
+#include "input/input.h"
+#include "input/seat.h"
 #include "server.h"
 
 static void
@@ -38,9 +40,11 @@ xdg_surface_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_view *view       = wl_container_of(listener, view, destroy);
     struct kiwmi_desktop *desktop = view->desktop;
+    struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
+    struct kiwmi_seat *seat       = server->input.seat;
 
-    if (desktop->focused_view == view) {
-        desktop->focused_view = NULL;
+    if (seat->focused_view == view) {
+        seat->focused_view = NULL;
     }
 
     wl_list_remove(&view->link);
