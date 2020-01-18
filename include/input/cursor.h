@@ -39,7 +39,6 @@ struct kiwmi_cursor {
     struct wl_listener cursor_button;
     struct wl_listener cursor_axis;
     struct wl_listener cursor_frame;
-    struct wl_listener seat_request_set_cursor;
 
     struct {
         struct wl_signal button_down;

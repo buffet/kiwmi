@@ -12,6 +12,7 @@
 
 #include "desktop/output.h"
 #include "input/cursor.h"
+#include "input/seat.h"
 #include "server.h"
 
 void
@@ -89,7 +90,7 @@ view_focus(struct kiwmi_view *view)
 
     struct kiwmi_desktop *desktop = view->desktop;
     struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
-    struct wlr_seat *seat         = server->input.seat;
+    struct wlr_seat *seat         = server->input.seat->seat;
 
     if (view == desktop->focused_view) {
         return;
@@ -174,7 +175,7 @@ view_begin_interactive(
     struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
     struct kiwmi_cursor *cursor   = server->input.cursor;
     struct wlr_surface *focused_surface =
-        server->input.seat->pointer_state.focused_surface;
+        server->input.seat->seat->pointer_state.focused_surface;
     struct wlr_surface *wlr_surface = view->wlr_surface;
 
     if (wlr_surface != focused_surface) {
