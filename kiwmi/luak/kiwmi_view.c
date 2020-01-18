@@ -10,10 +10,12 @@
 #include <string.h>
 
 #include <lauxlib.h>
+#include <wayland-server.h>
 #include <wlr/util/edges.h>
 #include <wlr/util/log.h>
 
 #include "desktop/view.h"
+#include "input/seat.h"
 #include "luak/kiwmi_lua_callback.h"
 #include "server.h"
 
@@ -34,7 +36,11 @@ l_kiwmi_view_focus(lua_State *L)
     struct kiwmi_view *view =
         *(struct kiwmi_view **)luaL_checkudata(L, 1, "kiwmi_view");
 
-    view_focus(view);
+    struct kiwmi_desktop *desktop = view->desktop;
+    struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
+    struct kiwmi_seat *seat       = server->input.seat;
+
+    seat_focus_view(seat, view);
 
     return 0;
 }

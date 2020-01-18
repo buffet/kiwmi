@@ -28,6 +28,7 @@ bool
 desktop_init(struct kiwmi_desktop *desktop, struct wlr_renderer *renderer)
 {
     struct kiwmi_server *server = wl_container_of(desktop, server, desktop);
+
     desktop->compositor = wlr_compositor_create(server->wl_display, renderer);
     desktop->data_device_manager =
         wlr_data_device_manager_create(server->wl_display);
@@ -48,8 +49,6 @@ desktop_init(struct kiwmi_desktop *desktop, struct wlr_renderer *renderer)
     wl_signal_add(
         &desktop->layer_shell->events.new_surface,
         &desktop->layer_shell_new_surface);
-
-    desktop->focused_view = NULL;
 
     wl_list_init(&desktop->outputs);
     wl_list_init(&desktop->views);

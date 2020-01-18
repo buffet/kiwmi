@@ -14,8 +14,8 @@
 #include <wlr/util/log.h>
 
 #include "desktop/desktop.h"
-#include "wayland-util.h"
-#include "wlr-layer-shell-unstable-v1-protocol.h"
+#include "input/seat.h"
+#include "server.h"
 
 static void
 kiwmi_layer_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
@@ -26,6 +26,8 @@ kiwmi_layer_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
     wl_list_remove(&layer->destroy.link);
 
     wlr_layer_surface_v1_close(layer->layer_surface);
+
+    arrange_layers(layer->output);
 
     free(layer);
 }
@@ -291,7 +293,11 @@ arrange_layers(struct kiwmi_output *output)
         }
     }
 
-    // TODO: focus topmost
+    struct kiwmi_desktop *desktop = output->desktop;
+    struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
+    struct kiwmi_seat *seat       = server->input.seat;
+
+    seat_focus_layer(seat, topmost);
 }
 
 void

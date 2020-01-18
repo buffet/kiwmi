@@ -9,13 +9,81 @@
 
 #include <stdlib.h>
 
-#include <wayland-server.h>
 #include <wlr/types/wlr_cursor.h>
+#include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_seat.h>
 #include <wlr/util/log.h>
 
+#include "desktop/layer_shell.h"
+#include "desktop/view.h"
 #include "input/cursor.h"
 #include "server.h"
+
+void
+seat_focus_surface(struct kiwmi_seat *seat, struct wlr_surface *wlr_surface)
+{
+    if (seat->focused_layer) {
+        return;
+    }
+
+    struct wlr_keyboard *keyboard = wlr_seat_get_keyboard(seat->seat);
+    if (!keyboard) {
+        wlr_seat_keyboard_enter(seat->seat, wlr_surface, NULL, 0, NULL);
+    }
+
+    wlr_seat_keyboard_enter(
+        seat->seat,
+        wlr_surface,
+        keyboard->keycodes,
+        keyboard->num_keycodes,
+        &keyboard->modifiers);
+}
+
+void
+seat_focus_view(struct kiwmi_seat *seat, struct kiwmi_view *view)
+{
+    if (!view) {
+        seat_focus_surface(seat, NULL);
+    }
+
+    struct kiwmi_desktop *desktop = view->desktop;
+
+    if (seat->focused_view) {
+        view_set_activated(seat->focused_view, false);
+    }
+
+    // move view to front
+    wl_list_remove(&view->link);
+    wl_list_insert(&desktop->views, &view->link);
+
+    seat->focused_view = view;
+    view_set_activated(view, true);
+    seat_focus_surface(seat, view->wlr_surface);
+}
+
+void
+seat_focus_layer(struct kiwmi_seat *seat, struct kiwmi_layer *layer)
+{
+    if (!layer) {
+        if (seat->focused_layer) {
+            seat_focus_surface(seat, NULL);
+            seat_focus_surface(
+                seat, seat->focused_layer->layer_surface->surface);
+        }
+
+        return;
+    }
+
+    if (seat->focused_layer == layer) {
+        return;
+    }
+
+    seat->focused_layer = NULL;
+
+    seat_focus_surface(seat, layer->layer_surface->surface);
+
+    seat->focused_layer = layer;
+}
 
 static void
 request_set_cursor_notify(struct wl_listener *listener, void *data)
@@ -56,6 +124,9 @@ seat_create(struct kiwmi_input *input)
 
     seat->input = input;
     seat->seat  = wlr_seat_create(server->wl_display, "seat-0");
+
+    seat->focused_view  = NULL;
+    seat->focused_layer = NULL;
 
     seat->request_set_cursor.notify = request_set_cursor_notify;
     wl_signal_add(
