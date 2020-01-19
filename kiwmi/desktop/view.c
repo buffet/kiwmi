@@ -34,12 +34,42 @@ view_for_each_surface(
     }
 }
 
+pid_t
+view_get_pid(struct kiwmi_view *view)
+{
+    if (view->impl->get_pid) {
+        return view->impl->get_pid(view);
+    }
+
+    return -1;
+}
+
 void
 view_get_size(struct kiwmi_view *view, uint32_t *width, uint32_t *height)
 {
     if (view->impl->get_size) {
         view->impl->get_size(view, width, height);
     }
+}
+
+const char *
+view_get_app_id(struct kiwmi_view *view)
+{
+    if (view->impl->get_string_prop) {
+        return view->impl->get_string_prop(view, KIWMI_VIEW_PROP_APP_ID);
+    }
+
+    return NULL;
+}
+
+const char *
+view_get_title(struct kiwmi_view *view)
+{
+    if (view->impl->get_string_prop) {
+        return view->impl->get_string_prop(view, KIWMI_VIEW_PROP_TITLE);
+    }
+
+    return NULL;
 }
 
 void

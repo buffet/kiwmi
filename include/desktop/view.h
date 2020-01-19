@@ -11,9 +11,16 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include <unistd.h>
+
 #include <wayland-server.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/edges.h>
+
+enum kiwmi_view_prop {
+    KIWMI_VIEW_PROP_APP_ID,
+    KIWMI_VIEW_PROP_TITLE,
+};
 
 enum kiwmi_view_type {
     KIWMI_VIEW_XDG_SHELL,
@@ -59,10 +66,13 @@ struct kiwmi_view_impl {
         struct kiwmi_view *view,
         wlr_surface_iterator_func_t iterator,
         void *user_data);
+    pid_t (*get_pid)(struct kiwmi_view *view);
     void (
         *get_size)(struct kiwmi_view *view, uint32_t *width, uint32_t *height);
     void (*set_activated)(struct kiwmi_view *view, bool activated);
     void (*set_size)(struct kiwmi_view *view, uint32_t width, uint32_t height);
+    const char *(
+        *get_string_prop)(struct kiwmi_view *view, enum kiwmi_view_prop prop);
     void (*set_tiled)(struct kiwmi_view *view, enum wlr_edges edges);
     struct wlr_surface *(*surface_at)(
         struct kiwmi_view *view,
@@ -77,7 +87,10 @@ void view_for_each_surface(
     struct kiwmi_view *view,
     wlr_surface_iterator_func_t iterator,
     void *user_data);
+pid_t view_get_pid(struct kiwmi_view *view);
 void view_get_size(struct kiwmi_view *view, uint32_t *width, uint32_t *height);
+const char *view_get_app_id(struct kiwmi_view *view);
+const char *view_get_title(struct kiwmi_view *view);
 void view_set_activated(struct kiwmi_view *view, bool activated);
 void view_set_size(struct kiwmi_view *view, uint32_t width, uint32_t height);
 void view_set_tiled(struct kiwmi_view *view, enum wlr_edges edges);

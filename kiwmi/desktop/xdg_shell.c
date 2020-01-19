@@ -7,6 +7,8 @@
 
 #include "desktop/xdg_shell.h"
 
+#include <unistd.h>
+
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/edges.h>
 #include <wlr/util/log.h>
@@ -104,6 +106,17 @@ xdg_shell_view_for_each_surface(
     wlr_xdg_surface_for_each_surface(view->xdg_surface, iterator, user_data);
 }
 
+static pid_t
+xdg_shell_view_get_pid(struct kiwmi_view *view)
+{
+    struct wl_client *client = view->xdg_surface->client->client;
+
+    pid_t pid;
+    wl_client_get_credentials(client, &pid, NULL, NULL);
+
+    return pid;
+}
+
 static void
 xdg_shell_view_get_size(
     struct kiwmi_view *view,
@@ -114,6 +127,21 @@ xdg_shell_view_get_size(
 
     *width  = geom->width;
     *height = geom->height;
+}
+
+static const char *
+xdg_shell_view_get_string_prop(
+    struct kiwmi_view *view,
+    enum kiwmi_view_prop prop)
+{
+    switch (prop) {
+    case KIWMI_VIEW_PROP_APP_ID:
+        return view->xdg_surface->toplevel->title;
+    case KIWMI_VIEW_PROP_TITLE:
+        return view->xdg_surface->toplevel->title;
+    default:
+        return NULL;
+    }
 }
 
 static void
@@ -151,7 +179,9 @@ xdg_shell_view_surface_at(
 static const struct kiwmi_view_impl xdg_shell_view_impl = {
     .close            = xdg_shell_view_close,
     .for_each_surface = xdg_shell_view_for_each_surface,
+    .get_pid          = xdg_shell_view_get_pid,
     .get_size         = xdg_shell_view_get_size,
+    .get_string_prop  = xdg_shell_view_get_string_prop,
     .set_activated    = xdg_shell_view_set_activated,
     .set_size         = xdg_shell_view_set_size,
     .set_tiled        = xdg_shell_view_set_tiled,
