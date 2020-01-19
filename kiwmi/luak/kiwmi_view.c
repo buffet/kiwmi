@@ -20,6 +20,17 @@
 #include "server.h"
 
 static int
+l_kiwmi_view_app_id(lua_State *L)
+{
+    struct kiwmi_view *view =
+        *(struct kiwmi_view **)luaL_checkudata(L, 1, "kiwmi_view");
+
+    lua_pushstring(L, view_get_app_id(view));
+
+    return 1;
+}
+
+static int
 l_kiwmi_view_close(lua_State *L)
 {
     struct kiwmi_view *view =
@@ -80,6 +91,17 @@ l_kiwmi_view_move(lua_State *L)
     view->y = lua_tonumber(L, 3);
 
     return 0;
+}
+
+static int
+l_kiwmi_view_pid(lua_State *L)
+{
+    struct kiwmi_view *view =
+        *(struct kiwmi_view **)luaL_checkudata(L, 1, "kiwmi_view");
+
+    lua_pushinteger(L, view_get_pid(view));
+
+    return 1;
 }
 
 static int
@@ -194,18 +216,32 @@ l_kiwmi_view_tiled(lua_State *L)
     return luaL_argerror(L, 2, "expected bool or table");
 }
 
+static int
+l_kiwmi_view_title(lua_State *L)
+{
+    struct kiwmi_view *view =
+        *(struct kiwmi_view **)luaL_checkudata(L, 1, "kiwmi_view");
+
+    lua_pushstring(L, view_get_app_id(view));
+
+    return 1;
+}
+
 static const luaL_Reg kiwmi_view_methods[] = {
+    {"app_id", l_kiwmi_view_app_id},
     {"close", l_kiwmi_view_close},
     {"focus", l_kiwmi_view_focus},
     {"hidden", l_kiwmi_view_hidden},
     {"hide", l_kiwmi_view_hide},
     {"move", l_kiwmi_view_move},
     {"on", luaK_callback_register_dispatch},
+    {"pid", l_kiwmi_view_pid},
     {"pos", l_kiwmi_view_pos},
     {"resize", l_kiwmi_view_resize},
     {"show", l_kiwmi_view_show},
     {"size", l_kiwmi_view_size},
     {"tiled", l_kiwmi_view_tiled},
+    {"title", l_kiwmi_view_title},
     {NULL, NULL},
 };
 
