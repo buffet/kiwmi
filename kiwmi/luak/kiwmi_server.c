@@ -93,7 +93,9 @@ l_kiwmi_server_spawn(lua_State *L)
         _exit(EXIT_FAILURE);
     }
 
-    return 0;
+    lua_pushinteger(L, pid);
+
+    return 1;
 }
 
 static int
