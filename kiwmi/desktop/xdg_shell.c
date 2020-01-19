@@ -36,6 +36,14 @@ xdg_surface_unmap_notify(struct wl_listener *listener, void *UNUSED(data))
 }
 
 static void
+xdg_surface_commit_notify(struct wl_listener *listener, void *UNUSED(data))
+{
+    struct kiwmi_view *view = wl_container_of(listener, view, commit);
+
+    wlr_xdg_surface_get_geometry(view->xdg_surface, &view->geom);
+}
+
+static void
 xdg_surface_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_view *view       = wl_container_of(listener, view, destroy);
@@ -50,6 +58,7 @@ xdg_surface_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
     wl_list_remove(&view->link);
     wl_list_remove(&view->map.link);
     wl_list_remove(&view->unmap.link);
+    wl_list_remove(&view->commit.link);
     wl_list_remove(&view->destroy.link);
     wl_list_remove(&view->request_move.link);
     wl_list_remove(&view->request_resize.link);
@@ -183,6 +192,9 @@ xdg_shell_new_surface_notify(struct wl_listener *listener, void *data)
 
     view->unmap.notify = xdg_surface_unmap_notify;
     wl_signal_add(&xdg_surface->events.unmap, &view->unmap);
+
+    view->commit.notify = xdg_surface_commit_notify;
+    wl_signal_add(&xdg_surface->surface->events.commit, &view->commit);
 
     view->destroy.notify = xdg_surface_destroy_notify;
     wl_signal_add(&xdg_surface->events.destroy, &view->destroy);
