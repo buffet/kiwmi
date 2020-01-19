@@ -300,6 +300,36 @@ arrange_layers(struct kiwmi_output *output)
     seat_focus_layer(seat, topmost);
 }
 
+struct kiwmi_layer *
+layer_at(
+    struct wl_list *layers,
+    struct wlr_surface **surface,
+    double ox,
+    double oy,
+    double *sx,
+    double *sy)
+{
+    struct kiwmi_layer *layer;
+    wl_list_for_each_reverse (layer, layers, link) {
+        double layer_sx = ox - layer->geom.x;
+        double layer_sy = oy - layer->geom.y;
+
+        double _sx;
+        double _sy;
+        struct wlr_surface *_surface = wlr_layer_surface_v1_surface_at(
+            layer->layer_surface, layer_sx, layer_sy, &_sx, &_sy);
+
+        if (_surface) {
+            *sx      = _sx;
+            *sy      = _sy;
+            *surface = _surface;
+            return layer;
+        }
+    }
+
+    return NULL;
+}
+
 void
 layer_shell_new_surface_notify(struct wl_listener *listener, void *data)
 {

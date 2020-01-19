@@ -93,11 +93,12 @@ surface_at(
     double view_sx = lx - view->x + view->geom.x;
     double view_sy = ly - view->y + view->geom.y;
 
-    double _sx, _sy;
-    struct wlr_surface *_surface = NULL;
-    _surface = view_surface_at(view, view_sx, view_sy, &_sx, &_sy);
+    double _sx;
+    double _sy;
+    struct wlr_surface *_surface =
+        view_surface_at(view, view_sx, view_sy, &_sx, &_sy);
 
-    if (_surface != NULL) {
+    if (_surface) {
         *sx      = _sx;
         *sy      = _sy;
         *surface = _surface;
