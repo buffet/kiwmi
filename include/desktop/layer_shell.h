@@ -12,6 +12,7 @@
 
 #include <wayland-server.h>
 #include <wlr/types/wlr_box.h>
+#include <wlr/types/wlr_surface.h>
 
 #include "desktop/output.h"
 
@@ -29,6 +30,13 @@ struct kiwmi_layer {
 
 void arrange_layers(struct kiwmi_output *output);
 
+struct kiwmi_layer *layer_at(
+    struct wl_list *layers,
+    struct wlr_surface **surface,
+    double ox,
+    double oy,
+    double *sx,
+    double *sy);
 void layer_shell_new_surface_notify(struct wl_listener *listener, void *data);
 
 #endif /* KIWMI_DESKTOP_LAYER_SHELL_H */
