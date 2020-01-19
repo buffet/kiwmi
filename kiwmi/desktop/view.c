@@ -90,8 +90,8 @@ surface_at(
     double *sx,
     double *sy)
 {
-    double view_sx = lx - view->x;
-    double view_sy = ly - view->y;
+    double view_sx = lx - view->x + view->geom.x;
+    double view_sy = ly - view->y + view->geom.y;
 
     double _sx, _sy;
     struct wlr_surface *_surface = NULL;

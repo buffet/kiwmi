@@ -33,8 +33,11 @@ struct kiwmi_view {
 
     struct wlr_surface *wlr_surface;
 
+    struct wlr_box geom;
+
     struct wl_listener map;
     struct wl_listener unmap;
+    struct wl_listener commit;
     struct wl_listener destroy;
     struct wl_listener request_move;
     struct wl_listener request_resize;

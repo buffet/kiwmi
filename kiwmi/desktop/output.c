@@ -103,8 +103,8 @@ render_surface(struct wlr_surface *surface, int sx, int sy, void *data)
     wlr_output_layout_output_coords(
         view->desktop->output_layout, output, &ox, &oy);
 
-    ox += view->x + sx;
-    oy += view->y + sy;
+    ox += view->x + sx - view->geom.x;
+    oy += view->y + sy - view->geom.y;
 
     struct wlr_box box = {
         .x      = ox * output->scale,
