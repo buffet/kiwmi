@@ -75,7 +75,7 @@ xdg_toplevel_request_move_notify(
 {
     struct kiwmi_view *view = wl_container_of(listener, view, request_move);
 
-    view_move(view);
+    wl_signal_emit(&view->events.request_move, view);
 }
 
 static void
@@ -84,7 +84,12 @@ xdg_toplevel_request_resize_notify(struct wl_listener *listener, void *data)
     struct kiwmi_view *view = wl_container_of(listener, view, request_resize);
     struct wlr_xdg_toplevel_resize_event *event = data;
 
-    view_resize(view, event->edges);
+    struct kiwmi_request_resize_event new_event = {
+        .view  = view,
+        .edges = event->edges,
+    };
+
+    wl_signal_emit(&view->events.request_resize, &new_event);
 }
 
 static void
