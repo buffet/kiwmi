@@ -199,8 +199,6 @@ cursor_button_notify(struct wl_listener *listener, void *data)
         wlr_seat_pointer_notify_button(
             input->seat->seat, event->time_msec, event->button, event->state);
     }
-
-    cursor->cursor_mode = KIWMI_CURSOR_PASSTHROUGH;
 }
 
 static void
