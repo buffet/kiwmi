@@ -34,6 +34,10 @@ Quit kiwmi.
 Spawn a new process.
 `command` is passed to `/bin/sh`.
 
+#### kiwmi:stop_interactive()
+
+Stops an interactive move or resize.
+
 #### kiwmi:view_at(x, y)
 
 Get the view at a specified position.

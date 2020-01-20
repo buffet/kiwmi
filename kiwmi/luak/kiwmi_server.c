@@ -99,6 +99,17 @@ l_kiwmi_server_spawn(lua_State *L)
 }
 
 static int
+l_kiwmi_server_stop_interactive(lua_State *L)
+{
+    struct kiwmi_server *server =
+        *(struct kiwmi_server **)luaL_checkudata(L, 1, "kiwmi_server");
+
+    server->input.cursor->cursor_mode = KIWMI_CURSOR_PASSTHROUGH;
+
+    return 0;
+}
+
+static int
 l_kiwmi_server_view_at(lua_State *L)
 {
     struct kiwmi_server *server =
@@ -136,6 +147,7 @@ static const luaL_Reg kiwmi_server_methods[] = {
     {"on", luaK_callback_register_dispatch},
     {"quit", l_kiwmi_server_quit},
     {"spawn", l_kiwmi_server_spawn},
+    {"stop_interactive", l_kiwmi_server_stop_interactive},
     {"view_at", l_kiwmi_server_view_at},
     {NULL, NULL},
 };
