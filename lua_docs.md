@@ -196,6 +196,11 @@ Represents a view (a window in kiwmi terms).
 
 ### Methods
 
+#### view:app_id()
+
+Returns the app id of the view.
+This is comparable to the window class of X windows.
+
 #### view:close()
 
 Closes the view.
@@ -220,6 +225,10 @@ Moves the view to the specified position.
 
 Used to register event listeners.
 
+#### view:pid()
+
+Returns the process ID of the client associated with the view.
+
 #### view:pos()
 
 Returns the position of the view (top-left corner).
@@ -241,6 +250,10 @@ Returns the size of the view.
 #### view:tiled(edges)
 
 Takes a table containing all edges that are tiled, or a bool to indicate all 4 edges.
+
+#### view:title()
+
+Returns the title of the view.
 
 ### Events
 
