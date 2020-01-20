@@ -217,6 +217,15 @@ Returns `true` if the view is hidden, `false` otherwise.
 
 Hides the view.
 
+#### view:imove()
+
+Starts an interactive move.
+
+#### view:iresize(edges)
+
+Starts an interactive resize.
+Takes a table containing the edges, that the resize is happening on.
+
 #### view:move(x, y)
 
 Moves the view to the specified position.
@@ -261,3 +270,13 @@ Returns the title of the view.
 
 The view is being destroyed.
 Callback receives the view.
+
+#### request_move
+
+The view wants to start an interactive move.
+Callback receives the view.
+
+#### request_resize
+
+The view wants to start an interactive resize.
+Callback receives a table containing the `view`, and `edges`, containing the edges.

@@ -234,6 +234,8 @@ view_create(
     view->y = 0;
 
     wl_signal_init(&view->events.unmap);
+    wl_signal_init(&view->events.request_move);
+    wl_signal_init(&view->events.request_resize);
 
     return view;
 }

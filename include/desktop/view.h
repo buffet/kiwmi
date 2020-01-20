@@ -57,6 +57,8 @@ struct kiwmi_view {
 
     struct {
         struct wl_signal unmap;
+        struct wl_signal request_move;
+        struct wl_signal request_resize;
     } events;
 };
 
@@ -80,6 +82,11 @@ struct kiwmi_view_impl {
         double sy,
         double *sub_x,
         double *sub_y);
+};
+
+struct kiwmi_request_resize_event {
+    struct kiwmi_view *view;
+    uint32_t edges;
 };
 
 void view_close(struct kiwmi_view *view);
