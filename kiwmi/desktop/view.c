@@ -224,11 +224,12 @@ view_create(
         return NULL;
     }
 
-    view->desktop = desktop;
-    view->type    = type;
-    view->impl    = impl;
-    view->mapped  = false;
-    view->hidden  = true;
+    view->desktop    = desktop;
+    view->type       = type;
+    view->impl       = impl;
+    view->mapped     = false;
+    view->hidden     = true;
+    view->decoration = NULL;
 
     view->x = 0;
     view->y = 0;

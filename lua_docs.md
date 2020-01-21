@@ -209,6 +209,10 @@ This is comparable to the window class of X windows.
 
 Closes the view.
 
+#### view:csd(client_draws)
+
+Set whether the client is supposed to draw their own client decoration.
+
 #### view:focus()
 
 Focuses the view.

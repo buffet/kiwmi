@@ -9,6 +9,7 @@
 
 #include <unistd.h>
 
+#include <wlr/types/wlr_xdg_decoration_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/edges.h>
 #include <wlr/util/log.h>
@@ -219,6 +220,8 @@ xdg_shell_new_surface_notify(struct wl_listener *listener, void *data)
         return;
     }
 
+    xdg_surface->data = view;
+
     view->xdg_surface = xdg_surface;
     view->wlr_surface = xdg_surface->surface;
 
@@ -243,4 +246,65 @@ xdg_shell_new_surface_notify(struct wl_listener *listener, void *data)
         &xdg_surface->toplevel->events.request_resize, &view->request_resize);
 
     wl_list_insert(&desktop->views, &view->link);
+}
+
+static void
+xdg_decoration_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
+{
+    struct kiwmi_xdg_decoration *decoration =
+        wl_container_of(listener, decoration, destroy);
+
+    decoration->view->decoration = NULL;
+
+    wl_list_remove(&decoration->destroy.link);
+    wl_list_remove(&decoration->request_mode.link);
+
+    free(decoration);
+}
+
+static void
+xdg_decoration_request_mode_notify(
+    struct wl_listener *listener,
+    void *UNUSED(data))
+{
+    struct kiwmi_xdg_decoration *decoration =
+        wl_container_of(listener, decoration, request_mode);
+
+    enum wlr_xdg_toplevel_decoration_v1_mode mode =
+        decoration->wlr_decoration->client_pending_mode;
+    if (mode == WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_NONE) {
+        mode = WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_CLIENT_SIDE;
+    }
+
+    wlr_xdg_toplevel_decoration_v1_set_mode(decoration->wlr_decoration, mode);
+}
+
+void
+xdg_toplevel_new_decoration_notify(struct wl_listener *listener, void *data)
+{
+    struct kiwmi_desktop *desktop =
+        wl_container_of(listener, desktop, xdg_toplevel_new_decoration);
+    struct wlr_xdg_toplevel_decoration_v1 *wlr_decoration = data;
+
+    wlr_log(WLR_DEBUG, "New xdg_toplevel decoration");
+
+    struct kiwmi_view *view = wlr_decoration->surface->data;
+
+    struct kiwmi_xdg_decoration *decoration = malloc(sizeof(*decoration));
+    if (!decoration) {
+        wlr_log(WLR_ERROR, "Failed to allocate xdg_decoration");
+        return;
+    }
+
+    view->decoration = decoration;
+
+    decoration->view           = view;
+    decoration->wlr_decoration = wlr_decoration;
+
+    decoration->destroy.notify = xdg_decoration_destroy_notify;
+    wl_signal_add(&wlr_decoration->events.destroy, &decoration->destroy);
+
+    decoration->request_mode.notify = xdg_decoration_request_mode_notify;
+    wl_signal_add(
+        &wlr_decoration->events.request_mode, &decoration->request_mode);
 }

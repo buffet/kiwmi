@@ -11,10 +11,12 @@
 
 #include <lauxlib.h>
 #include <wayland-server.h>
+#include <wlr/types/wlr_xdg_decoration_v1.h>
 #include <wlr/util/edges.h>
 #include <wlr/util/log.h>
 
 #include "desktop/view.h"
+#include "desktop/xdg_shell.h"
 #include "input/seat.h"
 #include "luak/kiwmi_lua_callback.h"
 #include "server.h"
@@ -37,6 +39,30 @@ l_kiwmi_view_close(lua_State *L)
         *(struct kiwmi_view **)luaL_checkudata(L, 1, "kiwmi_view");
 
     view_close(view);
+
+    return 0;
+}
+
+static int
+l_kiwmi_view_csd(lua_State *L)
+{
+    struct kiwmi_view *view =
+        *(struct kiwmi_view **)luaL_checkudata(L, 1, "kiwmi_view");
+    luaL_checktype(L, 2, LUA_TBOOLEAN);
+
+    struct kiwmi_xdg_decoration *decoration = view->decoration;
+    if (!decoration) {
+        return 0;
+    }
+
+    enum wlr_xdg_toplevel_decoration_v1_mode mode;
+    if (lua_toboolean(L, 2)) {
+        mode = WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_CLIENT_SIDE;
+    } else {
+        mode = WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE;
+    }
+
+    wlr_xdg_toplevel_decoration_v1_set_mode(decoration->wlr_decoration, mode);
 
     return 0;
 }
@@ -282,6 +308,7 @@ l_kiwmi_view_title(lua_State *L)
 static const luaL_Reg kiwmi_view_methods[] = {
     {"app_id", l_kiwmi_view_app_id},
     {"close", l_kiwmi_view_close},
+    {"csd", l_kiwmi_view_csd},
     {"focus", l_kiwmi_view_focus},
     {"hidden", l_kiwmi_view_hidden},
     {"hide", l_kiwmi_view_hide},

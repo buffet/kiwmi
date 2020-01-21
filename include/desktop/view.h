@@ -60,6 +60,8 @@ struct kiwmi_view {
         struct wl_signal request_move;
         struct wl_signal request_resize;
     } events;
+
+    struct kiwmi_xdg_decoration *decoration;
 };
 
 struct kiwmi_view_impl {

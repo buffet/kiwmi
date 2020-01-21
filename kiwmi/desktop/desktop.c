@@ -16,6 +16,7 @@
 #include <wlr/types/wlr_export_dmabuf_v1.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_output_layout.h>
+#include <wlr/types/wlr_xdg_decoration_v1.h>
 #include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
 
@@ -43,6 +44,14 @@ desktop_init(struct kiwmi_desktop *desktop, struct wlr_renderer *renderer)
     wl_signal_add(
         &desktop->xdg_shell->events.new_surface,
         &desktop->xdg_shell_new_surface);
+
+    desktop->xdg_decoration_manager =
+        wlr_xdg_decoration_manager_v1_create(server->wl_display);
+    desktop->xdg_toplevel_new_decoration.notify =
+        xdg_toplevel_new_decoration_notify;
+    wl_signal_add(
+        &desktop->xdg_decoration_manager->events.new_toplevel_decoration,
+        &desktop->xdg_toplevel_new_decoration);
 
     desktop->layer_shell = wlr_layer_shell_v1_create(server->wl_display);
     desktop->layer_shell_new_surface.notify = layer_shell_new_surface_notify;
