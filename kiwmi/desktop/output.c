@@ -26,35 +26,21 @@
 #include "input/cursor.h"
 #include "input/input.h"
 #include "server.h"
-#include "wayland-util.h"
-
-struct render_data {
-    struct wlr_output *output;
-    struct wlr_renderer *renderer;
-    struct timespec *when;
-    struct wlr_output_layout *output_layout;
-    void *data;
-};
 
 static void
 render_layer_surface(struct wlr_surface *surface, int x, int y, void *data)
 {
-    struct render_data *rdata               = data;
-    struct wlr_output *output               = rdata->output;
-    struct wlr_output_layout *output_layout = rdata->output_layout;
-    struct wlr_box *geom                    = rdata->data;
+    struct kiwmi_render_data *rdata = data;
+    struct wlr_output *output       = rdata->output;
+    struct wlr_box *geom            = rdata->data;
 
     struct wlr_texture *texture = wlr_surface_get_texture(surface);
     if (!texture) {
         return;
     }
 
-    double ox = 0;
-    double oy = 0;
-    wlr_output_layout_output_coords(output_layout, output, &ox, &oy);
-
-    ox += x + geom->x;
-    oy += y + geom->y;
+    double ox = rdata->output_lx + x + geom->x;
+    double oy = rdata->output_ly + y + geom->y;
 
     struct wlr_box box = {
         .x      = ox * output->scale,
@@ -75,7 +61,7 @@ render_layer_surface(struct wlr_surface *surface, int x, int y, void *data)
 }
 
 static void
-render_layer(struct wl_list *layer, struct render_data *rdata)
+render_layer(struct wl_list *layer, struct kiwmi_render_data *rdata)
 {
     struct kiwmi_layer *surface;
     wl_list_for_each (surface, layer, link) {
@@ -89,22 +75,17 @@ render_layer(struct wl_list *layer, struct render_data *rdata)
 static void
 render_surface(struct wlr_surface *surface, int sx, int sy, void *data)
 {
-    struct render_data *rdata = data;
-    struct kiwmi_view *view   = rdata->data;
-    struct wlr_output *output = rdata->output;
+    struct kiwmi_render_data *rdata = data;
+    struct kiwmi_view *view         = rdata->data;
+    struct wlr_output *output       = rdata->output;
 
     struct wlr_texture *texture = wlr_surface_get_texture(surface);
     if (!texture) {
         return;
     }
 
-    double ox = 0;
-    double oy = 0;
-    wlr_output_layout_output_coords(
-        view->desktop->output_layout, output, &ox, &oy);
-
-    ox += view->x + sx - view->geom.x;
-    oy += view->y + sy - view->geom.y;
+    double ox = rdata->output_lx + sx + view->x - view->geom.x;
+    double oy = rdata->output_ly + sy + view->y - view->geom.y;
 
     struct wlr_box box = {
         .x      = ox * output->scale,
@@ -144,17 +125,22 @@ output_frame_notify(struct wl_listener *listener, void *data)
 
     int width;
     int height;
-
     wlr_output_effective_resolution(wlr_output, &width, &height);
 
     wlr_renderer_begin(renderer, width, height);
     wlr_renderer_clear(renderer, (float[]){0.0f, 1.0f, 0.0f, 1.0f});
 
-    struct render_data rdata = {
-        .output        = output->wlr_output,
-        .renderer      = renderer,
-        .when          = &now,
-        .output_layout = output_layout,
+    double output_lx;
+    double output_ly;
+    wlr_output_layout_output_coords(
+        output_layout, wlr_output, &output_lx, &output_ly);
+
+    struct kiwmi_render_data rdata = {
+        .output    = output->wlr_output,
+        .output_lx = output_lx,
+        .output_ly = output_ly,
+        .renderer  = renderer,
+        .when      = &now,
     };
 
     render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND], &rdata);
