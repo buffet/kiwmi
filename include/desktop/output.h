@@ -27,6 +27,15 @@ struct kiwmi_output {
     } events;
 };
 
+struct kiwmi_render_data {
+    struct wlr_output *output;
+    double output_lx;
+    double output_ly;
+    struct wlr_renderer *renderer;
+    struct timespec *when;
+    void *data;
+};
+
 void new_output_notify(struct wl_listener *listener, void *data);
 
 #endif /* KIWMI_DESKTOP_OUTPUT_H */
