@@ -191,8 +191,8 @@ l_kiwmi_view_pos(lua_State *L)
     struct kiwmi_view *view =
         *(struct kiwmi_view **)luaL_checkudata(L, 1, "kiwmi_view");
 
-    lua_pushnumber(L, view->x);
-    lua_pushnumber(L, view->y);
+    lua_pushinteger(L, view->x);
+    lua_pushinteger(L, view->y);
 
     return 2;
 }

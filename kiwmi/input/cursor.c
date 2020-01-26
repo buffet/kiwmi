@@ -42,8 +42,8 @@ process_cursor_motion(struct kiwmi_server *server, uint32_t time)
     }
     case KIWMI_CURSOR_RESIZE: {
         struct kiwmi_view *view = cursor->grabbed.view;
-        double dx               = cursor->cursor->x - cursor->grabbed.orig_x;
-        double dy               = cursor->cursor->y - cursor->grabbed.orig_y;
+        int dx               = cursor->cursor->x - cursor->grabbed.orig_x;
+        int dy               = cursor->cursor->y - cursor->grabbed.orig_y;
 
         struct wlr_box new_geom = {
             .x      = view->x,
