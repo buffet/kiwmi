@@ -40,8 +40,8 @@ l_kiwmi_output_move(lua_State *L)
 
     struct wlr_output_layout *output_layout = output->desktop->output_layout;
 
-    int lx = lua_tointeger(L, 2);
-    int ly = lua_tointeger(L, 3);
+    int lx = lua_tonumber(L, 2);
+    int ly = lua_tonumber(L, 3);
 
     wlr_output_layout_move(output_layout, output->wlr_output, lx, ly);
 
