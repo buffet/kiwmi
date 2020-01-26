@@ -237,6 +237,8 @@ view_create(
     wl_signal_init(&view->events.unmap);
     wl_signal_init(&view->events.request_move);
     wl_signal_init(&view->events.request_resize);
+    wl_signal_init(&view->events.post_render);
+    wl_signal_init(&view->events.pre_render);
 
     return view;
 }

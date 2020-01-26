@@ -59,6 +59,8 @@ struct kiwmi_view {
         struct wl_signal unmap;
         struct wl_signal request_move;
         struct wl_signal request_resize;
+        struct wl_signal post_render;
+        struct wl_signal pre_render;
     } events;
 
     struct kiwmi_xdg_decoration *decoration;

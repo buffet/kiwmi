@@ -15,10 +15,13 @@
 #include <wlr/util/edges.h>
 #include <wlr/util/log.h>
 
+#include "desktop/output.h"
 #include "desktop/view.h"
 #include "desktop/xdg_shell.h"
 #include "input/seat.h"
 #include "luak/kiwmi_lua_callback.h"
+#include "luak/kiwmi_output.h"
+#include "luak/kiwmi_renderer.h"
 #include "server.h"
 
 static int
@@ -352,6 +355,62 @@ kiwmi_view_on_destroy_notify(struct wl_listener *listener, void *data)
 }
 
 static void
+kiwmi_view_on_render_notify(struct wl_listener *listener, void *data)
+{
+    struct kiwmi_lua_callback *lc   = wl_container_of(listener, lc, listener);
+    struct kiwmi_server *server     = lc->server;
+    lua_State *L                    = server->lua->L;
+    struct kiwmi_render_data *rdata = data;
+
+    struct kiwmi_view *view       = rdata->data;
+    struct wlr_renderer *renderer = rdata->renderer;
+    struct kiwmi_output *output   = rdata->output->data;
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lc->callback_ref);
+
+    lua_newtable(L);
+
+    lua_pushcfunction(L, luaK_kiwmi_view_new);
+    lua_pushlightuserdata(L, view);
+
+    if (lua_pcall(L, 1, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+        return;
+    }
+
+    lua_setfield(L, -2, "view");
+
+    lua_pushcfunction(L, luaK_kiwmi_output_new);
+    lua_pushlightuserdata(L, output);
+
+    if (lua_pcall(L, 1, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+        return;
+    }
+
+    lua_setfield(L, -2, "output");
+
+    lua_pushcfunction(L, luaK_kiwmi_renderer_new);
+    lua_pushlightuserdata(L, renderer);
+    lua_pushlightuserdata(L, output);
+
+    if (lua_pcall(L, 2, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+        return;
+    }
+
+    lua_setfield(L, -2, "renderer");
+
+    if (lua_pcall(L, 1, 0, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+}
+
+static void
 kiwmi_view_on_request_move_notify(struct wl_listener *listener, void *data)
 {
     struct kiwmi_lua_callback *lc = wl_container_of(listener, lc, listener);
@@ -457,6 +516,54 @@ l_kiwmi_view_on_destroy(lua_State *L)
 }
 
 static int
+l_kiwmi_view_on_post_render(lua_State *L)
+{
+    struct kiwmi_view *view =
+        *(struct kiwmi_view **)luaL_checkudata(L, 1, "kiwmi_view");
+    luaL_checktype(L, 2, LUA_TFUNCTION);
+
+    struct kiwmi_desktop *desktop = view->desktop;
+    struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
+
+    lua_pushcfunction(L, luaK_kiwmi_lua_callback_new);
+    lua_pushlightuserdata(L, server);
+    lua_pushvalue(L, 2);
+    lua_pushlightuserdata(L, kiwmi_view_on_render_notify);
+    lua_pushlightuserdata(L, &view->events.post_render);
+
+    if (lua_pcall(L, 4, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        return 0;
+    }
+
+    return 1;
+}
+
+static int
+l_kiwmi_view_on_pre_render(lua_State *L)
+{
+    struct kiwmi_view *view =
+        *(struct kiwmi_view **)luaL_checkudata(L, 1, "kiwmi_view");
+    luaL_checktype(L, 2, LUA_TFUNCTION);
+
+    struct kiwmi_desktop *desktop = view->desktop;
+    struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
+
+    lua_pushcfunction(L, luaK_kiwmi_lua_callback_new);
+    lua_pushlightuserdata(L, server);
+    lua_pushvalue(L, 2);
+    lua_pushlightuserdata(L, kiwmi_view_on_render_notify);
+    lua_pushlightuserdata(L, &view->events.pre_render);
+
+    if (lua_pcall(L, 4, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        return 0;
+    }
+
+    return 1;
+}
+
+static int
 l_kiwmi_view_on_request_move(lua_State *L)
 {
     struct kiwmi_view *view =
@@ -506,6 +613,8 @@ l_kiwmi_view_on_request_resize(lua_State *L)
 
 static const luaL_Reg kiwmi_view_events[] = {
     {"destroy", l_kiwmi_view_on_destroy},
+    {"post_render", l_kiwmi_view_on_post_render},
+    {"pre_render", l_kiwmi_view_on_pre_render},
     {"request_move", l_kiwmi_view_on_request_move},
     {"request_resize", l_kiwmi_view_on_request_resize},
     {NULL, NULL},

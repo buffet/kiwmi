@@ -154,7 +154,9 @@ output_frame_notify(struct wl_listener *listener, void *data)
 
         rdata.data = view;
 
+        wl_signal_emit(&view->events.pre_render, &rdata);
         view_for_each_surface(view, render_surface, &rdata);
+        wl_signal_emit(&view->events.post_render, &rdata);
     }
 
     render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], &rdata);

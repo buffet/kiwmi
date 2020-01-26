@@ -15,6 +15,7 @@ kiwmi_sources = files(
   'luak/kiwmi_keyboard.c',
   'luak/kiwmi_lua_callback.c',
   'luak/kiwmi_output.c',
+  'luak/kiwmi_renderer.c',
   'luak/kiwmi_server.c',
   'luak/kiwmi_view.c',
   'luak/luak.c',
