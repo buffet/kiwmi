@@ -49,8 +49,8 @@ struct kiwmi_view {
     struct wl_listener request_move;
     struct wl_listener request_resize;
 
-    double x;
-    double y;
+    int x;
+    int y;
 
     bool mapped;
     bool hidden;
