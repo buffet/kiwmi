@@ -279,6 +279,20 @@ Returns the title of the view.
 The view is being destroyed.
 Callback receives the view.
 
+#### post_render
+
+The view finished being rendered.
+Callback receives a table with the `view`, the `renderer` and the `output`.
+
+This event occurs once per output the view might be drawn on.
+
+#### pre_render
+
+The view is about to be rendered.
+Callback receives a table with the `view`, the `renderer` and the `output`.
+
+This event occurs once per output the view might be drawn on.
+
 #### request_move
 
 The view wants to start an interactive move.
