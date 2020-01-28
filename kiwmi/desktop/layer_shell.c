@@ -361,9 +361,9 @@ layer_shell_new_surface_notify(struct wl_listener *listener, void *data)
     struct kiwmi_output *output = layer_surface->output->data;
 
     size_t len = sizeof(output->layers) / sizeof(output->layers[0]);
-    if (layer_surface->layer >= len) {
+    if (layer_surface->current.layer >= len) {
         wlr_log(
-            WLR_ERROR, "Bad layer surface layer '%d'", layer_surface->layer);
+            WLR_ERROR, "Bad layer surface layer '%d'", layer_surface->current.layer);
         wlr_layer_surface_v1_close(layer_surface);
         free(layer);
         return;
@@ -378,7 +378,7 @@ layer_shell_new_surface_notify(struct wl_listener *listener, void *data)
     layer->commit.notify = kiwmi_layer_commit_notify;
     wl_signal_add(&layer_surface->surface->events.commit, &layer->commit);
 
-    wl_list_insert(&output->layers[layer_surface->layer], &layer->link);
+    wl_list_insert(&output->layers[layer_surface->current.layer], &layer->link);
 
     // Temporarily set the layer's current state to client_pending
     // So that we can easily arrange it
