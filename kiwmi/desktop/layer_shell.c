@@ -35,8 +35,16 @@ kiwmi_layer_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
 static void
 kiwmi_layer_commit_notify(struct wl_listener *listener, void *UNUSED(data))
 {
-    struct kiwmi_layer *surface = wl_container_of(listener, surface, commit);
-    struct kiwmi_output *output = surface->output;
+    struct kiwmi_layer *layer = wl_container_of(listener, layer, commit);
+    struct kiwmi_output *output = layer->output;
+
+    bool layer_changed = layer->layer != layer->layer_surface->current.layer;
+
+    if (layer_changed) {
+        wl_list_remove(&layer->link);
+        layer->layer = layer->layer_surface->current.layer;
+        wl_list_insert(&output->layers[layer->layer], &layer->link);
+    }
 
     arrange_layers(output);
 }
@@ -371,6 +379,7 @@ layer_shell_new_surface_notify(struct wl_listener *listener, void *data)
 
     layer->layer_surface = layer_surface;
     layer->output        = output;
+    layer->layer         = layer_surface->current.layer;
 
     layer->destroy.notify = kiwmi_layer_destroy_notify;
     wl_signal_add(&layer_surface->events.destroy, &layer->destroy);
@@ -378,7 +387,7 @@ layer_shell_new_surface_notify(struct wl_listener *listener, void *data)
     layer->commit.notify = kiwmi_layer_commit_notify;
     wl_signal_add(&layer_surface->surface->events.commit, &layer->commit);
 
-    wl_list_insert(&output->layers[layer_surface->current.layer], &layer->link);
+    wl_list_insert(&output->layers[layer->layer], &layer->link);
 
     // Temporarily set the layer's current state to client_pending
     // So that we can easily arrange it
