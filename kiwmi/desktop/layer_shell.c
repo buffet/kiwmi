@@ -35,7 +35,7 @@ kiwmi_layer_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
 static void
 kiwmi_layer_commit_notify(struct wl_listener *listener, void *UNUSED(data))
 {
-    struct kiwmi_layer *layer = wl_container_of(listener, layer, commit);
+    struct kiwmi_layer *layer   = wl_container_of(listener, layer, commit);
     struct kiwmi_output *output = layer->output;
 
     bool layer_changed = layer->layer != layer->layer_surface->current.layer;
@@ -371,7 +371,9 @@ layer_shell_new_surface_notify(struct wl_listener *listener, void *data)
     size_t len = sizeof(output->layers) / sizeof(output->layers[0]);
     if (layer_surface->current.layer >= len) {
         wlr_log(
-            WLR_ERROR, "Bad layer surface layer '%d'", layer_surface->current.layer);
+            WLR_ERROR,
+            "Bad layer surface layer '%d'",
+            layer_surface->current.layer);
         wlr_layer_surface_v1_close(layer_surface);
         free(layer);
         return;
