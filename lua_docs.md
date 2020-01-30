@@ -194,6 +194,17 @@ Callback receives the output.
 The output is being resized.
 Callback receives a table containing the `output`, the new `width`, and the new `height`.
 
+## kiwmi_renderer
+
+Represents a rendering context, to draw on the output.
+
+### Methods
+
+#### renderer:draw_rect(color, x, y, w, h)
+
+Draws a rect at the given position.
+Color is a string in the form #rrggbb or #rrggbbaa.
+
 ## kiwmi_view
 
 Represents a view (a window in kiwmi terms).
