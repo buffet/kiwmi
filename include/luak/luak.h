@@ -16,10 +16,30 @@
 
 struct kiwmi_lua {
     lua_State *L;
-    struct wl_list callbacks; // lua_callback::link
+    int objects;
     struct wl_global *global;
 };
 
+struct kiwmi_object {
+    struct kiwmi_lua *lua;
+
+    void *object;
+    size_t refcount;
+    bool valid;
+
+    struct wl_listener destroy;
+    struct wl_list callbacks; // struct kiwmi_lua_callback::link
+
+    struct {
+        struct wl_signal destroy;
+    } events;
+};
+
+int luaK_kiwmi_object_gc(lua_State *L);
+struct kiwmi_object *luaK_get_kiwmi_object(
+    struct kiwmi_lua *lua,
+    void *ptr,
+    struct wl_signal *destroy);
 int luaK_callback_register_dispatch(lua_State *L);
 int luaK_usertype_ref_equal(lua_State *L);
 struct kiwmi_lua *luaK_create(struct kiwmi_server *server);

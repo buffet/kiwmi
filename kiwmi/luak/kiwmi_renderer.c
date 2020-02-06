@@ -93,11 +93,13 @@ static const luaL_Reg kiwmi_renderer_methods[] = {
 int
 luaK_kiwmi_renderer_new(lua_State *L)
 {
-    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA); // wlr_renderer
-    luaL_checktype(L, 2, LUA_TLIGHTUSERDATA); // wlr_output
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA); // kiwmi_lua
+    luaL_checktype(L, 2, LUA_TLIGHTUSERDATA); // wlr_renderer
+    luaL_checktype(L, 3, LUA_TLIGHTUSERDATA); // wlr_output
 
-    struct wlr_renderer *wlr_renderer = lua_touserdata(L, 1);
-    struct kiwmi_output *output       = lua_touserdata(L, 2);
+    struct kiwmi_lua *UNUSED(lua)     = lua_touserdata(L, 1);
+    struct wlr_renderer *wlr_renderer = lua_touserdata(L, 2);
+    struct kiwmi_output *output       = lua_touserdata(L, 3);
 
     struct kiwmi_renderer *renderer_ud =
         lua_newuserdata(L, sizeof(*renderer_ud));
@@ -121,6 +123,9 @@ luaK_kiwmi_renderer_register(lua_State *L)
 
     lua_pushcfunction(L, luaK_usertype_ref_equal);
     lua_setfield(L, -2, "__eq");
+
+    lua_pushcfunction(L, luaK_kiwmi_object_gc);
+    lua_setfield(L, -2, "__gc");
 
     return 0;
 }

@@ -143,12 +143,6 @@ The compositor will not forward it to the focused view in that case.
 
 A handle to a registered callback.
 
-### Methods
-
-#### callback:cancel()
-
-Unregisters the callback.
-
 ## kiwmi_output
 
 Represents an output (most often a display).

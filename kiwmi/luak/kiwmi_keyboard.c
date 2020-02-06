@@ -19,8 +19,14 @@
 static int
 l_kiwmi_keyboard_modifiers(lua_State *L)
 {
-    struct kiwmi_keyboard *keyboard =
-        *(struct kiwmi_keyboard **)luaL_checkudata(L, 1, "kiwmi_keyboard");
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_keyboard");
+
+    if (!obj->valid) {
+        return luaL_error(L, "kiwmi_keyboard no longer valid");
+    }
+
+    struct kiwmi_keyboard *keyboard = obj->object;
 
     uint32_t modifiers = wlr_keyboard_get_modifiers(keyboard->device->keyboard);
 
@@ -70,8 +76,9 @@ kiwmi_keyboard_on_destroy_notify(struct wl_listener *listener, void *data)
     lua_rawgeti(L, LUA_REGISTRYINDEX, lc->callback_ref);
 
     lua_pushcfunction(L, luaK_kiwmi_keyboard_new);
+    lua_pushlightuserdata(L, server->lua);
     lua_pushlightuserdata(L, keyboard);
-    if (lua_pcall(L, 1, 1, 0)) {
+    if (lua_pcall(L, 2, 1, 0)) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
         lua_pop(L, 1);
         return;
@@ -116,8 +123,9 @@ kiwmi_keyboard_on_key_down_or_up_notify(
         lua_setfield(L, -2, "key");
 
         lua_pushcfunction(L, luaK_kiwmi_keyboard_new);
+        lua_pushlightuserdata(L, server->lua);
         lua_pushlightuserdata(L, keyboard);
-        if (lua_pcall(L, 1, 1, 0)) {
+        if (lua_pcall(L, 2, 1, 0)) {
             wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
             lua_pop(L, 1);
             return;
@@ -138,70 +146,88 @@ kiwmi_keyboard_on_key_down_or_up_notify(
 static int
 l_kiwmi_keyboard_on_destroy(lua_State *L)
 {
-    struct kiwmi_keyboard *keyboard =
-        *(struct kiwmi_keyboard **)luaL_checkudata(L, 1, "kiwmi_keyboard");
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_keyboard");
     luaL_checktype(L, 2, LUA_TFUNCTION);
 
-    struct kiwmi_server *server = keyboard->server;
+    if (!obj->valid) {
+        return luaL_error(L, "kiwmi_keyboard no longer valid");
+    }
+
+    struct kiwmi_keyboard *keyboard = obj->object;
+    struct kiwmi_server *server     = keyboard->server;
 
     lua_pushcfunction(L, luaK_kiwmi_lua_callback_new);
     lua_pushlightuserdata(L, server);
     lua_pushvalue(L, 2);
     lua_pushlightuserdata(L, kiwmi_keyboard_on_destroy_notify);
-    lua_pushlightuserdata(L, &keyboard->events.destroy);
+    lua_pushlightuserdata(L, &obj->events.destroy);
+    lua_pushlightuserdata(L, obj);
 
-    if (lua_pcall(L, 4, 1, 0)) {
+    if (lua_pcall(L, 5, 0, 0)) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
         return 0;
     }
 
-    return 1;
+    return 0;
 }
 
 static int
 l_kiwmi_keyboard_on_key_down(lua_State *L)
 {
-    struct kiwmi_keyboard *keyboard =
-        *(struct kiwmi_keyboard **)luaL_checkudata(L, 1, "kiwmi_keyboard");
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_keyboard");
     luaL_checktype(L, 2, LUA_TFUNCTION);
 
-    struct kiwmi_server *server = keyboard->server;
+    if (!obj->valid) {
+        return luaL_error(L, "kiwmi_keyboard no longer valid");
+    }
+
+    struct kiwmi_keyboard *keyboard = obj->object;
+    struct kiwmi_server *server     = keyboard->server;
 
     lua_pushcfunction(L, luaK_kiwmi_lua_callback_new);
     lua_pushlightuserdata(L, server);
     lua_pushvalue(L, 2);
     lua_pushlightuserdata(L, kiwmi_keyboard_on_key_down_or_up_notify);
     lua_pushlightuserdata(L, &keyboard->events.key_down);
+    lua_pushlightuserdata(L, obj);
 
-    if (lua_pcall(L, 4, 1, 0)) {
+    if (lua_pcall(L, 5, 0, 0)) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
         return 0;
     }
 
-    return 1;
+    return 0;
 }
 
 static int
 l_kiwmi_keyboard_on_key_up(lua_State *L)
 {
-    struct kiwmi_keyboard *keyboard =
-        *(struct kiwmi_keyboard **)luaL_checkudata(L, 1, "kiwmi_keyboard");
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_keyboard");
     luaL_checktype(L, 2, LUA_TFUNCTION);
 
-    struct kiwmi_server *server = keyboard->server;
+    if (!obj->valid) {
+        return luaL_error(L, "kiwmi_keyboard no longer valid");
+    }
+
+    struct kiwmi_keyboard *keyboard = obj->object;
+    struct kiwmi_server *server     = keyboard->server;
 
     lua_pushcfunction(L, luaK_kiwmi_lua_callback_new);
     lua_pushlightuserdata(L, server);
     lua_pushvalue(L, 2);
     lua_pushlightuserdata(L, kiwmi_keyboard_on_key_down_or_up_notify);
     lua_pushlightuserdata(L, &keyboard->events.key_up);
+    lua_pushlightuserdata(L, obj);
 
-    if (lua_pcall(L, 4, 1, 0)) {
+    if (lua_pcall(L, 5, 0, 0)) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
         return 0;
     }
 
-    return 1;
+    return 0;
 }
 
 static const luaL_Reg kiwmi_keyboard_events[] = {
@@ -214,16 +240,21 @@ static const luaL_Reg kiwmi_keyboard_events[] = {
 int
 luaK_kiwmi_keyboard_new(lua_State *L)
 {
-    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA); // kiwmi_keyboard
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA); // kiwmi_lua
+    luaL_checktype(L, 2, LUA_TLIGHTUSERDATA); // kiwmi_keyboard
 
-    struct kiwmi_keyboard *keyboard = lua_touserdata(L, 1);
+    struct kiwmi_lua *lua           = lua_touserdata(L, 1);
+    struct kiwmi_keyboard *keyboard = lua_touserdata(L, 2);
 
-    struct kiwmi_keyboard **keyboard_ud =
+    struct kiwmi_object *obj =
+        luaK_get_kiwmi_object(lua, keyboard, &keyboard->events.destroy);
+
+    struct kiwmi_object **keyboard_ud =
         lua_newuserdata(L, sizeof(*keyboard_ud));
     luaL_getmetatable(L, "kiwmi_keyboard");
     lua_setmetatable(L, -2);
 
-    *keyboard_ud = keyboard;
+    *keyboard_ud = obj;
 
     return 1;
 }
@@ -242,6 +273,9 @@ luaK_kiwmi_keyboard_register(lua_State *L)
 
     lua_pushcfunction(L, luaK_usertype_ref_equal);
     lua_setfield(L, -2, "__eq");
+
+    lua_pushcfunction(L, luaK_kiwmi_object_gc);
+    lua_setfield(L, -2, "__gc");
 
     return 0;
 }

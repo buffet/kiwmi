@@ -20,7 +20,5 @@ struct kiwmi_lua_callback {
 };
 
 int luaK_kiwmi_lua_callback_new(lua_State *L);
-int luaK_kiwmi_lua_callback_register(lua_State *L);
-void luaK_kiwmi_lua_callback_cleanup(struct kiwmi_lua *lua);
 
 #endif /* KIWMI_LUAK_KIWMI_LUA_CALLBACK_H */
