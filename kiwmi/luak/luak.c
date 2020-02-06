@@ -23,9 +23,107 @@
 #include "luak/kiwmi_view.h"
 
 int
+luaK_kiwmi_object_gc(lua_State *L)
+{
+    struct kiwmi_object *obj = *(struct kiwmi_object **)lua_touserdata(L, 1);
+
+    --obj->refcount;
+
+    if (obj->refcount == 0 && wl_list_empty(&obj->callbacks)) {
+        free(obj);
+    }
+
+    return 0;
+}
+
+static void
+kiwmi_object_destroy_notify(struct wl_listener *listener, void *data)
+{
+    struct kiwmi_object *obj = wl_container_of(listener, obj, destroy);
+
+    wl_signal_emit(&obj->events.destroy, data);
+
+    struct kiwmi_lua_callback *lc;
+    struct kiwmi_lua_callback *tmp;
+    wl_list_for_each_safe (lc, tmp, &obj->callbacks, link) {
+        wl_list_remove(&lc->listener.link);
+        wl_list_remove(&lc->link);
+
+        luaL_unref(lc->server->lua->L, LUA_REGISTRYINDEX, lc->callback_ref);
+
+        free(lc);
+    }
+
+    wl_list_remove(&obj->destroy.link);
+
+    lua_State *L = obj->lua->L;
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, obj->lua->objects);
+    lua_pushlightuserdata(L, obj->object);
+    lua_pushnil(L);
+    lua_settable(L, -3);
+    lua_pop(L, 1);
+
+    obj->valid = false;
+
+    if (obj->refcount == 0) {
+        free(obj);
+    }
+}
+
+struct kiwmi_object *
+luaK_get_kiwmi_object(
+    struct kiwmi_lua *lua,
+    void *ptr,
+    struct wl_signal *destroy)
+{
+    lua_State *L = lua->L;
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lua->objects);
+    lua_pushlightuserdata(L, ptr);
+    lua_gettable(L, -2);
+
+    struct kiwmi_object *obj = lua_touserdata(L, -1);
+
+    lua_pop(L, 2);
+
+    if (obj) {
+        ++obj->refcount;
+        return obj;
+    }
+
+    obj = malloc(sizeof(*obj));
+    if (!obj) {
+        wlr_log(WLR_ERROR, "Failed to allocate kiwmi_object");
+        return NULL;
+    }
+
+    obj->lua      = lua;
+    obj->object   = ptr;
+    obj->refcount = 1;
+    obj->valid    = true;
+
+    if (destroy) {
+        obj->destroy.notify = kiwmi_object_destroy_notify;
+        wl_signal_add(destroy, &obj->destroy);
+
+        wl_signal_init(&obj->events.destroy);
+    }
+
+    wl_list_init(&obj->callbacks);
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lua->objects);
+    lua_pushlightuserdata(L, ptr);
+    lua_pushlightuserdata(L, obj);
+    lua_settable(L, -3);
+
+    return obj;
+}
+
+int
 luaK_callback_register_dispatch(lua_State *L)
 {
-    luaL_checktype(L, 1, LUA_TUSERDATA); // server
+    luaL_checktype(L, 1, LUA_TUSERDATA); // object
     luaL_checktype(L, 2, LUA_TSTRING);   // type
     luaL_checktype(L, 3, LUA_TFUNCTION); // callback
 
@@ -77,7 +175,13 @@ luaK_create(struct kiwmi_server *server)
         return NULL;
     }
 
+    lua->L = L;
+
     luaL_openlibs(L);
+
+    // init object registry
+    lua_newtable(L);
+    lua->objects = luaL_ref(L, LUA_REGISTRYINDEX);
 
     // register types
     int error = 0;
@@ -85,8 +189,6 @@ luaK_create(struct kiwmi_server *server)
     lua_pushcfunction(L, luaK_kiwmi_cursor_register);
     error |= lua_pcall(L, 0, 0, 0);
     lua_pushcfunction(L, luaK_kiwmi_keyboard_register);
-    error |= lua_pcall(L, 0, 0, 0);
-    lua_pushcfunction(L, luaK_kiwmi_lua_callback_register);
     error |= lua_pcall(L, 0, 0, 0);
     lua_pushcfunction(L, luaK_kiwmi_output_register);
     error |= lua_pcall(L, 0, 0, 0);
@@ -100,24 +202,20 @@ luaK_create(struct kiwmi_server *server)
     if (error) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
         lua_close(L);
-        free(lua);
         return NULL;
     }
 
     // create kiwmi global
     lua_pushcfunction(L, luaK_kiwmi_server_new);
+    lua_pushlightuserdata(L, lua);
     lua_pushlightuserdata(L, server);
-    if (lua_pcall(L, 1, 1, 0)) {
+    if (lua_pcall(L, 2, 1, 0)) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
         lua_close(L);
         free(lua);
         return NULL;
     }
     lua_setglobal(L, "kiwmi");
-
-    lua->L = L;
-
-    wl_list_init(&lua->callbacks);
 
     if (!luaK_ipc_init(server, lua)) {
         wlr_log(WLR_ERROR, "Failed to initialize IPC");
@@ -148,8 +246,6 @@ luaK_dofile(struct kiwmi_lua *lua, const char *config_path)
 void
 luaK_destroy(struct kiwmi_lua *lua)
 {
-    luaK_kiwmi_lua_callback_cleanup(lua);
-
     lua_close(lua->L);
 
     free(lua);

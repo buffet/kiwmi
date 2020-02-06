@@ -30,12 +30,15 @@
 static int
 l_kiwmi_server_cursor(lua_State *L)
 {
-    struct kiwmi_server *server =
-        *(struct kiwmi_server **)luaL_checkudata(L, 1, "kiwmi_server");
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_server");
+
+    struct kiwmi_server *server = obj->object;
 
     lua_pushcfunction(L, luaK_kiwmi_cursor_new);
+    lua_pushlightuserdata(L, server->lua);
     lua_pushlightuserdata(L, server->input.cursor);
-    if (lua_pcall(L, 1, 1, 0)) {
+    if (lua_pcall(L, 2, 1, 0)) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
         return 0;
     }
@@ -46,16 +49,19 @@ l_kiwmi_server_cursor(lua_State *L)
 static int
 l_kiwmi_server_focused_view(lua_State *L)
 {
-    struct kiwmi_server *server =
-        *(struct kiwmi_server **)luaL_checkudata(L, 1, "kiwmi_server");
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_server");
+
+    struct kiwmi_server *server = obj->object;
 
     if (!server->input.seat->focused_view) {
         return 0;
     }
 
     lua_pushcfunction(L, luaK_kiwmi_view_new);
+    lua_pushlightuserdata(L, server->lua);
     lua_pushlightuserdata(L, server->input.seat->focused_view);
-    if (lua_pcall(L, 1, 1, 0)) {
+    if (lua_pcall(L, 2, 1, 0)) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
         return 0;
     }
@@ -66,8 +72,10 @@ l_kiwmi_server_focused_view(lua_State *L)
 static int
 l_kiwmi_server_quit(lua_State *L)
 {
-    struct kiwmi_server *server =
-        *(struct kiwmi_server **)luaL_checkudata(L, 1, "kiwmi_server");
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_server");
+
+    struct kiwmi_server *server = obj->object;
 
     wl_display_terminate(server->wl_display);
 
@@ -101,8 +109,10 @@ l_kiwmi_server_spawn(lua_State *L)
 static int
 l_kiwmi_server_stop_interactive(lua_State *L)
 {
-    struct kiwmi_server *server =
-        *(struct kiwmi_server **)luaL_checkudata(L, 1, "kiwmi_server");
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_server");
+
+    struct kiwmi_server *server = obj->object;
 
     server->input.cursor->cursor_mode = KIWMI_CURSOR_PASSTHROUGH;
 
@@ -112,10 +122,12 @@ l_kiwmi_server_stop_interactive(lua_State *L)
 static int
 l_kiwmi_server_view_at(lua_State *L)
 {
-    struct kiwmi_server *server =
-        *(struct kiwmi_server **)luaL_checkudata(L, 1, "kiwmi_server");
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_server");
     luaL_checktype(L, 2, LUA_TNUMBER); // x
     luaL_checktype(L, 3, LUA_TNUMBER); // y
+
+    struct kiwmi_server *server = obj->object;
 
     double x = lua_tonumber(L, 2);
     double y = lua_tonumber(L, 3);
@@ -129,8 +141,9 @@ l_kiwmi_server_view_at(lua_State *L)
 
     if (view) {
         lua_pushcfunction(L, luaK_kiwmi_view_new);
+        lua_pushlightuserdata(L, obj->lua);
         lua_pushlightuserdata(L, view);
-        if (lua_pcall(L, 1, 1, 0)) {
+        if (lua_pcall(L, 2, 1, 0)) {
             wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
             return 0;
         }
@@ -163,8 +176,9 @@ kiwmi_server_on_keyboard_notify(struct wl_listener *listener, void *data)
     lua_rawgeti(L, LUA_REGISTRYINDEX, lc->callback_ref);
 
     lua_pushcfunction(L, luaK_kiwmi_keyboard_new);
+    lua_pushlightuserdata(L, server->lua);
     lua_pushlightuserdata(L, keyboard);
-    if (lua_pcall(L, 1, 1, 0)) {
+    if (lua_pcall(L, 2, 1, 0)) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
         lua_pop(L, 1);
         return;
@@ -187,8 +201,9 @@ kiwmi_server_on_output_notify(struct wl_listener *listener, void *data)
     lua_rawgeti(L, LUA_REGISTRYINDEX, lc->callback_ref);
 
     lua_pushcfunction(L, luaK_kiwmi_output_new);
+    lua_pushlightuserdata(L, server->lua);
     lua_pushlightuserdata(L, output);
-    if (lua_pcall(L, 1, 1, 0)) {
+    if (lua_pcall(L, 2, 1, 0)) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
         lua_pop(L, 1);
         return;
@@ -211,8 +226,9 @@ kiwmi_server_on_view_notify(struct wl_listener *listener, void *data)
     lua_rawgeti(L, LUA_REGISTRYINDEX, lc->callback_ref);
 
     lua_pushcfunction(L, luaK_kiwmi_view_new);
+    lua_pushlightuserdata(L, server->lua);
     lua_pushlightuserdata(L, view);
-    if (lua_pcall(L, 1, 1, 0)) {
+    if (lua_pcall(L, 2, 1, 0)) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
         lua_pop(L, 1);
         return;
@@ -227,64 +243,73 @@ kiwmi_server_on_view_notify(struct wl_listener *listener, void *data)
 static int
 l_kiwmi_server_on_keyboard(lua_State *L)
 {
-    struct kiwmi_server *server =
-        *(struct kiwmi_server **)luaL_checkudata(L, 1, "kiwmi_server");
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_server");
     luaL_checktype(L, 2, LUA_TFUNCTION);
+
+    struct kiwmi_server *server = obj->object;
 
     lua_pushcfunction(L, luaK_kiwmi_lua_callback_new);
     lua_pushlightuserdata(L, server);
     lua_pushvalue(L, 2);
     lua_pushlightuserdata(L, kiwmi_server_on_keyboard_notify);
     lua_pushlightuserdata(L, &server->input.events.keyboard_new);
+    lua_pushlightuserdata(L, obj);
 
-    if (lua_pcall(L, 4, 1, 0)) {
+    if (lua_pcall(L, 5, 0, 0)) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
         return 0;
     }
 
-    return 1;
+    return 0;
 }
 
 static int
 l_kiwmi_server_on_output(lua_State *L)
 {
-    struct kiwmi_server *server =
-        *(struct kiwmi_server **)luaL_checkudata(L, 1, "kiwmi_server");
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_server");
     luaL_checktype(L, 2, LUA_TFUNCTION);
+
+    struct kiwmi_server *server = obj->object;
 
     lua_pushcfunction(L, luaK_kiwmi_lua_callback_new);
     lua_pushlightuserdata(L, server);
     lua_pushvalue(L, 2);
     lua_pushlightuserdata(L, kiwmi_server_on_output_notify);
     lua_pushlightuserdata(L, &server->desktop.events.new_output);
+    lua_pushlightuserdata(L, obj);
 
-    if (lua_pcall(L, 4, 1, 0)) {
+    if (lua_pcall(L, 5, 0, 0)) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
         return 0;
     }
 
-    return 1;
+    return 0;
 }
 
 static int
 l_kiwmi_server_on_view(lua_State *L)
 {
-    struct kiwmi_server *server =
-        *(struct kiwmi_server **)luaL_checkudata(L, 1, "kiwmi_server");
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_server");
     luaL_checktype(L, 2, LUA_TFUNCTION);
+
+    struct kiwmi_server *server = obj->object;
 
     lua_pushcfunction(L, luaK_kiwmi_lua_callback_new);
     lua_pushlightuserdata(L, server);
     lua_pushvalue(L, 2);
     lua_pushlightuserdata(L, kiwmi_server_on_view_notify);
     lua_pushlightuserdata(L, &server->desktop.events.view_map);
+    lua_pushlightuserdata(L, obj);
 
-    if (lua_pcall(L, 4, 1, 0)) {
+    if (lua_pcall(L, 5, 0, 0)) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
         return 0;
     }
 
-    return 1;
+    return 0;
 }
 
 static const luaL_Reg kiwmi_server_events[] = {
@@ -297,15 +322,19 @@ static const luaL_Reg kiwmi_server_events[] = {
 int
 luaK_kiwmi_server_new(lua_State *L)
 {
-    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA); // kiwmi_server
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA); // kiwmi_lua
+    luaL_checktype(L, 2, LUA_TLIGHTUSERDATA); // kiwmi_server
 
-    struct kiwmi_server *server = lua_touserdata(L, 1);
+    struct kiwmi_lua *lua       = lua_touserdata(L, 1);
+    struct kiwmi_server *server = lua_touserdata(L, 2);
 
-    struct kiwmi_server **server_ud = lua_newuserdata(L, sizeof(*server_ud));
+    struct kiwmi_object *obj = luaK_get_kiwmi_object(lua, server, NULL);
+
+    struct kiwmi_object **server_ud = lua_newuserdata(L, sizeof(*server_ud));
     luaL_getmetatable(L, "kiwmi_server");
     lua_setmetatable(L, -2);
 
-    *server_ud = server;
+    *server_ud = obj;
 
     return 1;
 }
@@ -324,6 +353,9 @@ luaK_kiwmi_server_register(lua_State *L)
 
     lua_pushcfunction(L, luaK_usertype_ref_equal);
     lua_setfield(L, -2, "__eq");
+
+    lua_pushcfunction(L, luaK_kiwmi_object_gc);
+    lua_setfield(L, -2, "__gc");
 
     return 0;
 }

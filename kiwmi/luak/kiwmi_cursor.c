@@ -23,8 +23,10 @@
 static int
 l_kiwmi_cursor_pos(lua_State *L)
 {
-    struct kiwmi_cursor *cursor =
-        *(struct kiwmi_cursor **)luaL_checkudata(L, 1, "kiwmi_cursor");
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_cursor");
+
+    struct kiwmi_cursor *cursor = obj->object;
 
     lua_pushnumber(L, cursor->cursor->x);
     lua_pushnumber(L, cursor->cursor->y);
@@ -35,9 +37,11 @@ l_kiwmi_cursor_pos(lua_State *L)
 static int
 l_kiwmi_cursor_view_at_pos(lua_State *L)
 {
-    struct kiwmi_cursor *cursor =
-        *(struct kiwmi_cursor **)luaL_checkudata(L, 1, "kiwmi_cursor");
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_cursor");
 
+    struct kiwmi_lua *lua       = obj->lua;
+    struct kiwmi_cursor *cursor = obj->object;
     struct kiwmi_server *server = cursor->server;
 
     struct wlr_surface *surface;
@@ -54,8 +58,9 @@ l_kiwmi_cursor_view_at_pos(lua_State *L)
 
     if (view) {
         lua_pushcfunction(L, luaK_kiwmi_view_new);
+        lua_pushlightuserdata(L, lua);
         lua_pushlightuserdata(L, view);
-        if (lua_pcall(L, 1, 1, 0)) {
+        if (lua_pcall(L, 2, 1, 0)) {
             wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
             return 0;
         }
@@ -130,10 +135,11 @@ kiwmi_cursor_on_motion_notify(struct wl_listener *listener, void *data)
 static int
 l_kiwmi_cursor_on_button_down(lua_State *L)
 {
-    struct kiwmi_cursor *cursor =
-        *(struct kiwmi_cursor **)luaL_checkudata(L, 1, "kiwmi_cursor");
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_cursor");
     luaL_checktype(L, 2, LUA_TFUNCTION);
 
+    struct kiwmi_cursor *cursor = obj->object;
     struct kiwmi_server *server = cursor->server;
 
     lua_pushcfunction(L, luaK_kiwmi_lua_callback_new);
@@ -141,22 +147,24 @@ l_kiwmi_cursor_on_button_down(lua_State *L)
     lua_pushvalue(L, 2);
     lua_pushlightuserdata(L, kiwmi_cursor_on_button_down_or_up_notify);
     lua_pushlightuserdata(L, &cursor->events.button_down);
+    lua_pushlightuserdata(L, obj);
 
-    if (lua_pcall(L, 4, 1, 0)) {
+    if (lua_pcall(L, 5, 0, 0)) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
         return 0;
     }
 
-    return 1;
+    return 0;
 }
 
 static int
 l_kiwmi_cursor_on_button_up(lua_State *L)
 {
-    struct kiwmi_cursor *cursor =
-        *(struct kiwmi_cursor **)luaL_checkudata(L, 1, "kiwmi_cursor");
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_cursor");
     luaL_checktype(L, 2, LUA_TFUNCTION);
 
+    struct kiwmi_cursor *cursor = obj->object;
     struct kiwmi_server *server = cursor->server;
 
     lua_pushcfunction(L, luaK_kiwmi_lua_callback_new);
@@ -164,22 +172,24 @@ l_kiwmi_cursor_on_button_up(lua_State *L)
     lua_pushvalue(L, 2);
     lua_pushlightuserdata(L, kiwmi_cursor_on_button_down_or_up_notify);
     lua_pushlightuserdata(L, &cursor->events.button_up);
+    lua_pushlightuserdata(L, obj);
 
-    if (lua_pcall(L, 4, 1, 0)) {
+    if (lua_pcall(L, 5, 0, 0)) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
         return 0;
     }
 
-    return 1;
+    return 0;
 }
 
 static int
 l_kiwmi_cursor_on_motion(lua_State *L)
 {
-    struct kiwmi_cursor *cursor =
-        *(struct kiwmi_cursor **)luaL_checkudata(L, 1, "kiwmi_cursor");
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_cursor");
     luaL_checktype(L, 2, LUA_TFUNCTION);
 
+    struct kiwmi_cursor *cursor = obj->object;
     struct kiwmi_server *server = cursor->server;
 
     lua_pushcfunction(L, luaK_kiwmi_lua_callback_new);
@@ -187,13 +197,14 @@ l_kiwmi_cursor_on_motion(lua_State *L)
     lua_pushvalue(L, 2);
     lua_pushlightuserdata(L, kiwmi_cursor_on_motion_notify);
     lua_pushlightuserdata(L, &cursor->events.motion);
+    lua_pushlightuserdata(L, obj);
 
-    if (lua_pcall(L, 4, 1, 0)) {
+    if (lua_pcall(L, 5, 0, 0)) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
         return 0;
     }
 
-    return 1;
+    return 0;
 }
 
 static const luaL_Reg kiwmi_cursor_events[] = {
@@ -206,15 +217,19 @@ static const luaL_Reg kiwmi_cursor_events[] = {
 int
 luaK_kiwmi_cursor_new(lua_State *L)
 {
-    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA); // kiwmi_cursor
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA); // kiwmi_lua
+    luaL_checktype(L, 2, LUA_TLIGHTUSERDATA); // kiwmi_cursor
 
-    struct kiwmi_cursor *cursor = lua_touserdata(L, 1);
+    struct kiwmi_lua *lua       = lua_touserdata(L, 1);
+    struct kiwmi_cursor *cursor = lua_touserdata(L, 2);
 
-    struct kiwmi_cursor **cursor_ud = lua_newuserdata(L, sizeof(*cursor_ud));
+    struct kiwmi_object *obj = luaK_get_kiwmi_object(lua, cursor, NULL);
+
+    struct kiwmi_object **cursor_ud = lua_newuserdata(L, sizeof(*cursor_ud));
     luaL_getmetatable(L, "kiwmi_cursor");
     lua_setmetatable(L, -2);
 
-    *cursor_ud = cursor;
+    *cursor_ud = obj;
 
     return 1;
 }
@@ -233,6 +248,9 @@ luaK_kiwmi_cursor_register(lua_State *L)
 
     lua_pushcfunction(L, luaK_usertype_ref_equal);
     lua_setfield(L, -2, "__eq");
+
+    lua_pushcfunction(L, luaK_kiwmi_object_gc);
+    lua_setfield(L, -2, "__gc");
 
     return 0;
 }
