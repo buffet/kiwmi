@@ -29,6 +29,11 @@ Used to register event listeners.
 
 Quit kiwmi.
 
+#### kiwmi:schedule(delay, callback)
+
+Call `callback` after `delay` ms.
+Callback get passed itself, so that it can easily reregister itself.
+
 #### kiwmi:spawn(command)
 
 Spawn a new process.

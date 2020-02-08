@@ -11,12 +11,14 @@
 #include <stdbool.h>
 
 #include <lua.h>
+#include <wayland-server.h>
 
 #include "server.h"
 
 struct kiwmi_lua {
     lua_State *L;
     int objects;
+    struct wl_list scheduled_callbacks;
     struct wl_global *global;
 };
 
