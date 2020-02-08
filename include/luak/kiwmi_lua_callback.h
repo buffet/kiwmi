@@ -16,7 +16,10 @@ struct kiwmi_lua_callback {
     struct wl_list link;
     struct kiwmi_server *server;
     int callback_ref;
-    struct wl_listener listener;
+    union {
+        struct wl_event_source *event_source;
+        struct wl_listener listener;
+    };
 };
 
 int luaK_kiwmi_lua_callback_new(lua_State *L);

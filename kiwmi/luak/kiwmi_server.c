@@ -83,6 +83,60 @@ l_kiwmi_server_quit(lua_State *L)
 }
 
 static int
+kiwmi_server_schedule_handler(void *data)
+{
+    struct kiwmi_lua_callback *lc = data;
+    lua_State *L = lc->server->lua->L;
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lc->callback_ref);
+    lua_pushvalue(L, -1);
+    if (lua_pcall(L, 1, 0, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+    }
+
+    wl_event_source_remove(lc->event_source);
+
+    luaL_unref(L, LUA_REGISTRYINDEX, lc->callback_ref);
+
+    wl_list_remove(&lc->link);
+    free(lc);
+
+    return 0;
+}
+
+static int
+l_kiwmi_server_schedule(lua_State *L)
+{
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_server");
+    luaL_checktype(L, 2, LUA_TNUMBER);   // delay
+    luaL_checktype(L, 3, LUA_TFUNCTION); // callback
+
+    struct kiwmi_server *server = obj->object;
+
+    struct kiwmi_lua_callback *lc = malloc(sizeof(*lc));
+    if (!lc) {
+        return luaL_error(L, "failed to allocate kiwmi_lua_callback");
+    }
+
+    int delay = lua_tonumber(L, 2);
+
+    lc->event_source = wl_event_loop_add_timer(server->wl_event_loop, kiwmi_server_schedule_handler, lc);
+
+    if (wl_event_source_timer_update(lc->event_source, delay) < 0) {
+        free(lc);
+        return luaL_error(L, "failed to arm timer");
+    }
+
+    lc->server = server;
+    lc->callback_ref = luaL_ref(L, LUA_REGISTRYINDEX);
+
+    wl_list_insert(&server->lua->scheduled_callbacks, &lc->link);
+
+    return 0;
+}
+
+static int
 l_kiwmi_server_spawn(lua_State *L)
 {
     luaL_checkudata(L, 1, "kiwmi_server");
@@ -159,6 +213,7 @@ static const luaL_Reg kiwmi_server_methods[] = {
     {"focused_view", l_kiwmi_server_focused_view},
     {"on", luaK_callback_register_dispatch},
     {"quit", l_kiwmi_server_quit},
+    {"schedule", l_kiwmi_server_schedule},
     {"spawn", l_kiwmi_server_spawn},
     {"stop_interactive", l_kiwmi_server_stop_interactive},
     {"view_at", l_kiwmi_server_view_at},

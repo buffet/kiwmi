@@ -179,6 +179,8 @@ luaK_create(struct kiwmi_server *server)
 
     luaL_openlibs(L);
 
+    wl_list_init(&lua->scheduled_callbacks);
+
     // init object registry
     lua_newtable(L);
     lua->objects = luaL_ref(L, LUA_REGISTRYINDEX);
@@ -247,6 +249,14 @@ void
 luaK_destroy(struct kiwmi_lua *lua)
 {
     lua_close(lua->L);
+
+    struct kiwmi_lua_callback *lc;
+    struct kiwmi_lua_callback *tmp;
+    wl_list_for_each_safe (lc, tmp, &lua->scheduled_callbacks, link) {
+        wl_event_source_remove(lc->event_source);
+        wl_list_remove(&lc->link);
+        free(lc);
+    }
 
     free(lua);
 }
