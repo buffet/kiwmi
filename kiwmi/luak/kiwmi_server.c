@@ -86,7 +86,7 @@ static int
 kiwmi_server_schedule_handler(void *data)
 {
     struct kiwmi_lua_callback *lc = data;
-    lua_State *L = lc->server->lua->L;
+    lua_State *L                  = lc->server->lua->L;
 
     lua_rawgeti(L, LUA_REGISTRYINDEX, lc->callback_ref);
     lua_pushvalue(L, -1);
@@ -121,14 +121,15 @@ l_kiwmi_server_schedule(lua_State *L)
 
     int delay = lua_tonumber(L, 2);
 
-    lc->event_source = wl_event_loop_add_timer(server->wl_event_loop, kiwmi_server_schedule_handler, lc);
+    lc->event_source = wl_event_loop_add_timer(
+        server->wl_event_loop, kiwmi_server_schedule_handler, lc);
 
     if (wl_event_source_timer_update(lc->event_source, delay) < 0) {
         free(lc);
         return luaL_error(L, "failed to arm timer");
     }
 
-    lc->server = server;
+    lc->server       = server;
     lc->callback_ref = luaL_ref(L, LUA_REGISTRYINDEX);
 
     wl_list_insert(&server->lua->scheduled_callbacks, &lc->link);
