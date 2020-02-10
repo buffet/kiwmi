@@ -124,8 +124,5 @@ luaK_kiwmi_renderer_register(lua_State *L)
     lua_pushcfunction(L, luaK_usertype_ref_equal);
     lua_setfield(L, -2, "__eq");
 
-    lua_pushcfunction(L, luaK_kiwmi_object_gc);
-    lua_setfield(L, -2, "__gc");
-
     return 0;
 }
