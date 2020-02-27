@@ -121,6 +121,11 @@ These are: `shift`, `caps`, `ctrl`, `alt`, `mod2`, `mod3`, `super`, and `mod5`.
 
 Used to register event listeners.
 
+#### keyboard:configure(rules, model, layout, variant, options)
+
+The parameters are all strings for more information see xkbcommon library.
+<https://xkbcommon.org/doc/current/index.html>
+
 ### Events
 
 #### destroy

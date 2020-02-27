@@ -17,6 +17,29 @@
 #include "luak/kiwmi_lua_callback.h"
 
 static int
+l_kiwmi_keyboard_configure(lua_State *L)
+{
+    struct kiwmi_keyboard *keyboard =
+        *(struct kiwmi_keyboard **)luaL_checkudata(L, 1, "kiwmi_keyboard");
+
+    struct xkb_rule_names rules = {
+        .rules   = luaL_checkstring(L, 2),
+        .model   = luaL_checkstring(L, 3),
+        .layout  = luaL_checkstring(L, 4),
+        .variant = luaL_checkstring(L, 5),
+        .options = luaL_checkstring(L, 6),
+    };
+    wlr_log(WLR_INFO, " %s ", lua_tostring(L, 2));
+    struct xkb_context *context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+    struct xkb_keymap *keymap =
+        xkb_map_new_from_names(context, &rules, XKB_KEYMAP_COMPILE_NO_FLAGS);
+    wlr_keyboard_set_keymap(keyboard->device->keyboard, keymap);
+    xkb_keymap_unref(keymap);
+    xkb_context_unref(context);
+    return 0;
+}
+
+static int
 l_kiwmi_keyboard_modifiers(lua_State *L)
 {
     struct kiwmi_object *obj =
@@ -61,6 +84,7 @@ l_kiwmi_keyboard_modifiers(lua_State *L)
 
 static const luaL_Reg kiwmi_keyboard_methods[] = {
     {"modifiers", l_kiwmi_keyboard_modifiers},
+    {"configure", l_kiwmi_keyboard_configure},
     {"on", luaK_callback_register_dispatch},
     {NULL, NULL},
 };

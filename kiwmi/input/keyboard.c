@@ -127,11 +127,6 @@ keyboard_create(struct kiwmi_server *server, struct wlr_input_device *device)
     keyboard->server = server;
     keyboard->device = device;
 
-    struct xkb_rule_names rules = {0};
-    struct xkb_context *context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
-    struct xkb_keymap *keymap =
-        xkb_map_new_from_names(context, &rules, XKB_KEYMAP_COMPILE_NO_FLAGS);
-
     keyboard->modifiers.notify = keyboard_modifiers_notify;
     wl_signal_add(&device->keyboard->events.modifiers, &keyboard->modifiers);
 
@@ -141,6 +136,10 @@ keyboard_create(struct kiwmi_server *server, struct wlr_input_device *device)
     keyboard->device_destroy.notify = keyboard_destroy_notify;
     wl_signal_add(&device->events.destroy, &keyboard->device_destroy);
 
+    struct xkb_rule_names rules = {0};
+    struct xkb_context *context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+    struct xkb_keymap *keymap =
+        xkb_map_new_from_names(context, &rules, XKB_KEYMAP_COMPILE_NO_FLAGS);
     wlr_keyboard_set_keymap(device->keyboard, keymap);
     xkb_keymap_unref(keymap);
     xkb_context_unref(context);
