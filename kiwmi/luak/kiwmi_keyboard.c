@@ -17,22 +17,44 @@
 #include "luak/kiwmi_lua_callback.h"
 
 static int
-l_kiwmi_keyboard_configure(lua_State *L)
+l_kiwmi_keyboard_set_keymap(lua_State *L)
 {
-    struct kiwmi_keyboard *keyboard =
-        *(struct kiwmi_keyboard **)luaL_checkudata(L, 1, "kiwmi_keyboard");
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_keyboard");
+    if (!obj->valid) {
+        return luaL_error(L, "kiwmi_keyboard no longer valid");
+    }
+    struct kiwmi_keyboard *keyboard = obj->object;
 
-    struct xkb_rule_names rules = {
-        .rules   = luaL_checkstring(L, 2),
-        .model   = luaL_checkstring(L, 3),
-        .layout  = luaL_checkstring(L, 4),
-        .variant = luaL_checkstring(L, 5),
-        .options = luaL_checkstring(L, 6),
-    };
-    wlr_log(WLR_INFO, " %s ", lua_tostring(L, 2));
+    if (!lua_istable(L, 2)) {
+        return luaL_error(L, "You have to pass a table as parameter.");
+    }
+
+    struct xkb_rule_names settings = {0};
+    lua_getfield(L, 2, "rules");
+    if (lua_isstring(L, -1)) {
+        settings.rules = luaL_checkstring(L, -1);
+    }
+    lua_getfield(L, 2, "model");
+    if (lua_isstring(L, -1)) {
+        settings.model = luaL_checkstring(L, -1);
+    }
+    lua_getfield(L, 2, "layout");
+    if (lua_isstring(L, -1)) {
+        settings.layout = luaL_checkstring(L, -1);
+    }
+    lua_getfield(L, 2, "variant");
+    if (lua_isstring(L, -1)) {
+        settings.variant = luaL_checkstring(L, -1);
+    }
+    lua_getfield(L, 2, "options");
+    if (lua_isstring(L, -1)) {
+        settings.options = luaL_checkstring(L, -1);
+    }
+
     struct xkb_context *context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
     struct xkb_keymap *keymap =
-        xkb_map_new_from_names(context, &rules, XKB_KEYMAP_COMPILE_NO_FLAGS);
+        xkb_keymap_new_from_names(context, &settings, XKB_KEYMAP_COMPILE_NO_FLAGS);
     wlr_keyboard_set_keymap(keyboard->device->keyboard, keymap);
     xkb_keymap_unref(keymap);
     xkb_context_unref(context);
@@ -84,8 +106,8 @@ l_kiwmi_keyboard_modifiers(lua_State *L)
 
 static const luaL_Reg kiwmi_keyboard_methods[] = {
     {"modifiers", l_kiwmi_keyboard_modifiers},
-    {"configure", l_kiwmi_keyboard_configure},
     {"on", luaK_callback_register_dispatch},
+    {"set_keymap", l_kiwmi_keyboard_set_keymap},
     {NULL, NULL},
 };
 

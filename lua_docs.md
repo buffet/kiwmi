@@ -121,10 +121,13 @@ These are: `shift`, `caps`, `ctrl`, `alt`, `mod2`, `mod3`, `super`, and `mod5`.
 
 Used to register event listeners.
 
-#### keyboard:configure(rules, model, layout, variant, options)
+#### keyboard:set_keymap({})
 
-The parameters are all strings for more information see xkbcommon library.
-<https://xkbcommon.org/doc/current/index.html>
+The funtcion takes a table as parameter.
+The possible table indexes are "rules, model, layout, variant, options".
+All the table parameters are optional and set to the system default if not set.
+For the values to set have a look at the xkbcommon library.
+<https://xkbcommon.org/doc/current/structxkb__rule__names.html>
 
 ### Events
 
