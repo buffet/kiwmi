@@ -29,6 +29,13 @@ $ meson build
 $ ninja -C build
 ```
 
+If you plan to use luajit instead, use the following commands instead.
+
+```
+$ meson -Dlua-pkg=luajit build
+$ ninja -C build
+```
+
 Installing is accomplished with the following command:
 
 ```
