@@ -49,3 +49,12 @@ Contributions are welcomed, especially while the project is in a heavy WIP stage
 If you believe you have a valid concern, read the [CONTRIBUTING](https://github.com/buffet/kiwmi/blob/master/CONTRIBUTING.md) document and please file an issue on the [issues page](https://github.com/buffet/kiwmi/issues/new).
 
 For clarifications or suggestions on anything, please don't hesitate to contact me.
+
+
+## Using
+
+Since kiwmi does not have any logic in itself, all logic must be provided by lua scripts.
+See the lua_docs.md for a ruleset for the lua files. To test a lua command / file, you can use the kiwmi client (kiwmic). 
+By default, no lua configuration file is supplied. If you *really* want an example, you can look at https://github.com/zena1/kiwmi./blob/master/init.lua  
+
+
