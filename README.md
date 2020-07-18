@@ -54,7 +54,7 @@ For clarifications or suggestions on anything, please don't hesitate to contact 
 ## Using
 
 Since kiwmi does not have any logic in itself, all logic must be provided by lua scripts, specifically the init.lua file.
-See the lua_docs.md for a ruleset for the lua files. To test a lua command / file, you can use the kiwmi client (kiwmic).
-By default, no lua configuration file is supplied. If you *really* want an example, you can look at https://github.com/zena1/kiwmi./blob/master/init.lua  
+See the lua_docs.md for a ruleset for the lua files. To test a snippet of lua code, you can use the kiwmi client (kiwmic).
+By default, no lua configuration file is supplied. You can place the file at ~/.config/kiwmi/init.lua If you *really* want an example, you can look at https://github.com/zena1/kiwmi./blob/master/init.lua  
 
 
