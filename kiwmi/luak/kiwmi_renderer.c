@@ -16,6 +16,7 @@
 #include <wlr/util/log.h>
 
 #include "desktop/output.h"
+#include "luak/lua_compat.h"
 #include "luak/luak.h"
 
 struct kiwmi_renderer {
@@ -119,7 +120,7 @@ luaK_kiwmi_renderer_register(lua_State *L)
 
     lua_pushvalue(L, -1);
     lua_setfield(L, -2, "__index");
-    luaL_setfuncs(L, kiwmi_renderer_methods, 0);
+    luaC_setfuncs(L, kiwmi_renderer_methods, 0);
 
     lua_pushcfunction(L, luaK_usertype_ref_equal);
     lua_setfield(L, -2, "__eq");
