@@ -245,7 +245,11 @@ new_output_notify(struct wl_listener *listener, void *data)
         struct wlr_output_mode *mode =
             wl_container_of(wlr_output->modes.prev, mode, link);
         wlr_output_set_mode(wlr_output, mode);
-        wlr_output_commit(wlr_output);
+
+        if (!wlr_output_commit(wlr_output)) {
+            wlr_log(WLR_ERROR, "Failed to modeset output");
+            return;
+        }
     }
 
     struct kiwmi_output *output = output_create(wlr_output, desktop);
