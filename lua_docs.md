@@ -112,6 +112,14 @@ A handle to a keyboard.
 
 ### Methods
 
+#### keyboard:keymap(keymap)
+
+The funtcion takes a table as parameter.
+The possible table indexes are "rules, model, layout, variant, options".
+All the table parameters are optional and set to the system default if not set.
+For the values to set have a look at the xkbcommon library.
+<https://xkbcommon.org/doc/current/structxkb__rule__names.html>
+
 #### keyboard:modifiers()
 
 Returns a table with the state of all modifiers.
