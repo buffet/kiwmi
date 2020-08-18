@@ -114,7 +114,7 @@ A handle to a keyboard.
 
 #### keyboard:keymap(keymap)
 
-The funtcion takes a table as parameter.
+The function takes a table as parameter.
 The possible table indexes are "rules, model, layout, variant, options".
 All the table parameters are optional and set to the system default if not set.
 For the values to set have a look at the xkbcommon library.
