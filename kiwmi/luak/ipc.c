@@ -42,6 +42,18 @@ ipc_eval(
         kiwmi_command_send_done(
             command_resource, KIWMI_COMMAND_ERROR_SUCCESS, "");
     } else {
+        lua_getglobal(L, "tostring");
+        lua_insert(L, -2);
+
+        if (lua_pcall(L, 1, 1, 0)) {
+            const char *error = lua_tostring(L, -1);
+            wlr_log(WLR_ERROR, "Error running IPC command: %s", error);
+            kiwmi_command_send_done(
+                command_resource, KIWMI_COMMAND_ERROR_FAILURE, error);
+            lua_pop(L, 1);
+            return;
+        }
+
         kiwmi_command_send_done(
             command_resource, KIWMI_COMMAND_ERROR_SUCCESS, lua_tostring(L, -1));
     }
