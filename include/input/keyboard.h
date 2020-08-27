@@ -8,6 +8,8 @@
 #ifndef KIWMI_INPUT_KEYBOARD_H
 #define KIWMI_INPUT_KEYBOARD_H
 
+#include <stdint.h>
+
 #include <wayland-server.h>
 #include <xkbcommon/xkbcommon.h>
 
@@ -27,8 +29,11 @@ struct kiwmi_keyboard {
 };
 
 struct kiwmi_keyboard_key_event {
-    const xkb_keysym_t *syms;
-    int nsyms;
+    const xkb_keysym_t *raw_syms;
+    const xkb_keysym_t *translated_syms;
+    int raw_syms_len;
+    int translated_syms_len;
+    uint32_t keycode;
     struct kiwmi_keyboard *keyboard;
     bool handled;
 };

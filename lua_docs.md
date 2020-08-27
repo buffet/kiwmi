@@ -139,7 +139,10 @@ Callback receives the keyboard.
 #### key_down
 
 A key got pressed.
-Callback receives a table containing the `key` and the `keyboard`).
+
+Callback receives a table containing the `key`, `keycode`, `raw`, and the `keyboard`.
+
+This event gets triggered twice, once with mods applied (i.e. `Shift+3` is `#`) and `raw` set to `false`, and then again with no mods applied and `raw` set to `true`.
 
 The callback is supposed to return `true` if the event was handled.
 The compositor will not forward it to the focused view in that case.
@@ -147,7 +150,9 @@ The compositor will not forward it to the focused view in that case.
 #### key_up
 
 A key got released.
-Callback receives a table containing the `key` and the `keyboard`).
+Callback receives a table containing the `key`, `keycode`, `raw`, and the `keyboard`.
+
+This event gets triggered twice, once with mods applied (i.e. `Shift+3` is `#`) and `raw` set to `false`, and then again with no mods applied and `raw` set to `true`.
 
 The callback is supposed to return `true` if the event was handled.
 The compositor will not forward it to the focused view in that case.

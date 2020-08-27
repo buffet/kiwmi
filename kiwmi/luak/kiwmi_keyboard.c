@@ -7,6 +7,8 @@
 
 #include "luak/kiwmi_keyboard.h"
 
+#include <stdint.h>
+
 #include <lauxlib.h>
 #include <wayland-server.h>
 #include <wlr/types/wlr_input_device.h>
@@ -145,56 +147,88 @@ kiwmi_keyboard_on_destroy_notify(struct wl_listener *listener, void *data)
     }
 }
 
+static bool
+send_key_event(
+    struct kiwmi_lua_callback *lc,
+    xkb_keysym_t sym,
+    uint32_t keycode,
+    struct kiwmi_keyboard *keyboard,
+    bool raw)
+{
+    struct kiwmi_server *server = lc->server;
+    lua_State *L                = server->lua->L;
+
+    static char keysym_name[64];
+    size_t namelen = xkb_keysym_get_name(sym, keysym_name, sizeof(keysym_name));
+
+    namelen = namelen > sizeof(keysym_name) ? sizeof(keysym_name) : namelen;
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lc->callback_ref);
+
+    lua_newtable(L);
+
+    lua_pushlstring(L, keysym_name, namelen);
+    lua_setfield(L, -2, "key");
+
+    lua_pushnumber(L, keycode);
+    lua_setfield(L, -2, "keycode");
+
+    lua_pushboolean(L, raw);
+    lua_setfield(L, -2, "raw");
+
+    lua_pushcfunction(L, luaK_kiwmi_keyboard_new);
+    lua_pushlightuserdata(L, server->lua);
+    lua_pushlightuserdata(L, keyboard);
+    if (lua_pcall(L, 2, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+        return false;
+    }
+    lua_setfield(L, -2, "keyboard");
+
+    if (lua_pcall(L, 1, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+        return false;
+    }
+
+    bool handled = lua_toboolean(L, -1);
+    lua_pop(L, 1);
+    return handled;
+}
+
 static void
 kiwmi_keyboard_on_key_down_or_up_notify(
     struct wl_listener *listener,
     void *data)
 {
     struct kiwmi_lua_callback *lc = wl_container_of(listener, lc, listener);
-    struct kiwmi_server *server   = lc->server;
-    lua_State *L                  = server->lua->L;
     struct kiwmi_keyboard_key_event *event = data;
     struct kiwmi_keyboard *keyboard        = event->keyboard;
 
-    const xkb_keysym_t *syms = event->syms;
-    int nsyms                = event->nsyms;
+    const xkb_keysym_t *raw_syms = event->raw_syms;
+    int raw_syms_len             = event->raw_syms_len;
 
-    char keysym_name[64];
+    const xkb_keysym_t *translated_syms = event->translated_syms;
+    int translated_syms_len             = event->translated_syms_len;
 
-    for (int i = 0; i < nsyms; ++i) {
-        xkb_keysym_t sym = syms[i];
+    uint32_t keycode = event->keycode;
 
-        size_t namelen =
-            xkb_keysym_get_name(sym, keysym_name, sizeof(keysym_name));
+    bool handled = false;
 
-        namelen = namelen > sizeof(keysym_name) ? sizeof(keysym_name) : namelen;
-
-        lua_rawgeti(L, LUA_REGISTRYINDEX, lc->callback_ref);
-
-        lua_newtable(L);
-
-        lua_pushlstring(L, keysym_name, namelen);
-        lua_setfield(L, -2, "key");
-
-        lua_pushcfunction(L, luaK_kiwmi_keyboard_new);
-        lua_pushlightuserdata(L, server->lua);
-        lua_pushlightuserdata(L, keyboard);
-        if (lua_pcall(L, 2, 1, 0)) {
-            wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
-            lua_pop(L, 1);
-            return;
-        }
-        lua_setfield(L, -2, "keyboard");
-
-        if (lua_pcall(L, 1, 1, 0)) {
-            wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
-            lua_pop(L, 1);
-            return;
-        }
-
-        event->handled |= lua_toboolean(L, -1);
-        lua_pop(L, 1);
+    for (int i = 0; i < translated_syms_len; ++i) {
+        xkb_keysym_t sym = translated_syms[i];
+        handled |= send_key_event(lc, sym, keycode, keyboard, false);
     }
+
+    if (!handled) {
+        for (int i = 0; i < raw_syms_len; ++i) {
+            xkb_keysym_t sym = raw_syms[i];
+            handled |= send_key_event(lc, sym, keycode, keyboard, true);
+        }
+    }
+
+    event->handled = handled;
 }
 
 static int
