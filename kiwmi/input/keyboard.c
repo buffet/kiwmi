@@ -59,24 +59,36 @@ keyboard_key_notify(struct wl_listener *listener, void *data)
     struct kiwmi_keyboard *keyboard = wl_container_of(listener, keyboard, key);
     struct kiwmi_server *server     = keyboard->server;
     struct wlr_event_keyboard_key *event = data;
+    struct wlr_input_device *device      = keyboard->device;
 
     uint32_t keycode = event->keycode + 8;
-    const xkb_keysym_t *syms;
-    int nsyms = xkb_state_key_get_syms(
-        keyboard->device->keyboard->xkb_state, keycode, &syms);
+
+    const xkb_keysym_t *raw_syms;
+    xkb_layout_index_t layout_index =
+        xkb_state_key_get_layout(device->keyboard->xkb_state, keycode);
+    int raw_syms_len = xkb_keymap_key_get_syms_by_level(
+        device->keyboard->keymap, keycode, layout_index, 0, &raw_syms);
+
+    const xkb_keysym_t *translated_syms;
+    int translated_syms_len = xkb_state_key_get_syms(
+        keyboard->device->keyboard->xkb_state, keycode, &translated_syms);
 
     bool handled = false;
 
     if (event->state == WLR_KEY_PRESSED) {
-        handled = switch_vt(syms, nsyms, server->backend);
+        handled =
+            switch_vt(translated_syms, translated_syms_len, server->backend);
     }
 
     if (!handled) {
         struct kiwmi_keyboard_key_event data = {
-            .syms     = syms,
-            .nsyms    = nsyms,
-            .keyboard = keyboard,
-            .handled  = false,
+            .raw_syms            = raw_syms,
+            .translated_syms     = translated_syms,
+            .raw_syms_len        = raw_syms_len,
+            .translated_syms_len = translated_syms_len,
+            .keycode             = keycode,
+            .keyboard            = keyboard,
+            .handled             = false,
         };
 
         if (event->state == WLR_KEY_PRESSED) {
