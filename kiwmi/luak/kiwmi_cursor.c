@@ -22,7 +22,7 @@
 #include "luak/lua_compat.h"
 #include "luak/luak.h"
 
-static void
+static int
 l_kiwmi_cursor_hide(lua_State *L)
 {
     struct kiwmi_object *obj =
@@ -30,6 +30,7 @@ l_kiwmi_cursor_hide(lua_State *L)
     struct kiwmi_cursor *cursor = obj->object;
 
     cursor_hide(cursor);
+    return 0;
 }
 
 static int
@@ -46,7 +47,7 @@ l_kiwmi_cursor_pos(lua_State *L)
     return 2;
 }
 
-static void
+static int
 l_kiwmi_cursor_show(lua_State *L)
 {
     struct kiwmi_object *obj =
@@ -54,6 +55,7 @@ l_kiwmi_cursor_show(lua_State *L)
     struct kiwmi_cursor *cursor = obj->object;
 
     cursor_show(cursor);
+    return 0;
 }
     
 static int
