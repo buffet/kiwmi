@@ -29,9 +29,7 @@ l_kiwmi_cursor_hide(lua_State *L)
         *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_cursor");
     struct kiwmi_cursor *cursor = obj->object;
 
-    wlr_cursor_set_surface(cursor->cursor, NULL, 0, 0);
-    cursor->visible = false;
-    wlr_seat_pointer_notify_clear_focus(cursor->server->input.seat->seat);
+    cursor_hide(cursor);
 }
 
 static int
@@ -55,7 +53,7 @@ l_kiwmi_cursor_show(lua_State *L)
         *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_cursor");
     struct kiwmi_cursor *cursor = obj->object;
 
-    cursor->visible = true;
+    cursor_show(cursor);
 }
     
 static int

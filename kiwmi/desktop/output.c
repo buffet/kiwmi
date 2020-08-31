@@ -115,7 +115,6 @@ output_frame_notify(struct wl_listener *listener, void *data)
     struct wlr_output_layout *output_layout = desktop->output_layout;
     struct wlr_renderer *renderer =
         wlr_backend_get_renderer(wlr_output->backend);
-    struct kiwmi_cursor *cursor = server->input.cursor;
 
     struct timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now);
