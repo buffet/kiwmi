@@ -278,6 +278,8 @@ cursor_create(
     wl_signal_init(&cursor->events.button_up);
     wl_signal_init(&cursor->events.motion);
 
+    cursor->visible = true;
+
     return cursor;
 }
 

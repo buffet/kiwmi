@@ -111,9 +111,11 @@ output_frame_notify(struct wl_listener *listener, void *data)
     struct kiwmi_output *output   = wl_container_of(listener, output, frame);
     struct wlr_output *wlr_output = data;
     struct kiwmi_desktop *desktop = output->desktop;
+    struct kiwmi_server *server = wl_container_of(desktop, server, desktop);
     struct wlr_output_layout *output_layout = desktop->output_layout;
     struct wlr_renderer *renderer =
         wlr_backend_get_renderer(wlr_output->backend);
+    struct kiwmi_cursor *cursor = server->input.cursor;
 
     struct timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now);

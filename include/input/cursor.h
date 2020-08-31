@@ -24,6 +24,8 @@ struct kiwmi_cursor {
     struct wlr_cursor *cursor;
     struct wlr_xcursor_manager *xcursor_manager;
 
+    bool visible;
+
     enum kiwmi_cursor_mode cursor_mode;
 
     struct {
