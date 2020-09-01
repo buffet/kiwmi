@@ -30,6 +30,7 @@ l_kiwmi_cursor_hide(lua_State *L)
     struct kiwmi_cursor *cursor = obj->object;
 
     cursor_hide(cursor);
+
     return 0;
 }
 
@@ -55,6 +56,7 @@ l_kiwmi_cursor_show(lua_State *L)
     struct kiwmi_cursor *cursor = obj->object;
 
     cursor_show(cursor);
+
     return 0;
 }
     
