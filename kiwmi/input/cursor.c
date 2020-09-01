@@ -105,6 +105,8 @@ process_cursor_motion(struct kiwmi_server *server, uint32_t time)
         &sx,
         &sy);
 
+    cursor->visible = true;
+
     if (!layer) {
         struct kiwmi_view *view = view_at(
             desktop, cursor->cursor->x, cursor->cursor->y, &surface, &sx, &sy);
