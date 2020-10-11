@@ -145,7 +145,7 @@ xdg_shell_view_get_string_prop(
 {
     switch (prop) {
     case KIWMI_VIEW_PROP_APP_ID:
-        return view->xdg_surface->toplevel->title;
+        return view->xdg_surface->toplevel->app_id;
     case KIWMI_VIEW_PROP_TITLE:
         return view->xdg_surface->toplevel->title;
     default:
