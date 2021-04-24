@@ -196,13 +196,16 @@ output_mode_notify(struct wl_listener *listener, void *UNUSED(data))
 }
 
 static void
-output_transform_notify(struct wl_listener *listener, void *UNUSED(data))
+output_commit_notify(struct wl_listener *listener, void *data)
 {
-    struct kiwmi_output *output = wl_container_of(listener, output, transform);
+    struct kiwmi_output *output = wl_container_of(listener, output, commit);
+    struct wlr_output_event_commit *event = data;
 
     arrange_layers(output);
 
-    wl_signal_emit(&output->events.resize, output);
+    if (event->committed == WLR_OUTPUT_STATE_TRANSFORM) {
+        wl_signal_emit(&output->events.resize, output);
+    }
 }
 
 static struct kiwmi_output *
@@ -225,8 +228,8 @@ output_create(struct wlr_output *wlr_output, struct kiwmi_desktop *desktop)
     output->mode.notify = output_mode_notify;
     wl_signal_add(&wlr_output->events.mode, &output->mode);
 
-    output->transform.notify = output_transform_notify;
-    wl_signal_add(&wlr_output->events.transform, &output->transform);
+    output->commit.notify = output_commit_notify;
+    wl_signal_add(&wlr_output->events.commit, &output->commit);
 
     return output;
 }
