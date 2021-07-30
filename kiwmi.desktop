@@ -1,0 +1,5 @@
+[Desktop Entry]
+Name=kiwmi
+Comment=A fully programmable Wayland Compositor
+Exec=kiwmi
+Type=Application
