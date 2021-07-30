@@ -14,6 +14,7 @@
 #include <lauxlib.h>
 #include <wayland-server.h>
 #include <wlr/types/wlr_cursor.h>
+#include <wlr/types/wlr_output_layout.h>
 #include <wlr/util/log.h>
 
 #include "desktop/view.h"
@@ -65,6 +66,37 @@ l_kiwmi_server_focused_view(lua_State *L)
     if (lua_pcall(L, 2, 1, 0)) {
         wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
         return 0;
+    }
+
+    return 1;
+}
+
+static int
+l_kiwmi_server_output_at(lua_State *L)
+{
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_server");
+    luaL_checktype(L, 2, LUA_TNUMBER); // lx
+    luaL_checktype(L, 3, LUA_TNUMBER); // ly
+
+    struct kiwmi_server *server = obj->object;
+
+    double lx = lua_tonumber(L, 2);
+    double ly = lua_tonumber(L, 3);
+
+    struct wlr_output *wlr_output =
+        wlr_output_layout_output_at(server->desktop.output_layout, lx, ly);
+
+    if (wlr_output) {
+        lua_pushcfunction(L, luaK_kiwmi_output_new);
+        lua_pushlightuserdata(L, obj->lua);
+        lua_pushlightuserdata(L, wlr_output->data);
+        if (lua_pcall(L, 2, 1, 0)) {
+            wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+            return 0;
+        }
+    } else {
+        lua_pushnil(L);
     }
 
     return 1;
@@ -180,20 +212,20 @@ l_kiwmi_server_view_at(lua_State *L)
 {
     struct kiwmi_object *obj =
         *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_server");
-    luaL_checktype(L, 2, LUA_TNUMBER); // x
-    luaL_checktype(L, 3, LUA_TNUMBER); // y
+    luaL_checktype(L, 2, LUA_TNUMBER); // lx
+    luaL_checktype(L, 3, LUA_TNUMBER); // ly
 
     struct kiwmi_server *server = obj->object;
 
-    double x = lua_tonumber(L, 2);
-    double y = lua_tonumber(L, 3);
+    double lx = lua_tonumber(L, 2);
+    double ly = lua_tonumber(L, 3);
 
     struct wlr_surface *surface;
     double sx;
     double sy;
 
     struct kiwmi_view *view =
-        view_at(&server->desktop, x, y, &surface, &sx, &sy);
+        view_at(&server->desktop, lx, ly, &surface, &sx, &sy);
 
     if (view) {
         lua_pushcfunction(L, luaK_kiwmi_view_new);
@@ -214,6 +246,7 @@ static const luaL_Reg kiwmi_server_methods[] = {
     {"cursor", l_kiwmi_server_cursor},
     {"focused_view", l_kiwmi_server_focused_view},
     {"on", luaK_callback_register_dispatch},
+    {"output_at", l_kiwmi_server_output_at},
     {"quit", l_kiwmi_server_quit},
     {"schedule", l_kiwmi_server_schedule},
     {"spawn", l_kiwmi_server_spawn},
