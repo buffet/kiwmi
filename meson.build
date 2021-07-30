@@ -48,6 +48,11 @@ else
   add_project_arguments('-DUNUSED(x)=UNUSED_ ## x', language: 'c')
 endif
 
+install_data(
+  'kiwmi.desktop',
+  install_dir: join_paths(get_option('datadir'), 'wayland-sessions')
+)
+
 subdir('protocols')
 subdir('kiwmi')
 subdir('kiwmic')
