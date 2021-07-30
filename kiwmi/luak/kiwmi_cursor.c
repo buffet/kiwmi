@@ -26,13 +26,13 @@ static int
 l_kiwmi_cursor_output_at_pos(lua_State *L)
 {
     struct kiwmi_object *obj =
-        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_server");
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_cursor");
 
     struct kiwmi_cursor *cursor = obj->object;
     struct kiwmi_server *server = cursor->server;
 
     struct wlr_output *wlr_output = wlr_output_layout_output_at(
-        server->desktop.output_layout, cursor->cursor->x, cursor->cursor->y);
+        server->desktop.output_layout,cursor->cursor->x, cursor->cursor->y);
 
     if (wlr_output) {
         lua_pushcfunction(L, luaK_kiwmi_output_new);
