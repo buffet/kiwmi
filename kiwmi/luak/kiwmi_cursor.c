@@ -17,9 +17,37 @@
 #include "desktop/view.h"
 #include "input/cursor.h"
 #include "luak/kiwmi_lua_callback.h"
+#include "luak/kiwmi_output.h"
 #include "luak/kiwmi_view.h"
 #include "luak/lua_compat.h"
 #include "luak/luak.h"
+
+static int
+l_kiwmi_cursor_output_at_pos(lua_State *L)
+{
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_server");
+
+    struct kiwmi_cursor *cursor = obj->object;
+    struct kiwmi_server *server = cursor->server;
+
+    struct wlr_output *wlr_output = wlr_output_layout_output_at(
+        server->desktop.output_layout, cursor->cursor->x, cursor->cursor->y);
+
+    if (wlr_output) {
+        lua_pushcfunction(L, luaK_kiwmi_output_new);
+        lua_pushlightuserdata(L, obj->lua);
+        lua_pushlightuserdata(L, wlr_output->data);
+        if (lua_pcall(L, 2, 1, 0)) {
+            wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+            return 0;
+        }
+    } else {
+        lua_pushnil(L);
+    }
+
+    return 1;
+}
 
 static int
 l_kiwmi_cursor_pos(lua_State *L)
@@ -74,6 +102,7 @@ l_kiwmi_cursor_view_at_pos(lua_State *L)
 
 static const luaL_Reg kiwmi_cursor_methods[] = {
     {"on", luaK_callback_register_dispatch},
+    {"output_at_pos", l_kiwmi_cursor_output_at_pos},
     {"pos", l_kiwmi_cursor_pos},
     {"view_at_pos", l_kiwmi_cursor_view_at_pos},
     {NULL, NULL},

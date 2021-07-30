@@ -21,6 +21,10 @@ Returns a reference to the cursor object.
 
 Returns the currently focused view.
 
+#### kiwmi:output_at(lx, ly)
+
+Returns the output at a specified position
+
 #### kiwmi:on(event, callback)
 
 Used to register event listeners.
@@ -43,7 +47,7 @@ Spawn a new process.
 
 Stops an interactive move or resize.
 
-#### kiwmi:view_at(x, y)
+#### kiwmi:view_at(lx, ly)
 
 Get the view at a specified position.
 
@@ -69,6 +73,10 @@ Callback receives a reference to the view.
 A reference to the cursor object.
 
 ### Methods
+
+#### cursor:output_at_pos()
+
+ Returns the output at the cursor position or `nil` if there is none.
 
 #### cursor:on(event, callback)
 
@@ -171,7 +179,7 @@ Represents an output (most often a display).
 
 Tells the compositor to start automatically positioning the output (this is on per default).
 
-#### output:move(x, y)
+#### output:move(lx, ly)
 
 Moves the output to a specified position.
 This is referring to the top-left corner.
@@ -257,7 +265,7 @@ Starts an interactive move.
 Starts an interactive resize.
 Takes a table containing the edges, that the resize is happening on.
 
-#### view:move(x, y)
+#### view:move(lx, ly)
 
 Moves the view to the specified position.
 
