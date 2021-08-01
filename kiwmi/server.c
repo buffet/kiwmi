@@ -15,6 +15,8 @@
 #include <wayland-server.h>
 #include <wlr/backend.h>
 #include <wlr/render/wlr_renderer.h>
+#include <wlr/types/wlr_data_control_v1.h>
+#include <wlr/types/wlr_primary_selection_v1.h>
 #include <wlr/types/wlr_screencopy_v1.h>
 #include <wlr/util/log.h>
 
@@ -54,6 +56,9 @@ server_init(struct kiwmi_server *server, char *config_path)
         wl_display_destroy(server->wl_display);
         return false;
     }
+
+    wlr_data_control_manager_v1_create(server->wl_display);
+    wlr_primary_selection_v1_device_manager_create(server->wl_display);
 
     server->socket = wl_display_add_socket_auto(server->wl_display);
     if (!server->socket) {

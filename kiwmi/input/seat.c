@@ -10,7 +10,9 @@
 #include <stdlib.h>
 
 #include <wlr/types/wlr_cursor.h>
+#include <wlr/types/wlr_data_device.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
+#include <wlr/types/wlr_primary_selection.h>
 #include <wlr/types/wlr_seat.h>
 #include <wlr/util/log.h>
 
@@ -111,6 +113,24 @@ request_set_cursor_notify(struct wl_listener *listener, void *data)
         cursor->cursor, event->surface, event->hotspot_x, event->hotspot_y);
 }
 
+static void
+request_set_selection_notify(struct wl_listener *listener, void *data)
+{
+    struct kiwmi_seat *seat =
+        wl_container_of(listener, seat, request_set_selection);
+    struct wlr_seat_request_set_selection_event *event = data;
+    wlr_seat_set_selection(seat->seat, event->source, event->serial);
+}
+
+static void
+request_set_primary_selection_notify(struct wl_listener *listener, void *data)
+{
+    struct kiwmi_seat *seat =
+        wl_container_of(listener, seat, request_set_primary_selection);
+    struct wlr_seat_request_set_primary_selection_event *event = data;
+    wlr_seat_set_primary_selection(seat->seat, event->source, event->serial);
+}
+
 struct kiwmi_seat *
 seat_create(struct kiwmi_input *input)
 {
@@ -132,6 +152,17 @@ seat_create(struct kiwmi_input *input)
     wl_signal_add(
         &seat->seat->events.request_set_cursor, &seat->request_set_cursor);
 
+    wl_signal_add(
+        &seat->seat->events.request_set_selection,
+        &seat->request_set_selection);
+    seat->request_set_selection.notify = request_set_selection_notify;
+
+    wl_signal_add(
+        &seat->seat->events.request_set_primary_selection,
+        &seat->request_set_primary_selection);
+    seat->request_set_primary_selection.notify =
+        request_set_primary_selection_notify;
+
     return seat;
 }
 
@@ -139,6 +170,8 @@ void
 seat_destroy(struct kiwmi_seat *seat)
 {
     wl_list_remove(&seat->request_set_cursor.link);
+    wl_list_remove(&seat->request_set_selection.link);
+    wl_list_remove(&seat->request_set_primary_selection.link);
 
     free(seat);
 }
