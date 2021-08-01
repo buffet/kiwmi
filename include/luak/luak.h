@@ -37,6 +37,7 @@ struct kiwmi_object {
     } events;
 };
 
+void *luaK_toudata(lua_State *L, int ud, const char *tname);
 int luaK_kiwmi_object_gc(lua_State *L);
 struct kiwmi_object *luaK_get_kiwmi_object(
     struct kiwmi_lua *lua,

@@ -306,6 +306,39 @@ kiwmi_server_on_output_notify(struct wl_listener *listener, void *data)
 }
 
 static void
+kiwmi_server_on_request_active_output_notify(struct wl_listener *listener, void *data)
+{
+    struct kiwmi_lua_callback *lc = wl_container_of(listener, lc, listener);
+    struct kiwmi_server *server   = lc->server;
+    lua_State *L                  = server->lua->L;
+    struct kiwmi_output **output  = data;
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lc->callback_ref);
+    if (lua_pcall(L, 0, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        return;
+    }
+
+    if (!lua_isnil(L, -1)) {
+        struct kiwmi_object *obj;
+        struct kiwmi_object **objp;
+        if (!(objp = luaK_toudata(L, -1, "kiwmi_output"))) {
+            wlr_log(WLR_ERROR, "kiwmi_output expected, got %s", luaL_typename(L, -1));
+            return;
+        }
+
+        obj = *objp;
+
+        if (!obj->valid) {
+            wlr_log(WLR_ERROR, "kiwmi_output no longer valid");
+            return;
+        }
+
+        *output = obj->object;
+    }
+}
+
+static void
 kiwmi_server_on_view_notify(struct wl_listener *listener, void *data)
 {
     struct kiwmi_lua_callback *lc = wl_container_of(listener, lc, listener);
@@ -379,6 +412,30 @@ l_kiwmi_server_on_output(lua_State *L)
 }
 
 static int
+l_kiwmi_server_on_request_active_output(lua_State *L)
+{
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_server");
+    luaL_checktype(L, 2, LUA_TFUNCTION);
+
+    struct kiwmi_server *server = obj->object;
+
+    lua_pushcfunction(L, luaK_kiwmi_lua_callback_new);
+    lua_pushlightuserdata(L, server);
+    lua_pushvalue(L, 2);
+    lua_pushlightuserdata(L, kiwmi_server_on_request_active_output_notify);
+    lua_pushlightuserdata(L, &server->desktop.events.request_active_output);
+    lua_pushlightuserdata(L, obj);
+
+    if (lua_pcall(L, 5, 0, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        return 0;
+    }
+
+    return 0;
+}
+
+static int
 l_kiwmi_server_on_view(lua_State *L)
 {
     struct kiwmi_object *obj =
@@ -405,6 +462,7 @@ l_kiwmi_server_on_view(lua_State *L)
 static const luaL_Reg kiwmi_server_events[] = {
     {"keyboard", l_kiwmi_server_on_keyboard},
     {"output", l_kiwmi_server_on_output},
+    {"request_active_output", l_kiwmi_server_on_request_active_output},
     {"view", l_kiwmi_server_on_view},
     {NULL, NULL},
 };

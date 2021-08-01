@@ -22,6 +22,22 @@
 #include "luak/kiwmi_server.h"
 #include "luak/kiwmi_view.h"
 
+void *
+luaK_toudata(lua_State *L, int ud, const char *tname)
+{
+    void *p = lua_touserdata(L, ud);
+    if (p != NULL) {  /* value is a userdata? */
+        if (lua_getmetatable(L, ud)) {  /* does it have a metatable? */
+            lua_getfield(L, LUA_REGISTRYINDEX, tname);  /* get correct metatable */
+            if (lua_rawequal(L, -1, -2)) {  /* does it have the correct mt? */
+                lua_pop(L, 2);  /* remove both metatables */
+                return p;
+            }
+        }
+    }
+    return NULL;
+}
+
 int
 luaK_kiwmi_object_gc(lua_State *L)
 {

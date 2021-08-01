@@ -351,13 +351,9 @@ layer_shell_new_surface_notify(struct wl_listener *listener, void *data)
         layer_surface->namespace);
 
     if (!layer_surface->output) {
-        // TODO: assign active output
-        wlr_log(WLR_ERROR, "TODO: assign active output");
-        struct kiwmi_output *output;
-        wl_list_for_each (output, &desktop->outputs, link) {
-            layer_surface->output = output->wlr_output;
-            break;
-        }
+        struct kiwmi_server *server =
+            wl_container_of(desktop, server, desktop);
+        layer_surface->output = desktop_active_output(server)->wlr_output;
     }
 
     struct kiwmi_layer *layer = malloc(sizeof(*layer));

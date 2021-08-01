@@ -29,10 +29,14 @@ struct kiwmi_desktop {
     struct {
         struct wl_signal new_output;
         struct wl_signal view_map;
+        struct wl_signal request_active_output;
     } events;
 };
 
 bool desktop_init(struct kiwmi_desktop *desktop, struct wlr_renderer *renderer);
 void desktop_fini(struct kiwmi_desktop *desktop);
+
+struct kiwmi_server;
+struct kiwmi_output *desktop_active_output(struct kiwmi_server *server);
 
 #endif /* KIWMI_DESKTOP_DESKTOP_H */
