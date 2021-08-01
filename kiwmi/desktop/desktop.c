@@ -12,6 +12,7 @@
 #include <wayland-server.h>
 #include <wlr/backend.h>
 #include <wlr/types/wlr_compositor.h>
+#include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_data_device.h>
 #include <wlr/types/wlr_export_dmabuf_v1.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
@@ -22,7 +23,10 @@
 
 #include "desktop/layer_shell.h"
 #include "desktop/output.h"
+#include "desktop/view.h"
 #include "desktop/xdg_shell.h"
+#include "input/cursor.h"
+#include "input/input.h"
 #include "server.h"
 
 bool
@@ -67,6 +71,7 @@ desktop_init(struct kiwmi_desktop *desktop, struct wlr_renderer *renderer)
 
     wl_signal_init(&desktop->events.new_output);
     wl_signal_init(&desktop->events.view_map);
+    wl_signal_init(&desktop->events.request_active_output);
 
     return true;
 }
@@ -75,4 +80,38 @@ void
 desktop_fini(struct kiwmi_desktop *desktop)
 {
     wlr_output_layout_destroy(desktop->output_layout);
+}
+
+struct kiwmi_output *
+desktop_active_output(struct kiwmi_server *server)
+{
+    // 1. callback (request_active_output)
+    struct kiwmi_output *output = NULL;
+    wl_signal_emit(&server->desktop.events.request_active_output, &output);
+
+    if (output) {
+        return output;
+    }
+
+
+    // 2. focused view center
+    if (!wl_list_empty(&server->desktop.views)) {
+        struct kiwmi_view *view;
+        wl_list_for_each (view, &server->desktop.views, link) {
+            break; // get first element of list
+        }
+
+        double lx = view->geom.x + view->geom.width / 2;
+        double ly = view->geom.y + view->geom.height / 2;
+
+        struct wlr_output *wlr_output = wlr_output_layout_output_at(server->desktop.output_layout, lx, ly);
+        return wlr_output->data;
+    }
+
+    // 3. cursor
+    double lx = server->input.cursor->cursor->x;
+    double ly = server->input.cursor->cursor->y;
+
+    struct wlr_output *wlr_output = wlr_output_layout_output_at(server->desktop.output_layout, lx, ly);
+    return wlr_output->data;
 }

@@ -58,6 +58,13 @@ Get the view at a specified position.
 A new keyboard got attached.
 Callback receives a reference to the keyboard.
 
+#### request_active_output
+
+Called when the active output needs to be requested (for example because a layer-shell surface needs to be positioned).
+Callback receives nothing and optionally returns a kiwmi_output.
+
+If this isn't set or returns `nil`, the compositor defaults to the output the focused view is on, and if there is no view, the output the mouse is on.
+
 #### output
 
 A new output got attached.
