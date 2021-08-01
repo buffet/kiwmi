@@ -30,6 +30,27 @@
 #include "server.h"
 
 static int
+l_kiwmi_server_active_output(lua_State *L)
+{
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_server");
+
+    struct kiwmi_server *server = obj->object;
+
+    struct kiwmi_output *output = desktop_active_output(server);
+
+    lua_pushcfunction(L, luaK_kiwmi_output_new);
+    lua_pushlightuserdata(L, server->lua);
+    lua_pushlightuserdata(L, output);
+    if (lua_pcall(L, 2, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        return 0;
+    }
+
+    return 1;
+}
+
+static int
 l_kiwmi_server_cursor(lua_State *L)
 {
     struct kiwmi_object *obj =
@@ -243,6 +264,7 @@ l_kiwmi_server_view_at(lua_State *L)
 }
 
 static const luaL_Reg kiwmi_server_methods[] = {
+    {"active_output", l_kiwmi_server_active_output},
     {"cursor", l_kiwmi_server_cursor},
     {"focused_view", l_kiwmi_server_focused_view},
     {"on", luaK_callback_register_dispatch},

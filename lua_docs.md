@@ -13,6 +13,12 @@ This is the entry point to the API.
 
 ### Methods
 
+#### kiwmi:active_output()
+
+Returns the active `kiwmi_output`.
+
+See `request_active_output`.
+
 #### kiwmi:cursor()
 
 Returns a reference to the cursor object.
