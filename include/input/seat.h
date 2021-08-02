@@ -23,6 +23,8 @@ struct kiwmi_seat {
     struct kiwmi_layer *focused_layer;
 
     struct wl_listener request_set_cursor;
+    struct wl_listener request_set_selection;
+    struct wl_listener request_set_primary_selection;
 };
 
 void
