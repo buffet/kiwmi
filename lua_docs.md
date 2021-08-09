@@ -6,6 +6,12 @@ This means Lua's garbage collection has no effect on the lifetime of the object.
 
 kiwmi offers the following classes to work with:
 
+## Globals
+
+### `FROM_KIWMIC`
+
+`true` when invoked from kiwmic, `false` otherwise.
+
 ## kiwmi_server
 
 This is the type of the global `kiwmi` singleton, representing the compositor.

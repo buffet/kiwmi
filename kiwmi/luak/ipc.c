@@ -27,14 +27,24 @@ ipc_eval(
 
     int top = lua_gettop(L);
 
+    lua_pushboolean(L, true);
+    lua_setglobal(L, "FROM_KIWMIC");
+
     if (luaL_dostring(L, message)) {
         const char *error = lua_tostring(L, -1);
         wlr_log(WLR_ERROR, "Error running IPC command: %s", error);
         kiwmi_command_send_done(
             command_resource, KIWMI_COMMAND_ERROR_FAILURE, error);
         lua_pop(L, 1);
+
+        lua_pushboolean(L, false);
+        lua_setglobal(L, "FROM_KIWMIC");
+
         return;
     }
+
+    lua_pushboolean(L, false);
+    lua_setglobal(L, "FROM_KIWMIC");
 
     int results = top - lua_gettop(L);
 

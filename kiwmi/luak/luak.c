@@ -224,6 +224,10 @@ luaK_create(struct kiwmi_server *server)
         return NULL;
     }
 
+    // create FROM_KIWMIC global
+    lua_pushboolean(L, false);
+    lua_setglobal(L, "FROM_KIWMIC");
+
     // create kiwmi global
     lua_pushcfunction(L, luaK_kiwmi_server_new);
     lua_pushlightuserdata(L, lua);
