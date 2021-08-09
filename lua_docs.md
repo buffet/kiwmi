@@ -53,6 +53,10 @@ Spawn a new process.
 
 Stops an interactive move or resize.
 
+#### kiwmi:unfocus()
+
+Unfocus the currently focused view.
+
 #### kiwmi:view_at(lx, ly)
 
 Get the view at a specified position.

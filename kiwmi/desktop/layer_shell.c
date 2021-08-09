@@ -351,9 +351,8 @@ layer_shell_new_surface_notify(struct wl_listener *listener, void *data)
         layer_surface->namespace);
 
     if (!layer_surface->output) {
-        struct kiwmi_server *server =
-            wl_container_of(desktop, server, desktop);
-        layer_surface->output = desktop_active_output(server)->wlr_output;
+        struct kiwmi_server *server = wl_container_of(desktop, server, desktop);
+        layer_surface->output       = desktop_active_output(server)->wlr_output;
     }
 
     struct kiwmi_layer *layer = malloc(sizeof(*layer));

@@ -42,28 +42,6 @@ seat_focus_surface(struct kiwmi_seat *seat, struct wlr_surface *wlr_surface)
 }
 
 void
-seat_focus_view(struct kiwmi_seat *seat, struct kiwmi_view *view)
-{
-    if (!view) {
-        seat_focus_surface(seat, NULL);
-    }
-
-    struct kiwmi_desktop *desktop = view->desktop;
-
-    if (seat->focused_view) {
-        view_set_activated(seat->focused_view, false);
-    }
-
-    // move view to front
-    wl_list_remove(&view->link);
-    wl_list_insert(&desktop->views, &view->link);
-
-    seat->focused_view = view;
-    view_set_activated(view, true);
-    seat_focus_surface(seat, view->wlr_surface);
-}
-
-void
 seat_focus_layer(struct kiwmi_seat *seat, struct kiwmi_layer *layer)
 {
     if (!layer) {
@@ -85,6 +63,29 @@ seat_focus_layer(struct kiwmi_seat *seat, struct kiwmi_layer *layer)
     seat_focus_surface(seat, layer->layer_surface->surface);
 
     seat->focused_layer = layer;
+}
+
+void
+seat_focus_view(struct kiwmi_seat *seat, struct kiwmi_view *view)
+{
+    if (!view) {
+        seat_focus_surface(seat, NULL);
+        return;
+    }
+
+    struct kiwmi_desktop *desktop = view->desktop;
+
+    if (seat->focused_view) {
+        view_set_activated(seat->focused_view, false);
+    }
+
+    // move view to front
+    wl_list_remove(&view->link);
+    wl_list_insert(&desktop->views, &view->link);
+
+    seat->focused_view = view;
+    view_set_activated(view, true);
+    seat_focus_surface(seat, view->wlr_surface);
 }
 
 static void

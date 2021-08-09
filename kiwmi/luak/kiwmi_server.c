@@ -229,6 +229,19 @@ l_kiwmi_server_stop_interactive(lua_State *L)
 }
 
 static int
+l_kiwmi_server_unfocus(lua_State *L)
+{
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_server");
+
+    struct kiwmi_server *server = obj->object;
+
+    seat_focus_view(server->input.seat, NULL);
+
+    return 0;
+}
+
+static int
 l_kiwmi_server_view_at(lua_State *L)
 {
     struct kiwmi_object *obj =
@@ -273,6 +286,7 @@ static const luaL_Reg kiwmi_server_methods[] = {
     {"schedule", l_kiwmi_server_schedule},
     {"spawn", l_kiwmi_server_spawn},
     {"stop_interactive", l_kiwmi_server_stop_interactive},
+    {"unfocus", l_kiwmi_server_unfocus},
     {"view_at", l_kiwmi_server_view_at},
     {NULL, NULL},
 };
@@ -328,7 +342,9 @@ kiwmi_server_on_output_notify(struct wl_listener *listener, void *data)
 }
 
 static void
-kiwmi_server_on_request_active_output_notify(struct wl_listener *listener, void *data)
+kiwmi_server_on_request_active_output_notify(
+    struct wl_listener *listener,
+    void *data)
 {
     struct kiwmi_lua_callback *lc = wl_container_of(listener, lc, listener);
     struct kiwmi_server *server   = lc->server;
@@ -345,7 +361,10 @@ kiwmi_server_on_request_active_output_notify(struct wl_listener *listener, void 
         struct kiwmi_object *obj;
         struct kiwmi_object **objp;
         if (!(objp = luaK_toudata(L, -1, "kiwmi_output"))) {
-            wlr_log(WLR_ERROR, "kiwmi_output expected, got %s", luaL_typename(L, -1));
+            wlr_log(
+                WLR_ERROR,
+                "kiwmi_output expected, got %s",
+                luaL_typename(L, -1));
             return;
         }
 

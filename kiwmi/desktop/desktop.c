@@ -93,7 +93,6 @@ desktop_active_output(struct kiwmi_server *server)
         return output;
     }
 
-
     // 2. focused view center
     if (!wl_list_empty(&server->desktop.views)) {
         struct kiwmi_view *view;
@@ -104,7 +103,8 @@ desktop_active_output(struct kiwmi_server *server)
         double lx = view->geom.x + view->geom.width / 2;
         double ly = view->geom.y + view->geom.height / 2;
 
-        struct wlr_output *wlr_output = wlr_output_layout_output_at(server->desktop.output_layout, lx, ly);
+        struct wlr_output *wlr_output =
+            wlr_output_layout_output_at(server->desktop.output_layout, lx, ly);
         return wlr_output->data;
     }
 
@@ -112,6 +112,7 @@ desktop_active_output(struct kiwmi_server *server)
     double lx = server->input.cursor->cursor->x;
     double ly = server->input.cursor->cursor->y;
 
-    struct wlr_output *wlr_output = wlr_output_layout_output_at(server->desktop.output_layout, lx, ly);
+    struct wlr_output *wlr_output =
+        wlr_output_layout_output_at(server->desktop.output_layout, lx, ly);
     return wlr_output->data;
 }
