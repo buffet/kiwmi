@@ -70,6 +70,7 @@ seat_focus_view(struct kiwmi_seat *seat, struct kiwmi_view *view)
 {
     if (!view) {
         seat_focus_surface(seat, NULL);
+        seat->focused_view = NULL;
         return;
     }
 
