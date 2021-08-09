@@ -11,6 +11,10 @@ kiwmi specifically does not enforce any logic, allowing for the creation of Lua-
 New users should be aware of the  steep learning curve present, however this will be reduced as the project matures.
 
 
+## Documentation
+
+Documentation for the API can be found in [lua_docs.md](lua_docs.md).
+
 ## Getting Started
 
 The dependencies required are:
