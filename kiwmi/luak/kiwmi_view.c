@@ -144,6 +144,23 @@ l_kiwmi_view_hide(lua_State *L)
 }
 
 static int
+l_kiwmi_view_id(lua_State *L)
+{
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_view");
+
+    if (!obj->valid) {
+        return luaL_error(L, "kiwmi_view no longer valid");
+    }
+
+    struct kiwmi_view *view = obj->object;
+
+    lua_pushnumber(L, (lua_Number)(size_t)view);
+
+    return 1;
+}
+
+static int
 l_kiwmi_view_imove(lua_State *L)
 {
     struct kiwmi_object *obj =
@@ -411,6 +428,7 @@ static const luaL_Reg kiwmi_view_methods[] = {
     {"focus", l_kiwmi_view_focus},
     {"hidden", l_kiwmi_view_hidden},
     {"hide", l_kiwmi_view_hide},
+    {"id", l_kiwmi_view_id},
     {"imove", l_kiwmi_view_imove},
     {"iresize", l_kiwmi_view_iresize},
     {"move", l_kiwmi_view_move},

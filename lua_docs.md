@@ -279,6 +279,10 @@ Returns `true` if the view is hidden, `false` otherwise.
 
 Hides the view.
 
+#### view:id()
+
+Returns an ID unique to the view.
+
 #### view:imove()
 
 Starts an interactive move.
