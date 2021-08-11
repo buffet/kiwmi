@@ -74,15 +74,9 @@ seat_focus_view(struct kiwmi_seat *seat, struct kiwmi_view *view)
         return;
     }
 
-    struct kiwmi_desktop *desktop = view->desktop;
-
     if (seat->focused_view) {
         view_set_activated(seat->focused_view, false);
     }
-
-    // move view to front
-    wl_list_remove(&view->link);
-    wl_list_insert(&desktop->views, &view->link);
 
     seat->focused_view = view;
     view_set_activated(view, true);

@@ -208,6 +208,24 @@ l_kiwmi_view_iresize(lua_State *L)
 }
 
 static int
+l_kiwmi_view_lower(lua_State *L)
+{
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_view");
+
+    if (!obj->valid) {
+        return luaL_error(L, "kiwmi_view no longer valid");
+    }
+
+    struct kiwmi_view *view       = obj->object;
+    struct kiwmi_desktop *desktop = view->desktop;
+
+    desktop_raise_view(desktop, view, false);
+
+    return 0;
+}
+
+static int
 l_kiwmi_view_move(lua_State *L)
 {
     struct kiwmi_object *obj =
@@ -261,6 +279,24 @@ l_kiwmi_view_pos(lua_State *L)
     lua_pushinteger(L, view->y);
 
     return 2;
+}
+
+static int
+l_kiwmi_view_raise(lua_State *L)
+{
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_view");
+
+    if (!obj->valid) {
+        return luaL_error(L, "kiwmi_view no longer valid");
+    }
+
+    struct kiwmi_view *view       = obj->object;
+    struct kiwmi_desktop *desktop = view->desktop;
+
+    desktop_raise_view(desktop, view, true);
+
+    return 0;
 }
 
 static int
@@ -413,10 +449,12 @@ static const luaL_Reg kiwmi_view_methods[] = {
     {"hide", l_kiwmi_view_hide},
     {"imove", l_kiwmi_view_imove},
     {"iresize", l_kiwmi_view_iresize},
+    {"lower", l_kiwmi_view_lower},
     {"move", l_kiwmi_view_move},
     {"on", luaK_callback_register_dispatch},
     {"pid", l_kiwmi_view_pid},
     {"pos", l_kiwmi_view_pos},
+    {"raise", l_kiwmi_view_raise},
     {"resize", l_kiwmi_view_resize},
     {"show", l_kiwmi_view_show},
     {"size", l_kiwmi_view_size},

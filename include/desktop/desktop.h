@@ -11,6 +11,8 @@
 #include <wayland-server.h>
 #include <wlr/render/wlr_renderer.h>
 
+#include "desktop/view.h"
+
 struct kiwmi_desktop {
     struct wlr_compositor *compositor;
     struct wlr_xdg_shell *xdg_shell;
@@ -33,6 +35,10 @@ struct kiwmi_desktop {
     } events;
 };
 
+void desktop_raise_view(
+    struct kiwmi_desktop *desktop,
+    struct kiwmi_view *view,
+    bool raise);
 bool desktop_init(struct kiwmi_desktop *desktop, struct wlr_renderer *renderer);
 void desktop_fini(struct kiwmi_desktop *desktop);
 

@@ -288,6 +288,10 @@ Starts an interactive move.
 Starts an interactive resize.
 Takes a table containing the edges, that the resize is happening on.
 
+#### view:lower()
+
+Moves the view to background.
+
 #### view:move(lx, ly)
 
 Moves the view to the specified position.
@@ -303,6 +307,10 @@ Returns the process ID of the client associated with the view.
 #### view:pos()
 
 Returns the position of the view (top-left corner).
+
+#### view:raise()
+
+Moves the view to foreground.
 
 #### view:resize(width, height)
 

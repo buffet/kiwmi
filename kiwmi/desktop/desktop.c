@@ -29,6 +29,20 @@
 #include "input/input.h"
 #include "server.h"
 
+void
+desktop_raise_view(
+    struct kiwmi_desktop *desktop,
+    struct kiwmi_view *view,
+    bool raise)
+{
+    wl_list_remove(&view->link);
+    if (raise) {
+        wl_list_insert(&desktop->views, &view->link);
+    } else {
+        wl_list_insert(desktop->views.prev, &view->link);
+    }
+}
+
 bool
 desktop_init(struct kiwmi_desktop *desktop, struct wlr_renderer *renderer)
 {
