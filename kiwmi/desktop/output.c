@@ -219,6 +219,9 @@ output_create(struct wlr_output *wlr_output, struct kiwmi_desktop *desktop)
     output->wlr_output = wlr_output;
     output->desktop    = desktop;
 
+    output->usable_area.width  = wlr_output->width;
+    output->usable_area.height = wlr_output->height;
+
     output->frame.notify = output_frame_notify;
     wl_signal_add(&wlr_output->events.frame, &output->frame);
 
@@ -280,6 +283,7 @@ new_output_notify(struct wl_listener *listener, void *data)
 
     wl_signal_init(&output->events.destroy);
     wl_signal_init(&output->events.resize);
+    wl_signal_init(&output->events.usable_area_change);
 
     wl_signal_emit(&desktop->events.new_output, output);
 }
