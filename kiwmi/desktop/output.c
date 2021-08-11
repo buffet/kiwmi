@@ -39,8 +39,8 @@ render_layer_surface(struct wlr_surface *surface, int x, int y, void *data)
         return;
     }
 
-    int ox = rdata->output_lx + x + geom->x;
-    int oy = rdata->output_ly + y + geom->y;
+    int ox = x + geom->x;
+    int oy = y + geom->y;
 
     struct wlr_box box = {
         .x      = ox * output->scale,
