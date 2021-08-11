@@ -20,8 +20,9 @@ Documentation for the API can be found in [lua_docs.md](lua_docs.md).
 The dependencies required are:
 
 - [wlroots](https://github.com/swaywm/wlroots)
-- meson (building)
-- ninja (building)
+- lua or luajit
+- meson (build)
+- ninja (build)
 - git (build, optional)
 
 ### Building
