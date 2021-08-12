@@ -15,6 +15,15 @@ New users should be aware of the  steep learning curve present, however this wil
 
 Documentation for the API can be found in [lua_docs.md](lua_docs.md).
 
+Additionally `kiwmic` can be used to send a single lua string to kiwmi for direct evaluation.
+
+For example:
+
+```
+$ kiwmic 'return kiwmi:focused_view():id()'
+94036737803088.0
+```
+
 ## Getting Started
 
 The dependencies required are:
