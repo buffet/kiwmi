@@ -116,6 +116,35 @@ l_kiwmi_output_size(lua_State *L)
     return 2;
 }
 
+static int
+l_kiwmi_output_usable_area(lua_State *L)
+{
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_output");
+
+    if (!obj->valid) {
+        return luaL_error(L, "kiwmi_output no longer valid");
+    }
+
+    struct kiwmi_output *output = obj->object;
+
+    lua_newtable(L);
+
+    lua_pushinteger(L, output->usable_area.x);
+    lua_setfield(L, -2, "x");
+
+    lua_pushinteger(L, output->usable_area.y);
+    lua_setfield(L, -2, "y");
+
+    lua_pushinteger(L, output->usable_area.width);
+    lua_setfield(L, -2, "width");
+
+    lua_pushinteger(L, output->usable_area.height);
+    lua_setfield(L, -2, "height");
+
+    return 1;
+}
+
 static const luaL_Reg kiwmi_output_methods[] = {
     {"auto", l_kiwmi_output_auto},
     {"move", l_kiwmi_output_move},
@@ -123,6 +152,7 @@ static const luaL_Reg kiwmi_output_methods[] = {
     {"on", luaK_callback_register_dispatch},
     {"pos", l_kiwmi_output_pos},
     {"size", l_kiwmi_output_size},
+    {"usable_area", l_kiwmi_output_usable_area},
     {NULL, NULL},
 };
 
@@ -192,6 +222,50 @@ kiwmi_output_on_resize_notify(struct wl_listener *listener, void *data)
     }
 }
 
+static void
+kiwmi_output_on_usable_area_change_notify(
+    struct wl_listener *listener,
+    void *data)
+{
+    struct kiwmi_lua_callback *lc = wl_container_of(listener, lc, listener);
+    struct kiwmi_server *server   = lc->server;
+    lua_State *L                  = server->lua->L;
+    struct kiwmi_output *output   = data;
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lc->callback_ref);
+
+    lua_newtable(L);
+
+    lua_pushcfunction(L, luaK_kiwmi_output_new);
+    lua_pushlightuserdata(L, server->lua);
+    lua_pushlightuserdata(L, output);
+
+    if (lua_pcall(L, 2, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+        return;
+    }
+
+    lua_setfield(L, -2, "output");
+
+    lua_pushinteger(L, output->usable_area.x);
+    lua_setfield(L, -2, "x");
+
+    lua_pushinteger(L, output->usable_area.y);
+    lua_setfield(L, -2, "y");
+
+    lua_pushinteger(L, output->usable_area.width);
+    lua_setfield(L, -2, "width");
+
+    lua_pushinteger(L, output->usable_area.height);
+    lua_setfield(L, -2, "height");
+
+    if (lua_pcall(L, 1, 0, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+}
+
 static int
 l_kiwmi_output_on_destroy(lua_State *L)
 {
@@ -252,9 +326,40 @@ l_kiwmi_output_on_resize(lua_State *L)
     return 0;
 }
 
+static int
+l_kiwmi_output_on_usable_area_change(lua_State *L)
+{
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_output");
+    luaL_checktype(L, 2, LUA_TFUNCTION);
+
+    if (!obj->valid) {
+        return luaL_error(L, "kiwmi_output no longer valid");
+    }
+
+    struct kiwmi_output *output   = obj->object;
+    struct kiwmi_desktop *desktop = output->desktop;
+    struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
+
+    lua_pushcfunction(L, luaK_kiwmi_lua_callback_new);
+    lua_pushlightuserdata(L, server);
+    lua_pushvalue(L, 2);
+    lua_pushlightuserdata(L, kiwmi_output_on_usable_area_change_notify);
+    lua_pushlightuserdata(L, &output->events.usable_area_change);
+    lua_pushlightuserdata(L, obj);
+
+    if (lua_pcall(L, 5, 0, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        return 0;
+    }
+
+    return 0;
+}
+
 static const luaL_Reg kiwmi_output_events[] = {
     {"destroy", l_kiwmi_output_on_destroy},
     {"resize", l_kiwmi_output_on_resize},
+    {"usable_area_change", l_kiwmi_output_on_usable_area_change},
     {NULL, NULL},
 };
 
