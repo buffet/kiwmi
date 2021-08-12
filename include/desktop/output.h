@@ -9,6 +9,7 @@
 #define KIWMI_DESKTOP_OUTPUT_H
 
 #include <wayland-server.h>
+#include <wlr/types/wlr_box.h>
 
 struct kiwmi_output {
     struct wl_list link;
@@ -20,10 +21,12 @@ struct kiwmi_output {
     struct wl_listener mode;
 
     struct wl_list layers[4]; // struct kiwmi_layer_surface::link
+    struct wlr_box usable_area;
 
     struct {
         struct wl_signal destroy;
         struct wl_signal resize;
+        struct wl_signal usable_area_change;
     } events;
 };
 
