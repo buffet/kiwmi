@@ -50,6 +50,10 @@ Quit kiwmi.
 Call `callback` after `delay` ms.
 Callback get passed itself, so that it can easily reregister itself.
 
+#### kiwmi:set_verbosity(level)
+
+Sets verbosity of kiwmi to the level specified with a number (see `kiwmi:verbosity()`).
+
 #### kiwmi:spawn(command)
 
 Spawn a new process.
@@ -62,6 +66,10 @@ Stops an interactive move or resize.
 #### kiwmi:unfocus()
 
 Unfocus the currently focused view.
+
+#### kiwmi:verbosity()
+
+Returns the numerical verbosity level of kiwmi (value of one of `wlr_log_importance`, silent = 0, error = 1, info = 2, debug = 3).
 
 #### kiwmi:view_at(lx, ly)
 
