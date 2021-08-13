@@ -128,7 +128,7 @@ output_frame_notify(struct wl_listener *listener, void *data)
     wlr_output_effective_resolution(wlr_output, &width, &height);
 
     wlr_renderer_begin(renderer, width, height);
-    wlr_renderer_clear(renderer, (float[]){0.1f, 0.1f, 0.1f, 1.0f});
+    wlr_renderer_clear(renderer, desktop->bg_color);
 
     double output_lx = 0;
     double output_ly = 0;

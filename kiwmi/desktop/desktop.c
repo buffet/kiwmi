@@ -43,6 +43,11 @@ desktop_init(struct kiwmi_desktop *desktop, struct wlr_renderer *renderer)
     wlr_xdg_output_manager_v1_create(
         server->wl_display, desktop->output_layout);
 
+    desktop->bg_color[0] = 0.1f;
+    desktop->bg_color[1] = 0.1f;
+    desktop->bg_color[2] = 0.1f;
+    desktop->bg_color[3] = 1.0f;
+
     desktop->xdg_shell = wlr_xdg_shell_create(server->wl_display);
     desktop->xdg_shell_new_surface.notify = xdg_shell_new_surface_notify;
     wl_signal_add(
