@@ -15,6 +15,7 @@
 #include <wlr/types/wlr_output.h>
 #include <wlr/util/log.h>
 
+#include "color.h"
 #include "desktop/output.h"
 #include "luak/lua_compat.h"
 #include "luak/luak.h"
@@ -23,36 +24,6 @@ struct kiwmi_renderer {
     struct wlr_renderer *wlr_renderer;
     struct kiwmi_output *output;
 };
-
-static bool
-parse_color(const char *hex, float color[static 4])
-{
-    if (hex[0] == '#') {
-        ++hex;
-    }
-
-    int len = strlen(hex);
-    if (len != 6 && len != 8) {
-        return false;
-    }
-
-    uint32_t rgba = (uint32_t)strtoul(hex, NULL, 16);
-    if (len == 6) {
-        rgba = (rgba << 8) | 0xff;
-    }
-
-    for (size_t i = 0; i < 4; ++i) {
-        color[3 - i] = (rgba & 0xff) / 255.0;
-        rgba >>= 8;
-    }
-
-    // premultiply alpha
-    color[0] *= color[3];
-    color[1] *= color[3];
-    color[2] *= color[3];
-
-    return true;
-}
 
 static int
 l_kiwmi_renderer_draw_rect(lua_State *L)
@@ -70,7 +41,7 @@ l_kiwmi_renderer_draw_rect(lua_State *L)
     struct wlr_output *wlr_output     = output->wlr_output;
 
     float color[4];
-    if (!parse_color(lua_tostring(L, 2), color)) {
+    if (!color_parse(lua_tostring(L, 2), color)) {
         return luaL_argerror(L, 2, "not a valid color");
     }
 

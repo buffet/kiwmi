@@ -17,6 +17,7 @@
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/util/log.h>
 
+#include "color.h"
 #include "desktop/view.h"
 #include "input/cursor.h"
 #include "input/input.h"
@@ -48,6 +49,28 @@ l_kiwmi_server_active_output(lua_State *L)
     }
 
     return 1;
+}
+
+static int
+l_kiwmi_server_bg_color(lua_State *L)
+{
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_server");
+    luaL_checktype(L, 2, LUA_TSTRING);
+
+    struct kiwmi_server *server = obj->object;
+
+    float color[4];
+    if (!color_parse(lua_tostring(L, 2), color)) {
+        return luaL_argerror(L, 2, "not a valid color");
+    }
+
+    server->desktop.bg_color[0] = color[0];
+    server->desktop.bg_color[1] = color[1];
+    server->desktop.bg_color[2] = color[2];
+    // ignore alpha
+
+    return 0;
 }
 
 static int
@@ -309,6 +332,7 @@ l_kiwmi_server_view_at(lua_State *L)
 
 static const luaL_Reg kiwmi_server_methods[] = {
     {"active_output", l_kiwmi_server_active_output},
+    {"bg_color", l_kiwmi_server_bg_color},
     {"cursor", l_kiwmi_server_cursor},
     {"focused_view", l_kiwmi_server_focused_view},
     {"on", luaK_callback_register_dispatch},

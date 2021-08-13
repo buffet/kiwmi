@@ -45,6 +45,10 @@ Used to register event listeners.
 
 Quit kiwmi.
 
+#### kiwmi:bg_color(color)
+
+Sets the background color (shown behind all views) to `color` (in the format #rrggbb).
+
 #### kiwmi:schedule(delay, callback)
 
 Call `callback` after `delay` ms.
