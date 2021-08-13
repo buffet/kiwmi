@@ -21,6 +21,8 @@ struct kiwmi_desktop {
     struct wl_list outputs; // struct kiwmi_output::link
     struct wl_list views;   // struct kiwmi_view::link
 
+    float bg_color[4];
+
     struct wl_listener xdg_shell_new_surface;
     struct wl_listener xdg_toplevel_new_decoration;
     struct wl_listener layer_shell_new_surface;

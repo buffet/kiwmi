@@ -1,6 +1,7 @@
 kiwmi_sources = files(
   'main.c',
   'server.c',
+  'color.c',
   'desktop/desktop.c',
   'desktop/layer_shell.c',
   'desktop/output.c',
