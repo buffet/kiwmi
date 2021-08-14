@@ -128,7 +128,7 @@ process_cursor_motion(struct kiwmi_server *server, uint32_t time)
     }
 
     wl_list_for_each (output, &server->desktop.outputs, link) {
-        output->damaged = true;
+        output->damaged = 2;
     }
 }
 
