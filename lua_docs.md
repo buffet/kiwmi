@@ -149,6 +149,14 @@ The compositor will not forward it to the view under the cursor.
 The cursor got moved.
 Callback receives a table containing `oldx`, `oldy`, `newx`, and `newy`.
 
+#### scroll
+
+Something was scrolled.
+The callback receives a table containing `device` with the device name, `vertical` indicating whether it was a vertical or horizontal scroll, and `length` with the length of the vector (negative for left of up scrolls).
+
+The callback is supposed to return `true` if the event was handled.
+The compositor will not forward it to the view under the cursor.
+
 ## kiwmi_keyboard
 
 A handle to a keyboard.

@@ -210,13 +210,24 @@ cursor_axis_notify(struct wl_listener *listener, void *data)
     struct kiwmi_input *input            = &server->input;
     struct wlr_event_pointer_axis *event = data;
 
-    wlr_seat_pointer_notify_axis(
-        input->seat->seat,
-        event->time_msec,
-        event->orientation,
-        event->delta,
-        event->delta_discrete,
-        event->source);
+    struct kiwmi_cursor_scroll_event new_event = {
+        .device_name = event->device->name,
+        .is_vertical = event->orientation == WLR_AXIS_ORIENTATION_VERTICAL,
+        .length      = event->delta,
+        .handled     = false,
+    };
+
+    wl_signal_emit(&cursor->events.scroll, &new_event);
+
+    if (!new_event.handled) {
+        wlr_seat_pointer_notify_axis(
+            input->seat->seat,
+            event->time_msec,
+            event->orientation,
+            event->delta,
+            event->delta_discrete,
+            event->source);
+    }
 }
 
 static void
@@ -277,6 +288,7 @@ cursor_create(
     wl_signal_init(&cursor->events.button_down);
     wl_signal_init(&cursor->events.button_up);
     wl_signal_init(&cursor->events.motion);
+    wl_signal_init(&cursor->events.scroll);
 
     return cursor;
 }
