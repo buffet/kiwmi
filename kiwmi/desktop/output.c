@@ -40,7 +40,7 @@ render_layer_surface(struct wlr_surface *surface, int x, int y, void *data)
         return;
     }
 
-    if (!output->damaged) {
+    if (output->damaged == 0) {
         wlr_surface_send_frame_done(surface, rdata->when);
         return;
     }
@@ -91,7 +91,7 @@ render_surface(struct wlr_surface *surface, int sx, int sy, void *data)
         return;
     }
 
-    if (!output->damaged) {
+    if (output->damaged == 0) {
         wlr_surface_send_frame_done(surface, rdata->when);
         return;
     }
@@ -140,7 +140,7 @@ output_frame_notify(struct wl_listener *listener, void *data)
     wlr_output_effective_resolution(wlr_output, &width, &height);
 
     wlr_renderer_begin(renderer, width, height);
-    if (output->damaged) {
+    if (output->damaged > 0) {
         wlr_renderer_clear(renderer, desktop->bg_color);
     }
 
@@ -168,7 +168,7 @@ output_frame_notify(struct wl_listener *listener, void *data)
 
         rdata.data = view;
 
-        if (output->damaged) {
+        if (output->damaged > 0) {
             wl_signal_emit(&view->events.pre_render, &rdata);
             view_for_each_surface(view, render_surface, &rdata);
             wl_signal_emit(&view->events.post_render, &rdata);
@@ -183,7 +183,7 @@ output_frame_notify(struct wl_listener *listener, void *data)
     wlr_output_render_software_cursors(wlr_output, NULL);
     wlr_renderer_end(renderer);
 
-    output->damaged = false;
+    --output->damaged;
 
     wlr_output_commit(wlr_output);
 }
@@ -196,7 +196,7 @@ output_commit_notify(struct wl_listener *listener, void *data)
 
     if (event->committed & WLR_OUTPUT_STATE_TRANSFORM) {
         arrange_layers(output);
-        output->damaged = true;
+        output->damaged = 2;
 
         wl_signal_emit(&output->events.resize, output);
     }
@@ -225,7 +225,7 @@ output_mode_notify(struct wl_listener *listener, void *UNUSED(data))
     struct kiwmi_output *output = wl_container_of(listener, output, mode);
 
     arrange_layers(output);
-    output->damaged = true;
+    output->damaged = 2;
 
     wl_signal_emit(&output->events.resize, output);
 }
@@ -244,7 +244,7 @@ output_create(struct wlr_output *wlr_output, struct kiwmi_desktop *desktop)
     output->usable_area.width  = wlr_output->width;
     output->usable_area.height = wlr_output->height;
 
-    output->damaged = true;
+    output->damaged = 2;
 
     output->frame.notify = output_frame_notify;
     wl_signal_add(&wlr_output->events.frame, &output->frame);

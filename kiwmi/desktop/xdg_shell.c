@@ -28,7 +28,7 @@ xdg_surface_map_notify(struct wl_listener *listener, void *UNUSED(data))
 
     struct kiwmi_output *output;
     wl_list_for_each (output, &view->desktop->outputs, link) {
-        output->damaged = true;
+        output->damaged = 2;
     }
 
     wl_signal_emit(&view->desktop->events.view_map, view);
@@ -44,7 +44,7 @@ xdg_surface_unmap_notify(struct wl_listener *listener, void *UNUSED(data))
 
         struct kiwmi_output *output;
         wl_list_for_each (output, &view->desktop->outputs, link) {
-            output->damaged = true;
+            output->damaged = 2;
         }
 
         wl_signal_emit(&view->events.unmap, view);
@@ -59,7 +59,7 @@ xdg_surface_commit_notify(struct wl_listener *listener, void *UNUSED(data))
     if (pixman_region32_not_empty(&view->wlr_surface->buffer_damage)) {
         struct kiwmi_output *output;
         wl_list_for_each (output, &view->desktop->outputs, link) {
-            output->damaged = true;
+            output->damaged = 2;
         }
     }
 

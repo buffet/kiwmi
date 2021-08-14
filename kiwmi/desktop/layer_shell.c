@@ -54,7 +54,7 @@ kiwmi_layer_commit_notify(struct wl_listener *listener, void *UNUSED(data))
     }
 
     if (layer_changed || geom_changed) {
-        output->damaged = true;
+        output->damaged = 2;
     }
 }
 
@@ -63,7 +63,7 @@ kiwmi_layer_map_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_layer *layer = wl_container_of(listener, layer, map);
 
-    layer->output->damaged = true;
+    layer->output->damaged = 2;
 }
 
 static void
@@ -71,7 +71,7 @@ kiwmi_layer_unmap_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_layer *layer = wl_container_of(listener, layer, unmap);
 
-    layer->output->damaged = true;
+    layer->output->damaged = 2;
 }
 
 static void
