@@ -44,6 +44,7 @@ struct kiwmi_cursor {
         struct wl_signal button_down;
         struct wl_signal button_up;
         struct wl_signal motion;
+        struct wl_signal scroll;
     } events;
 };
 
@@ -57,6 +58,13 @@ struct kiwmi_cursor_motion_event {
     double oldy;
     double newx;
     double newy;
+};
+
+struct kiwmi_cursor_scroll_event {
+    const char *device_name;
+    bool is_vertical;
+    double length;
+    bool handled;
 };
 
 struct kiwmi_cursor *cursor_create(

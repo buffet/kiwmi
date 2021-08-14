@@ -162,6 +162,36 @@ kiwmi_cursor_on_motion_notify(struct wl_listener *listener, void *data)
     }
 }
 
+static void
+kiwmi_cursor_on_scroll_notify(struct wl_listener *listener, void *data)
+{
+    struct kiwmi_lua_callback *lc = wl_container_of(listener, lc, listener);
+    struct kiwmi_server *server   = lc->server;
+    lua_State *L                  = server->lua->L;
+    struct kiwmi_cursor_scroll_event *event = data;
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lc->callback_ref);
+
+    lua_newtable(L);
+
+    lua_pushstring(L, event->device_name);
+    lua_setfield(L, -2, "device");
+
+    lua_pushnumber(L, event->is_vertical);
+    lua_setfield(L, -2, "vertical");
+
+    lua_pushnumber(L, event->length);
+    lua_setfield(L, -2, "length");
+
+    if (lua_pcall(L, 1, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+
+    event->handled |= lua_toboolean(L, -1);
+    lua_pop(L, 1);
+}
+
 static int
 l_kiwmi_cursor_on_button_down(lua_State *L)
 {
@@ -237,10 +267,36 @@ l_kiwmi_cursor_on_motion(lua_State *L)
     return 0;
 }
 
+static int
+l_kiwmi_cursor_on_scroll(lua_State *L)
+{
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_cursor");
+    luaL_checktype(L, 2, LUA_TFUNCTION);
+
+    struct kiwmi_cursor *cursor = obj->object;
+    struct kiwmi_server *server = cursor->server;
+
+    lua_pushcfunction(L, luaK_kiwmi_lua_callback_new);
+    lua_pushlightuserdata(L, server);
+    lua_pushvalue(L, 2);
+    lua_pushlightuserdata(L, kiwmi_cursor_on_scroll_notify);
+    lua_pushlightuserdata(L, &cursor->events.scroll);
+    lua_pushlightuserdata(L, obj);
+
+    if (lua_pcall(L, 5, 0, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        return 0;
+    }
+
+    return 0;
+}
+
 static const luaL_Reg kiwmi_cursor_events[] = {
     {"button_down", l_kiwmi_cursor_on_button_down},
     {"button_up", l_kiwmi_cursor_on_button_up},
     {"motion", l_kiwmi_cursor_on_motion},
+    {"scroll", l_kiwmi_cursor_on_scroll},
     {NULL, NULL},
 };
 
