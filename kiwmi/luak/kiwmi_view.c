@@ -239,8 +239,10 @@ l_kiwmi_view_move(lua_State *L)
     luaL_checktype(L, 2, LUA_TNUMBER);
     luaL_checktype(L, 3, LUA_TNUMBER);
 
-    view->x = lua_tonumber(L, 2);
-    view->y = lua_tonumber(L, 3);
+    uint32_t x = lua_tonumber(L, 2);
+    uint32_t y = lua_tonumber(L, 3);
+
+    view_set_pos(view, x, y);
 
     return 0;
 }

@@ -104,6 +104,7 @@ const char *view_get_app_id(struct kiwmi_view *view);
 const char *view_get_title(struct kiwmi_view *view);
 void view_set_activated(struct kiwmi_view *view, bool activated);
 void view_set_size(struct kiwmi_view *view, uint32_t width, uint32_t height);
+void view_set_pos(struct kiwmi_view *view, uint32_t x, uint32_t y);
 void view_set_tiled(struct kiwmi_view *view, enum wlr_edges edges);
 struct wlr_surface *view_surface_at(
     struct kiwmi_view *view,
