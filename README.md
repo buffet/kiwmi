@@ -30,6 +30,7 @@ The dependencies required are:
 
 - [wlroots](https://github.com/swaywm/wlroots)
 - lua or luajit
+- pixman
 - meson (build)
 - ninja (build)
 - git (build, optional)

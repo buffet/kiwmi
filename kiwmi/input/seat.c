@@ -111,6 +111,14 @@ request_set_cursor_notify(struct wl_listener *listener, void *data)
         return;
     }
 
+    struct kiwmi_input *input   = seat->input;
+    struct kiwmi_server *server = wl_container_of(input, server, input);
+
+    struct kiwmi_output *output;
+    wl_list_for_each (output, &server->desktop.outputs, link) {
+        output->damaged = true;
+    }
+
     wlr_cursor_set_surface(
         cursor->cursor, event->surface, event->hotspot_x, event->hotspot_y);
 }

@@ -23,6 +23,8 @@ struct kiwmi_output {
     struct wl_list layers[4]; // struct kiwmi_layer_surface::link
     struct wlr_box usable_area;
 
+    bool damaged;
+
     struct {
         struct wl_signal destroy;
         struct wl_signal resize;

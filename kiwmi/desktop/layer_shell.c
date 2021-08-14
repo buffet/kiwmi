@@ -24,6 +24,8 @@ kiwmi_layer_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
 
     wl_list_remove(&layer->link);
     wl_list_remove(&layer->destroy.link);
+    wl_list_remove(&layer->map.link);
+    wl_list_remove(&layer->unmap.link);
 
     wlr_layer_surface_v1_close(layer->layer_surface);
 
@@ -38,7 +40,12 @@ kiwmi_layer_commit_notify(struct wl_listener *listener, void *UNUSED(data))
     struct kiwmi_layer *layer   = wl_container_of(listener, layer, commit);
     struct kiwmi_output *output = layer->output;
 
+    struct wlr_box old_geom = layer->geom;
+
+    arrange_layers(output);
+
     bool layer_changed = layer->layer != layer->layer_surface->current.layer;
+    bool geom_changed  = memcmp(&old_geom, &layer->geom, sizeof(old_geom)) != 0;
 
     if (layer_changed) {
         wl_list_remove(&layer->link);
@@ -46,7 +53,25 @@ kiwmi_layer_commit_notify(struct wl_listener *listener, void *UNUSED(data))
         wl_list_insert(&output->layers[layer->layer], &layer->link);
     }
 
-    arrange_layers(output);
+    if (layer_changed || geom_changed) {
+        output->damaged = true;
+    }
+}
+
+static void
+kiwmi_layer_map_notify(struct wl_listener *listener, void *UNUSED(data))
+{
+    struct kiwmi_layer *layer = wl_container_of(listener, layer, map);
+
+    layer->output->damaged = true;
+}
+
+static void
+kiwmi_layer_unmap_notify(struct wl_listener *listener, void *UNUSED(data))
+{
+    struct kiwmi_layer *layer = wl_container_of(listener, layer, unmap);
+
+    layer->output->damaged = true;
 }
 
 static void
@@ -389,6 +414,12 @@ layer_shell_new_surface_notify(struct wl_listener *listener, void *data)
 
     layer->commit.notify = kiwmi_layer_commit_notify;
     wl_signal_add(&layer_surface->surface->events.commit, &layer->commit);
+
+    layer->map.notify = kiwmi_layer_map_notify;
+    wl_signal_add(&layer_surface->events.map, &layer->map);
+
+    layer->unmap.notify = kiwmi_layer_unmap_notify;
+    wl_signal_add(&layer_surface->events.unmap, &layer->unmap);
 
     wl_list_insert(&output->layers[layer->layer], &layer->link);
 

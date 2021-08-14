@@ -25,6 +25,7 @@ kiwmi_sources = files(
 
 kiwmi_deps = [
   lua,
+  pixman,
   protocols_server,
   wayland_server,
   wlroots,
