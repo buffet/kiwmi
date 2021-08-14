@@ -26,6 +26,11 @@ xdg_surface_map_notify(struct wl_listener *listener, void *UNUSED(data))
     struct kiwmi_view *view = wl_container_of(listener, view, map);
     view->mapped            = true;
 
+    struct kiwmi_output *output;
+    wl_list_for_each (output, &view->desktop->outputs, link) {
+        output->damaged = true;
+    }
+
     wl_signal_emit(&view->desktop->events.view_map, view);
 }
 
@@ -37,6 +42,11 @@ xdg_surface_unmap_notify(struct wl_listener *listener, void *UNUSED(data))
     if (view->mapped) {
         view->mapped = false;
 
+        struct kiwmi_output *output;
+        wl_list_for_each (output, &view->desktop->outputs, link) {
+            output->damaged = true;
+        }
+
         wl_signal_emit(&view->events.unmap, view);
     }
 }
@@ -45,6 +55,13 @@ static void
 xdg_surface_commit_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_view *view = wl_container_of(listener, view, commit);
+
+    if (pixman_region32_not_empty(&view->wlr_surface->buffer_damage)) {
+        struct kiwmi_output *output;
+        wl_list_for_each (output, &view->desktop->outputs, link) {
+            output->damaged = true;
+        }
+    }
 
     wlr_xdg_surface_get_geometry(view->xdg_surface, &view->geom);
 }

@@ -31,11 +31,17 @@ static void
 render_layer_surface(struct wlr_surface *surface, int x, int y, void *data)
 {
     struct kiwmi_render_data *rdata = data;
-    struct wlr_output *output       = rdata->output;
+    struct wlr_output *wlr_output   = rdata->output;
     struct wlr_box *geom            = rdata->data;
+    struct kiwmi_output *output     = wlr_output->data;
 
     struct wlr_texture *texture = wlr_surface_get_texture(surface);
     if (!texture) {
+        return;
+    }
+
+    if (!output->damaged) {
+        wlr_surface_send_frame_done(surface, rdata->when);
         return;
     }
 
@@ -43,17 +49,17 @@ render_layer_surface(struct wlr_surface *surface, int x, int y, void *data)
     int oy = y + geom->y;
 
     struct wlr_box box = {
-        .x      = ox * output->scale,
-        .y      = oy * output->scale,
-        .width  = surface->current.width * output->scale,
-        .height = surface->current.height * output->scale,
+        .x      = ox * wlr_output->scale,
+        .y      = oy * wlr_output->scale,
+        .width  = surface->current.width * wlr_output->scale,
+        .height = surface->current.height * wlr_output->scale,
     };
 
     float matrix[9];
     enum wl_output_transform transform =
         wlr_output_transform_invert(surface->current.transform);
     wlr_matrix_project_box(
-        matrix, &box, transform, 0, output->transform_matrix);
+        matrix, &box, transform, 0, wlr_output->transform_matrix);
 
     wlr_render_texture_with_matrix(rdata->renderer, texture, matrix, 1);
 
@@ -77,10 +83,16 @@ render_surface(struct wlr_surface *surface, int sx, int sy, void *data)
 {
     struct kiwmi_render_data *rdata = data;
     struct kiwmi_view *view         = rdata->data;
-    struct wlr_output *output       = rdata->output;
+    struct wlr_output *wlr_output   = rdata->output;
+    struct kiwmi_output *output     = wlr_output->data;
 
     struct wlr_texture *texture = wlr_surface_get_texture(surface);
     if (!texture) {
+        return;
+    }
+
+    if (!output->damaged) {
+        wlr_surface_send_frame_done(surface, rdata->when);
         return;
     }
 
@@ -88,17 +100,17 @@ render_surface(struct wlr_surface *surface, int sx, int sy, void *data)
     int oy = rdata->output_ly + sy + view->y - view->geom.y;
 
     struct wlr_box box = {
-        .x      = ox * output->scale,
-        .y      = oy * output->scale,
-        .width  = surface->current.width * output->scale,
-        .height = surface->current.height * output->scale,
+        .x      = ox * wlr_output->scale,
+        .y      = oy * wlr_output->scale,
+        .width  = surface->current.width * wlr_output->scale,
+        .height = surface->current.height * wlr_output->scale,
     };
 
     float matrix[9];
     enum wl_output_transform transform =
         wlr_output_transform_invert(surface->current.transform);
     wlr_matrix_project_box(
-        matrix, &box, transform, 0, output->transform_matrix);
+        matrix, &box, transform, 0, wlr_output->transform_matrix);
 
     wlr_render_texture_with_matrix(rdata->renderer, texture, matrix, 1);
 
@@ -128,7 +140,9 @@ output_frame_notify(struct wl_listener *listener, void *data)
     wlr_output_effective_resolution(wlr_output, &width, &height);
 
     wlr_renderer_begin(renderer, width, height);
-    wlr_renderer_clear(renderer, desktop->bg_color);
+    if (output->damaged) {
+        wlr_renderer_clear(renderer, desktop->bg_color);
+    }
 
     double output_lx = 0;
     double output_ly = 0;
@@ -154,9 +168,13 @@ output_frame_notify(struct wl_listener *listener, void *data)
 
         rdata.data = view;
 
-        wl_signal_emit(&view->events.pre_render, &rdata);
-        view_for_each_surface(view, render_surface, &rdata);
-        wl_signal_emit(&view->events.post_render, &rdata);
+        if (output->damaged) {
+            wl_signal_emit(&view->events.pre_render, &rdata);
+            view_for_each_surface(view, render_surface, &rdata);
+            wl_signal_emit(&view->events.post_render, &rdata);
+        } else {
+            view_for_each_surface(view, render_surface, &rdata);
+        }
     }
 
     render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], &rdata);
@@ -164,6 +182,8 @@ output_frame_notify(struct wl_listener *listener, void *data)
 
     wlr_output_render_software_cursors(wlr_output, NULL);
     wlr_renderer_end(renderer);
+
+    output->damaged = false;
 
     wlr_output_commit(wlr_output);
 }
@@ -176,6 +196,7 @@ output_commit_notify(struct wl_listener *listener, void *data)
 
     if (event->committed & WLR_OUTPUT_STATE_TRANSFORM) {
         arrange_layers(output);
+        output->damaged = true;
 
         wl_signal_emit(&output->events.resize, output);
     }
@@ -204,6 +225,7 @@ output_mode_notify(struct wl_listener *listener, void *UNUSED(data))
     struct kiwmi_output *output = wl_container_of(listener, output, mode);
 
     arrange_layers(output);
+    output->damaged = true;
 
     wl_signal_emit(&output->events.resize, output);
 }
@@ -221,6 +243,8 @@ output_create(struct wlr_output *wlr_output, struct kiwmi_desktop *desktop)
 
     output->usable_area.width  = wlr_output->width;
     output->usable_area.height = wlr_output->height;
+
+    output->damaged = true;
 
     output->frame.notify = output_frame_notify;
     wl_signal_add(&wlr_output->events.frame, &output->frame);

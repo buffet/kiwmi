@@ -18,6 +18,7 @@ add_project_arguments(
 
 git               = find_program('git', required: false)
 lua               = dependency(get_option('lua-pkg'))
+pixman            = dependency('pixman-1')
 wayland_client    = dependency('wayland-client')
 wayland_protocols = dependency('wayland-protocols')
 wayland_scanner   = dependency('wayland-scanner')
