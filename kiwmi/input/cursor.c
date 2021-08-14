@@ -126,10 +126,6 @@ process_cursor_motion(struct kiwmi_server *server, uint32_t time)
     } else {
         wlr_seat_pointer_clear_focus(seat);
     }
-
-    wl_list_for_each (output, &server->desktop.outputs, link) {
-        output->damaged = 2;
-    }
 }
 
 static void

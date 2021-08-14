@@ -137,6 +137,18 @@ send_frame_done_to_surface(
     wlr_surface_send_frame_done(surface, now);
 }
 
+static bool
+render_cursors(struct wlr_output *wlr_output)
+{
+    pixman_region32_t damage;
+    pixman_region32_init(&damage);
+    wlr_output_render_software_cursors(wlr_output, &damage);
+    bool damaged = pixman_region32_not_empty(&damage);
+    pixman_region32_fini(&damage);
+
+    return damaged;
+}
+
 static void
 output_frame_notify(struct wl_listener *listener, void *data)
 {
@@ -146,8 +158,6 @@ output_frame_notify(struct wl_listener *listener, void *data)
 
     struct timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now);
-
-    printf("%d\n", output->damaged);
 
     if (output->damaged == 0) {
         send_frame_done_to_layer(
@@ -167,6 +177,10 @@ output_frame_notify(struct wl_listener *listener, void *data)
         if (!wlr_output_attach_render(wlr_output, NULL)) {
             wlr_log(WLR_ERROR, "Failed to attach renderer to output");
             return;
+        }
+
+        if (render_cursors(wlr_output)) {
+            output->damaged = 2;
         }
 
         wlr_output_commit(wlr_output);
@@ -221,7 +235,10 @@ output_frame_notify(struct wl_listener *listener, void *data)
     render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], &rdata);
     render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], &rdata);
 
-    wlr_output_render_software_cursors(wlr_output, NULL);
+    if (render_cursors(wlr_output)) {
+        output->damaged = 3;
+    }
+
     wlr_renderer_end(renderer);
 
     --output->damaged;
