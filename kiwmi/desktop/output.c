@@ -33,15 +33,9 @@ render_layer_surface(struct wlr_surface *surface, int x, int y, void *data)
     struct kiwmi_render_data *rdata = data;
     struct wlr_output *wlr_output   = rdata->output;
     struct wlr_box *geom            = rdata->data;
-    struct kiwmi_output *output     = wlr_output->data;
 
     struct wlr_texture *texture = wlr_surface_get_texture(surface);
     if (!texture) {
-        return;
-    }
-
-    if (output->damaged == 0) {
-        wlr_surface_send_frame_done(surface, rdata->when);
         return;
     }
 
@@ -79,20 +73,35 @@ render_layer(struct wl_list *layer, struct kiwmi_render_data *rdata)
 }
 
 static void
+send_frame_done_to_layer_surface(
+    struct wlr_surface *surface,
+    int UNUSED(x),
+    int UNUSED(y),
+    void *data)
+{
+    struct timespec *now = data;
+    wlr_surface_send_frame_done(surface, now);
+}
+
+static void
+send_frame_done_to_layer(struct wl_list *layer, struct timespec *now)
+{
+    struct kiwmi_layer *surface;
+    wl_list_for_each (surface, layer, link) {
+        wlr_layer_surface_v1_for_each_surface(
+            surface->layer_surface, send_frame_done_to_layer_surface, now);
+    }
+}
+
+static void
 render_surface(struct wlr_surface *surface, int sx, int sy, void *data)
 {
     struct kiwmi_render_data *rdata = data;
     struct kiwmi_view *view         = rdata->data;
     struct wlr_output *wlr_output   = rdata->output;
-    struct kiwmi_output *output     = wlr_output->data;
 
     struct wlr_texture *texture = wlr_surface_get_texture(surface);
     if (!texture) {
-        return;
-    }
-
-    if (output->damaged == 0) {
-        wlr_surface_send_frame_done(surface, rdata->when);
         return;
     }
 
@@ -118,17 +127,55 @@ render_surface(struct wlr_surface *surface, int sx, int sy, void *data)
 }
 
 static void
+send_frame_done_to_surface(
+    struct wlr_surface *surface,
+    int UNUSED(sx),
+    int UNUSED(sy),
+    void *data)
+{
+    struct timespec *now = data;
+    wlr_surface_send_frame_done(surface, now);
+}
+
+static void
 output_frame_notify(struct wl_listener *listener, void *data)
 {
     struct kiwmi_output *output   = wl_container_of(listener, output, frame);
     struct wlr_output *wlr_output = data;
     struct kiwmi_desktop *desktop = output->desktop;
-    struct wlr_output_layout *output_layout = desktop->output_layout;
-    struct wlr_renderer *renderer =
-        wlr_backend_get_renderer(wlr_output->backend);
 
     struct timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now);
+
+    printf("%d\n", output->damaged);
+
+    if (output->damaged == 0) {
+        send_frame_done_to_layer(
+            &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND], &now);
+        send_frame_done_to_layer(
+            &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM], &now);
+        send_frame_done_to_layer(
+            &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], &now);
+        send_frame_done_to_layer(
+            &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], &now);
+
+        struct kiwmi_view *view;
+        wl_list_for_each (view, &desktop->views, link) {
+            view_for_each_surface(view, send_frame_done_to_surface, &now);
+        }
+
+        if (!wlr_output_attach_render(wlr_output, NULL)) {
+            wlr_log(WLR_ERROR, "Failed to attach renderer to output");
+            return;
+        }
+
+        wlr_output_commit(wlr_output);
+        return;
+    }
+
+    struct wlr_output_layout *output_layout = desktop->output_layout;
+    struct wlr_renderer *renderer =
+        wlr_backend_get_renderer(wlr_output->backend);
 
     if (!wlr_output_attach_render(wlr_output, NULL)) {
         wlr_log(WLR_ERROR, "Failed to attach renderer to output");
@@ -140,9 +187,7 @@ output_frame_notify(struct wl_listener *listener, void *data)
     wlr_output_effective_resolution(wlr_output, &width, &height);
 
     wlr_renderer_begin(renderer, width, height);
-    if (output->damaged > 0) {
-        wlr_renderer_clear(renderer, desktop->bg_color);
-    }
+    wlr_renderer_clear(renderer, desktop->bg_color);
 
     double output_lx = 0;
     double output_ly = 0;
@@ -168,13 +213,9 @@ output_frame_notify(struct wl_listener *listener, void *data)
 
         rdata.data = view;
 
-        if (output->damaged > 0) {
-            wl_signal_emit(&view->events.pre_render, &rdata);
-            view_for_each_surface(view, render_surface, &rdata);
-            wl_signal_emit(&view->events.post_render, &rdata);
-        } else {
-            view_for_each_surface(view, render_surface, &rdata);
-        }
+        wl_signal_emit(&view->events.pre_render, &rdata);
+        view_for_each_surface(view, render_surface, &rdata);
+        wl_signal_emit(&view->events.post_render, &rdata);
     }
 
     render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], &rdata);
