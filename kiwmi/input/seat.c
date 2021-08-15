@@ -116,7 +116,7 @@ request_set_cursor_notify(struct wl_listener *listener, void *data)
 
     struct kiwmi_output *output;
     wl_list_for_each (output, &server->desktop.outputs, link) {
-        output->damaged = 2;
+        output_damage(output);
     }
 
     wlr_cursor_set_surface(

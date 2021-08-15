@@ -15,6 +15,7 @@
 #include <wlr/util/log.h>
 
 #include "desktop/desktop.h"
+#include "desktop/output.h"
 #include "input/seat.h"
 #include "server.h"
 
@@ -57,7 +58,7 @@ kiwmi_layer_commit_notify(struct wl_listener *listener, void *UNUSED(data))
     }
 
     if (buffer_changed || layer_changed || geom_changed) {
-        output->damaged = 2;
+        output_damage(layer->output);
     }
 }
 
@@ -66,7 +67,7 @@ kiwmi_layer_map_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_layer *layer = wl_container_of(listener, layer, map);
 
-    layer->output->damaged = 2;
+    output_damage(layer->output);
 }
 
 static void
@@ -74,7 +75,7 @@ kiwmi_layer_unmap_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_layer *layer = wl_container_of(listener, layer, unmap);
 
-    layer->output->damaged = 2;
+    output_damage(layer->output);
 }
 
 static void

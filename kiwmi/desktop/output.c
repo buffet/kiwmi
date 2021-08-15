@@ -181,7 +181,7 @@ output_frame_notify(struct wl_listener *listener, void *data)
         }
 
         if (render_cursors(wlr_output)) {
-            output->damaged = 2;
+            output_damage(output);
         }
 
         wlr_output_commit(wlr_output);
@@ -236,13 +236,14 @@ output_frame_notify(struct wl_listener *listener, void *data)
     render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], &rdata);
     render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], &rdata);
 
-    if (render_cursors(wlr_output)) {
-        output->damaged = 3;
-    }
-
+    bool damaged = render_cursors(wlr_output);
     wlr_renderer_end(renderer);
 
-    --output->damaged;
+    if (damaged) {
+        output_damage(output);
+    } else {
+        --output->damaged;
+    }
 
     wlr_output_commit(wlr_output);
 }
@@ -255,7 +256,7 @@ output_commit_notify(struct wl_listener *listener, void *data)
 
     if (event->committed & WLR_OUTPUT_STATE_TRANSFORM) {
         arrange_layers(output);
-        output->damaged = 2;
+        output_damage(output);
 
         wl_signal_emit(&output->events.resize, output);
     }
@@ -284,7 +285,7 @@ output_mode_notify(struct wl_listener *listener, void *UNUSED(data))
     struct kiwmi_output *output = wl_container_of(listener, output, mode);
 
     arrange_layers(output);
-    output->damaged = 2;
+    output_damage(output);
 
     wl_signal_emit(&output->events.resize, output);
 }
@@ -303,8 +304,6 @@ output_create(struct wlr_output *wlr_output, struct kiwmi_desktop *desktop)
     output->usable_area.width  = wlr_output->width;
     output->usable_area.height = wlr_output->height;
 
-    output->damaged = 2;
-
     output->frame.notify = output_frame_notify;
     wl_signal_add(&wlr_output->events.frame, &output->frame);
 
@@ -316,6 +315,8 @@ output_create(struct wlr_output *wlr_output, struct kiwmi_desktop *desktop)
 
     output->mode.notify = output_mode_notify;
     wl_signal_add(&wlr_output->events.mode, &output->mode);
+
+    output_damage(output);
 
     return output;
 }
@@ -369,4 +370,10 @@ new_output_notify(struct wl_listener *listener, void *data)
     wl_signal_init(&output->events.usable_area_change);
 
     wl_signal_emit(&desktop->events.new_output, output);
+}
+
+void
+output_damage(struct kiwmi_output *output)
+{
+    output->damaged = 2;
 }
