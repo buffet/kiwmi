@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 
+#include <pixman.h>
 #include <wayland-server.h>
 #include <wlr/backend.h>
 #include <wlr/render/wlr_renderer.h>

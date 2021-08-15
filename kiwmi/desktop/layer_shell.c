@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 
+#include <pixman.h>
 #include <wayland-server.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/util/log.h>
@@ -46,6 +47,8 @@ kiwmi_layer_commit_notify(struct wl_listener *listener, void *UNUSED(data))
 
     bool layer_changed = layer->layer != layer->layer_surface->current.layer;
     bool geom_changed  = memcmp(&old_geom, &layer->geom, sizeof(old_geom)) != 0;
+    bool buffer_changed = pixman_region32_not_empty(
+        &layer->layer_surface->surface->buffer_damage);
 
     if (layer_changed) {
         wl_list_remove(&layer->link);
@@ -53,7 +56,7 @@ kiwmi_layer_commit_notify(struct wl_listener *listener, void *UNUSED(data))
         wl_list_insert(&output->layers[layer->layer], &layer->link);
     }
 
-    if (layer_changed || geom_changed) {
+    if (buffer_changed || layer_changed || geom_changed) {
         output->damaged = 2;
     }
 }
