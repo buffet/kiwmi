@@ -9,6 +9,7 @@
 
 #include <unistd.h>
 
+#include <pixman.h>
 #include <wlr/types/wlr_xdg_decoration_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/edges.h>
