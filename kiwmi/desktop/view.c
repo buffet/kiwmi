@@ -88,7 +88,7 @@ view_set_size(struct kiwmi_view *view, uint32_t width, uint32_t height)
 
         struct kiwmi_output *output;
         wl_list_for_each (output, &view->desktop->outputs, link) {
-            output->damaged = 2;
+            output_damage(output);
         }
     }
 }
@@ -101,7 +101,7 @@ view_set_pos(struct kiwmi_view *view, uint32_t x, uint32_t y)
 
     struct kiwmi_output *output;
     wl_list_for_each (output, &view->desktop->outputs, link) {
-        output->damaged = 2;
+        output_damage(output);
     }
 }
 

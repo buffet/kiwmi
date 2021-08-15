@@ -43,4 +43,6 @@ struct kiwmi_render_data {
 
 void new_output_notify(struct wl_listener *listener, void *data);
 
+void output_damage(struct kiwmi_output *output);
+
 #endif /* KIWMI_DESKTOP_OUTPUT_H */
