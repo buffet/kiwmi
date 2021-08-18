@@ -7,7 +7,7 @@ task:
       script:
         - sudo pacman --noconfirm -Syu
         - sudo pacman --noconfirm -S git meson ninja lua51 wlroots wayland-protocols
-        - meson build -Dlua-pkg=lua51
+        - meson build -Dlua-pkg=lua51 --werror
         - ninja -C build
 
     - name: Format
