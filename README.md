@@ -2,8 +2,9 @@
 <p align="center"><i>A fully programmable Wayland Compositor</i></p>
 <hr><p align="center">
   <img alt="Stars" src="https://img.shields.io/github/stars/buffet/kiwmi.svg?label=Stars&style=flat" />
-  <a href="https://github.com/buffet/kiwmi/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/buffet/kiwmi.svg"/></a>
-  <a href="https://github.com/buffet/kiwmi/graphs/contributors"><img alt="GitHub contributors" src="https://img.shields.io/github/contributors/buffet/kiwmi"></a>
+  <a href="https://cirrus-ci.com/github/buffet/kiwmi"><img alt="Build Status" src="https://api.cirrus-ci.com/github/buffet/kiwmi.svg"></a>
+  <a href="https://github.com/buffet/kiwmi/issues"><img alt="GitHub Issues" src="https://img.shields.io/github/issues/buffet/kiwmi.svg"/></a>
+  <a href="https://github.com/buffet/kiwmi/graphs/contributors"><img alt="GitHub Contributors" src="https://img.shields.io/github/contributors/buffet/kiwmi"></a>
 </p>
 
 kiwmi is a work-in-progress extensive user-configurable Wayland Compositor.
