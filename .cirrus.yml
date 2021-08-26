@@ -14,5 +14,5 @@ task:
       script:
         - sudo pacman --noconfirm -Syu
         - sudo pacman --noconfirm -S clang git
-        - clang-format -i **/*.{c,h}
+        - find -name .git -prune -o -type f -name '*.[ch]' -print | xargs -d '\n' clang-format -i
         - git diff --exit-code
