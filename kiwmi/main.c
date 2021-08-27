@@ -9,9 +9,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <getopt.h>
 #include <limits.h>
 #include <signal.h>
+#include <unistd.h>
 
 #include <wlr/util/log.h>
 
