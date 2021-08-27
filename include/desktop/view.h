@@ -28,6 +28,7 @@ enum kiwmi_view_type {
 
 struct kiwmi_view {
     struct wl_list link;
+    struct wl_list children; // struct kiwmi_view_child::link
 
     struct kiwmi_desktop *desktop;
 
@@ -46,6 +47,8 @@ struct kiwmi_view {
     struct wl_listener unmap;
     struct wl_listener commit;
     struct wl_listener destroy;
+    struct wl_listener new_popup;
+    struct wl_listener new_subsurface;
     struct wl_listener request_move;
     struct wl_listener request_resize;
 
@@ -88,6 +91,42 @@ struct kiwmi_view_impl {
         double *sub_y);
 };
 
+enum kiwmi_view_child_type {
+    KIWMI_VIEW_CHILD_SUBSURFACE,
+    KIWMI_VIEW_CHILD_XDG_POPUP,
+};
+
+struct kiwmi_view_child {
+    struct wl_list link;
+    struct wl_list children; // struct kiwmi_view_child::link
+
+    struct kiwmi_view *view;
+    struct kiwmi_view_child *parent;
+
+    enum kiwmi_view_child_type type;
+    const struct kiwmi_view_child_impl *impl;
+
+    struct wlr_surface *wlr_surface;
+    union {
+        struct wlr_subsurface *wlr_subsurface;
+        struct wlr_xdg_popup *wlr_xdg_popup;
+    };
+
+    bool mapped;
+
+    struct wl_listener commit;
+    struct wl_listener map;
+    struct wl_listener unmap;
+    struct wl_listener new_popup;
+    struct wl_listener new_subsurface;
+    struct wl_listener extension_destroy; // the union'ed object destroy
+    struct wl_listener surface_destroy;   // wlr_surface::events.destroy
+};
+
+struct kiwmi_view_child_impl {
+    void (*reconfigure)(struct kiwmi_view_child *child);
+};
+
 struct kiwmi_request_resize_event {
     struct kiwmi_view *view;
     uint32_t edges;
@@ -127,5 +166,21 @@ struct kiwmi_view *view_create(
     struct kiwmi_desktop *desktop,
     enum kiwmi_view_type type,
     const struct kiwmi_view_impl *impl);
+
+void
+view_init_subsurfaces(struct kiwmi_view_child *child, struct kiwmi_view *view);
+bool view_child_is_mapped(struct kiwmi_view_child *child);
+void view_child_damage(struct kiwmi_view_child *child);
+void view_child_destroy(struct kiwmi_view_child *child);
+struct kiwmi_view_child *view_child_create(
+    struct kiwmi_view_child *parent,
+    struct kiwmi_view *view,
+    struct wlr_surface *wlr_surface,
+    enum kiwmi_view_child_type type,
+    const struct kiwmi_view_child_impl *impl);
+struct kiwmi_view_child *view_child_subsurface_create(
+    struct kiwmi_view_child *parent,
+    struct kiwmi_view *view,
+    struct wlr_subsurface *subsurface);
 
 #endif /* KIWMI_DESKTOP_VIEW_H */
