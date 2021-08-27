@@ -172,7 +172,8 @@ output_frame_notify(struct wl_listener *listener, void *data)
 
         struct kiwmi_view *view;
         wl_list_for_each (view, &desktop->views, link) {
-            view_for_each_surface(view, send_frame_done_to_surface, &now);
+            view_for_each_mapped_surface(
+                view, send_frame_done_to_surface, &now);
         }
 
         if (!wlr_output_attach_render(wlr_output, NULL)) {
@@ -229,7 +230,7 @@ output_frame_notify(struct wl_listener *listener, void *data)
         rdata.data = view;
 
         wl_signal_emit(&view->events.pre_render, &rdata);
-        view_for_each_surface(view, render_surface, &rdata);
+        view_for_each_mapped_surface(view, render_surface, &rdata);
         wl_signal_emit(&view->events.post_render, &rdata);
     }
 

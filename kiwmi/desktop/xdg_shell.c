@@ -10,6 +10,7 @@
 #include <unistd.h>
 
 #include <pixman.h>
+#include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_xdg_decoration_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/edges.h>
@@ -21,6 +22,151 @@
 #include "input/input.h"
 #include "input/seat.h"
 #include "server.h"
+
+static struct kiwmi_view_child *view_child_popup_create(
+    struct kiwmi_view_child *parent,
+    struct kiwmi_view *view,
+    struct wlr_xdg_popup *wlr_popup);
+
+static void
+popup_new_popup_notify(struct wl_listener *listener, void *data)
+{
+    struct kiwmi_view_child *popup =
+        wl_container_of(listener, popup, new_popup);
+    struct wlr_xdg_popup *wlr_popup = data;
+    view_child_popup_create(popup, popup->view, wlr_popup);
+}
+
+static void
+popup_extension_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
+{
+    struct kiwmi_view_child *popup =
+        wl_container_of(listener, popup, extension_destroy);
+    view_child_destroy(popup);
+}
+
+static void
+popup_unconstrain(struct kiwmi_view_child *popup)
+{
+    if (popup->type != KIWMI_VIEW_CHILD_XDG_POPUP) {
+        wlr_log(WLR_ERROR, "Expected an xdg_popup kiwmi_view_child");
+        return;
+    }
+
+    struct kiwmi_view *view = popup->view;
+
+    // Prefer output at view center
+    struct wlr_output *output = wlr_output_layout_output_at(
+        view->desktop->output_layout,
+        view->x + view->geom.width / 2,
+        view->y + view->geom.height / 2);
+
+    if (!output) {
+        // Retry with view top-left corner (if its center is off-screen)
+        output = wlr_output_layout_output_at(
+            view->desktop->output_layout, view->x, view->y);
+    }
+
+    if (!output) {
+        wlr_log(
+            WLR_ERROR, "View's output not found, popups may end up invisible");
+        return;
+    }
+
+    double view_ox = view->x;
+    double view_oy = view->y;
+    wlr_output_layout_output_coords(
+        view->desktop->output_layout, output, &view_ox, &view_oy);
+
+    int output_width;
+    int output_height;
+    wlr_output_effective_resolution(output, &output_width, &output_height);
+
+    // relative to the view
+    struct wlr_box output_box = {
+        .x      = -view_ox,
+        .y      = -view_oy,
+        .width  = output_width,
+        .height = output_height,
+    };
+
+    wlr_xdg_popup_unconstrain_from_box(popup->wlr_xdg_popup, &output_box);
+}
+
+static void
+popup_reconfigure(struct kiwmi_view_child *popup)
+{
+    if (popup->type != KIWMI_VIEW_CHILD_XDG_POPUP) {
+        wlr_log(WLR_ERROR, "Expected an xdg_popup view_child");
+        return;
+    }
+
+    popup_unconstrain(popup);
+
+    struct kiwmi_view_child *subchild;
+    wl_list_for_each (subchild, &popup->children, link) {
+        if (subchild->impl && subchild->impl->reconfigure) {
+            subchild->impl->reconfigure(subchild);
+        }
+    }
+}
+
+static const struct kiwmi_view_child_impl xdg_popup_view_child_impl = {
+    .reconfigure = popup_reconfigure,
+};
+
+static struct kiwmi_view_child *
+view_child_popup_create(
+    struct kiwmi_view_child *parent,
+    struct kiwmi_view *view,
+    struct wlr_xdg_popup *wlr_popup)
+{
+    struct kiwmi_view_child *child = view_child_create(
+        parent,
+        view,
+        wlr_popup->base->surface,
+        KIWMI_VIEW_CHILD_XDG_POPUP,
+        &xdg_popup_view_child_impl);
+    if (!child) {
+        return NULL;
+    }
+
+    child->wlr_xdg_popup = wlr_popup;
+    child->mapped        = wlr_popup->base->mapped;
+
+    if (view_child_is_mapped(child)) {
+        view_child_damage(child);
+    }
+
+    wl_signal_add(&wlr_popup->base->events.map, &child->map);
+    wl_signal_add(&wlr_popup->base->events.unmap, &child->unmap);
+
+    child->new_popup.notify = popup_new_popup_notify;
+    wl_signal_add(&wlr_popup->base->events.new_popup, &child->new_popup);
+
+    child->extension_destroy.notify = popup_extension_destroy_notify;
+    wl_signal_add(&wlr_popup->base->events.destroy, &child->extension_destroy);
+
+    popup_unconstrain(child);
+
+    return child;
+}
+
+static void
+xdg_surface_new_popup_notify(struct wl_listener *listener, void *data)
+{
+    struct kiwmi_view *view = wl_container_of(listener, view, new_popup);
+    struct wlr_xdg_popup *wlr_popup = data;
+    view_child_popup_create(NULL, view, wlr_popup);
+}
+
+static void
+xdg_surface_new_subsurface_notify(struct wl_listener *listener, void *data)
+{
+    struct kiwmi_view *view = wl_container_of(listener, view, new_subsurface);
+    struct wlr_subsurface *subsurface = data;
+    view_child_subsurface_create(NULL, view, subsurface);
+}
 
 static void
 xdg_surface_map_notify(struct wl_listener *listener, void *UNUSED(data))
@@ -80,11 +226,20 @@ xdg_surface_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
         seat->focused_view = NULL;
     }
 
+    struct kiwmi_view_child *child, *tmpchild;
+    wl_list_for_each_safe (child, tmpchild, &view->children, link) {
+        child->mapped = false;
+        view_child_destroy(child);
+    }
+
     wl_list_remove(&view->link);
+    wl_list_remove(&view->children);
     wl_list_remove(&view->map.link);
     wl_list_remove(&view->unmap.link);
     wl_list_remove(&view->commit.link);
     wl_list_remove(&view->destroy.link);
+    wl_list_remove(&view->new_popup.link);
+    wl_list_remove(&view->new_subsurface.link);
     wl_list_remove(&view->request_move.link);
     wl_list_remove(&view->request_resize.link);
 
@@ -126,12 +281,87 @@ xdg_shell_view_close(struct kiwmi_view *view)
 }
 
 static void
-xdg_shell_view_for_each_surface(
-    struct kiwmi_view *view,
-    wlr_surface_iterator_func_t iterator,
+surface_for_each_mapped_surface(
+    struct wlr_surface *surface,
+    int x,
+    int y,
+    wlr_surface_iterator_func_t callback,
     void *user_data)
 {
-    wlr_xdg_surface_for_each_surface(view->xdg_surface, iterator, user_data);
+    struct wlr_subsurface *subsurface;
+    wl_list_for_each (subsurface, &surface->subsurfaces_below, parent_link) {
+        if (!subsurface->mapped) {
+            continue;
+        }
+
+        surface_for_each_mapped_surface(
+            subsurface->surface,
+            x + subsurface->current.x,
+            y + subsurface->current.y,
+            callback,
+            user_data);
+    }
+
+    callback(surface, x, y, user_data);
+
+    wl_list_for_each (subsurface, &surface->subsurfaces_above, parent_link) {
+        if (!subsurface->mapped) {
+            continue;
+        }
+
+        surface_for_each_mapped_surface(
+            subsurface->surface,
+            x + subsurface->current.x,
+            y + subsurface->current.y,
+            callback,
+            user_data);
+    }
+}
+
+static void
+xdg_surface_for_each_mapped_popup_surface(
+    struct wlr_xdg_surface *surface,
+    int x,
+    int y,
+    wlr_surface_iterator_func_t callback,
+    void *user_data)
+{
+    struct wlr_xdg_popup *popup;
+    wl_list_for_each (popup, &surface->popups, link) {
+        struct wlr_xdg_surface *popup_surface = popup->base;
+        if (!popup_surface->configured || !popup_surface->mapped) {
+            continue;
+        }
+
+        double popup_sx, popup_sy;
+        wlr_xdg_popup_get_position(popup, &popup_sx, &popup_sy);
+
+        surface_for_each_mapped_surface(
+            popup_surface->surface,
+            x + popup_sx,
+            y + popup_sy,
+            callback,
+            user_data);
+        xdg_surface_for_each_mapped_popup_surface(
+            popup_surface, x + popup_sx, y + popup_sy, callback, user_data);
+    }
+}
+
+static void
+xdg_shell_view_for_each_mapped_surface(
+    struct kiwmi_view *view,
+    wlr_surface_iterator_func_t callback,
+    void *user_data)
+{
+    if (!view->mapped) {
+        return;
+    }
+
+    // Have to copy over the wlroots implementation with only small changes
+    surface_for_each_mapped_surface(
+        view->xdg_surface->surface, 0, 0, callback, user_data);
+    xdg_surface_for_each_mapped_popup_surface(
+        view->xdg_surface, 0, 0, callback, user_data);
 }
 
 static pid_t
@@ -205,15 +435,15 @@ xdg_shell_view_surface_at(
 }
 
 static const struct kiwmi_view_impl xdg_shell_view_impl = {
-    .close            = xdg_shell_view_close,
-    .for_each_surface = xdg_shell_view_for_each_surface,
-    .get_pid          = xdg_shell_view_get_pid,
-    .get_size         = xdg_shell_view_get_size,
-    .get_string_prop  = xdg_shell_view_get_string_prop,
-    .set_activated    = xdg_shell_view_set_activated,
-    .set_size         = xdg_shell_view_set_size,
-    .set_tiled        = xdg_shell_view_set_tiled,
-    .surface_at       = xdg_shell_view_surface_at,
+    .close                   = xdg_shell_view_close,
+    .for_each_mapped_surface = xdg_shell_view_for_each_mapped_surface,
+    .get_pid                 = xdg_shell_view_get_pid,
+    .get_size                = xdg_shell_view_get_size,
+    .get_string_prop         = xdg_shell_view_get_string_prop,
+    .set_activated           = xdg_shell_view_set_activated,
+    .set_size                = xdg_shell_view_set_size,
+    .set_tiled               = xdg_shell_view_set_tiled,
+    .surface_at              = xdg_shell_view_surface_at,
 };
 
 void
@@ -259,6 +489,13 @@ xdg_shell_new_surface_notify(struct wl_listener *listener, void *data)
     view->destroy.notify = xdg_surface_destroy_notify;
     wl_signal_add(&xdg_surface->events.destroy, &view->destroy);
 
+    view->new_popup.notify = xdg_surface_new_popup_notify;
+    wl_signal_add(&xdg_surface->events.new_popup, &view->new_popup);
+
+    view->new_subsurface.notify = xdg_surface_new_subsurface_notify;
+    wl_signal_add(
+        &xdg_surface->surface->events.new_subsurface, &view->new_subsurface);
+
     view->request_move.notify = xdg_toplevel_request_move_notify;
     wl_signal_add(
         &xdg_surface->toplevel->events.request_move, &view->request_move);
@@ -266,6 +503,8 @@ xdg_shell_new_surface_notify(struct wl_listener *listener, void *data)
     view->request_resize.notify = xdg_toplevel_request_resize_notify;
     wl_signal_add(
         &xdg_surface->toplevel->events.request_resize, &view->request_resize);
+
+    view_init_subsurfaces(NULL, view);
 
     wl_list_insert(&desktop->views, &view->link);
 }
