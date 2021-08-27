@@ -281,12 +281,87 @@ xdg_shell_view_close(struct kiwmi_view *view)
 }
 
 static void
-xdg_shell_view_for_each_surface(
-    struct kiwmi_view *view,
-    wlr_surface_iterator_func_t iterator,
+surface_for_each_mapped_surface(
+    struct wlr_surface *surface,
+    int x,
+    int y,
+    wlr_surface_iterator_func_t callback,
     void *user_data)
 {
-    wlr_xdg_surface_for_each_surface(view->xdg_surface, iterator, user_data);
+    struct wlr_subsurface *subsurface;
+    wl_list_for_each (subsurface, &surface->subsurfaces_below, parent_link) {
+        if (!subsurface->mapped) {
+            continue;
+        }
+
+        surface_for_each_mapped_surface(
+            subsurface->surface,
+            x + subsurface->current.x,
+            y + subsurface->current.y,
+            callback,
+            user_data);
+    }
+
+    callback(surface, x, y, user_data);
+
+    wl_list_for_each (subsurface, &surface->subsurfaces_above, parent_link) {
+        if (!subsurface->mapped) {
+            continue;
+        }
+
+        surface_for_each_mapped_surface(
+            subsurface->surface,
+            x + subsurface->current.x,
+            y + subsurface->current.y,
+            callback,
+            user_data);
+    }
+}
+
+static void
+xdg_surface_for_each_mapped_popup_surface(
+    struct wlr_xdg_surface *surface,
+    int x,
+    int y,
+    wlr_surface_iterator_func_t callback,
+    void *user_data)
+{
+    struct wlr_xdg_popup *popup;
+    wl_list_for_each (popup, &surface->popups, link) {
+        struct wlr_xdg_surface *popup_surface = popup->base;
+        if (!popup_surface->configured || !popup_surface->mapped) {
+            continue;
+        }
+
+        double popup_sx, popup_sy;
+        wlr_xdg_popup_get_position(popup, &popup_sx, &popup_sy);
+
+        surface_for_each_mapped_surface(
+            popup_surface->surface,
+            x + popup_sx,
+            y + popup_sy,
+            callback,
+            user_data);
+        xdg_surface_for_each_mapped_popup_surface(
+            popup_surface, x + popup_sx, y + popup_sy, callback, user_data);
+    }
+}
+
+static void
+xdg_shell_view_for_each_mapped_surface(
+    struct kiwmi_view *view,
+    wlr_surface_iterator_func_t callback,
+    void *user_data)
+{
+    if (!view->mapped) {
+        return;
+    }
+
+    // Have to copy over the wlroots implementation with only small changes
+    surface_for_each_mapped_surface(
+        view->xdg_surface->surface, 0, 0, callback, user_data);
+    xdg_surface_for_each_mapped_popup_surface(
+        view->xdg_surface, 0, 0, callback, user_data);
 }
 
 static pid_t
@@ -360,15 +435,15 @@ xdg_shell_view_surface_at(
 }
 
 static const struct kiwmi_view_impl xdg_shell_view_impl = {
-    .close            = xdg_shell_view_close,
-    .for_each_surface = xdg_shell_view_for_each_surface,
-    .get_pid          = xdg_shell_view_get_pid,
-    .get_size         = xdg_shell_view_get_size,
-    .get_string_prop  = xdg_shell_view_get_string_prop,
-    .set_activated    = xdg_shell_view_set_activated,
-    .set_size         = xdg_shell_view_set_size,
-    .set_tiled        = xdg_shell_view_set_tiled,
-    .surface_at       = xdg_shell_view_surface_at,
+    .close                   = xdg_shell_view_close,
+    .for_each_mapped_surface = xdg_shell_view_for_each_mapped_surface,
+    .get_pid                 = xdg_shell_view_get_pid,
+    .get_size                = xdg_shell_view_get_size,
+    .get_string_prop         = xdg_shell_view_get_string_prop,
+    .set_activated           = xdg_shell_view_set_activated,
+    .set_size                = xdg_shell_view_set_size,
+    .set_tiled               = xdg_shell_view_set_tiled,
+    .surface_at              = xdg_shell_view_surface_at,
 };
 
 void
