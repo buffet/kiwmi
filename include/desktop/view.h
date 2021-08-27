@@ -71,9 +71,9 @@ struct kiwmi_view {
 
 struct kiwmi_view_impl {
     void (*close)(struct kiwmi_view *view);
-    void (*for_each_surface)(
+    void (*for_each_mapped_surface)(
         struct kiwmi_view *view,
-        wlr_surface_iterator_func_t iterator,
+        wlr_surface_iterator_func_t callback,
         void *user_data);
     pid_t (*get_pid)(struct kiwmi_view *view);
     void (
@@ -133,9 +133,9 @@ struct kiwmi_request_resize_event {
 };
 
 void view_close(struct kiwmi_view *view);
-void view_for_each_surface(
+void view_for_each_mapped_surface(
     struct kiwmi_view *view,
-    wlr_surface_iterator_func_t iterator,
+    wlr_surface_iterator_func_t callback,
     void *user_data);
 pid_t view_get_pid(struct kiwmi_view *view);
 void view_get_size(struct kiwmi_view *view, uint32_t *width, uint32_t *height);
