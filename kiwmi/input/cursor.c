@@ -28,10 +28,9 @@
 static void
 process_cursor_motion(struct kiwmi_server *server, uint32_t time)
 {
-    struct kiwmi_desktop *desktop = &server->desktop;
-    struct kiwmi_input *input     = &server->input;
-    struct kiwmi_cursor *cursor   = input->cursor;
-    struct wlr_seat *seat         = input->seat->seat;
+    struct kiwmi_input *input   = &server->input;
+    struct kiwmi_cursor *cursor = input->cursor;
+    struct wlr_seat *seat       = input->seat->seat;
 
     switch (cursor->cursor_mode) {
     case KIWMI_CURSOR_MOVE: {
@@ -83,48 +82,13 @@ process_cursor_motion(struct kiwmi_server *server, uint32_t time)
         break;
     }
 
-    double ox                     = 0;
-    double oy                     = 0;
-    struct wlr_output *wlr_output = wlr_output_layout_output_at(
-        desktop->output_layout, cursor->cursor->x, cursor->cursor->y);
-
-    wlr_output_layout_output_coords(
-        desktop->output_layout, wlr_output, &ox, &oy);
-
-    struct kiwmi_output *output = wlr_output->data;
-
-    struct wlr_surface *surface = NULL;
-    double sx;
-    double sy;
-
-    struct kiwmi_layer *layer = layer_at(
-        &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
-        &surface,
-        cursor->cursor->x,
-        cursor->cursor->y,
-        &sx,
-        &sy);
-
-    if (!layer) {
-        struct kiwmi_view *view = view_at(
-            desktop, cursor->cursor->x, cursor->cursor->y, &surface, &sx, &sy);
-
-        if (!view) {
-            wlr_xcursor_manager_set_cursor_image(
-                cursor->xcursor_manager, "left_ptr", cursor->cursor);
-        }
-    }
-
-    if (surface) {
-        bool focus_changed = surface != seat->pointer_state.focused_surface;
-
-        wlr_seat_pointer_notify_enter(seat, surface, sx, sy);
-
-        if (!focus_changed) {
-            wlr_seat_pointer_notify_motion(seat, time, sx, sy);
-        }
-    } else {
-        wlr_seat_pointer_clear_focus(seat);
+    struct wlr_surface *old_focus = seat->pointer_state.focused_surface;
+    struct wlr_surface *new_focus;
+    double sx, sy;
+    cursor_refresh_focus(cursor, &new_focus, &sx, &sy);
+    if (new_focus && new_focus == old_focus) {
+        wlr_seat_pointer_notify_enter(seat, new_focus, sx, sy);
+        wlr_seat_pointer_notify_motion(seat, time, sx, sy);
     }
 }
 
@@ -306,4 +270,63 @@ cursor_destroy(struct kiwmi_cursor *cursor)
     wl_list_remove(&cursor->cursor_frame.link);
 
     free(cursor);
+}
+
+void
+cursor_refresh_focus(
+    struct kiwmi_cursor *cursor,
+    struct wlr_surface **new_surface,
+    double *cursor_sx,
+    double *cursor_sy)
+{
+    struct kiwmi_desktop *desktop = &cursor->server->desktop;
+    struct wlr_seat *seat         = cursor->server->input.seat->seat;
+
+    double ox                     = 0;
+    double oy                     = 0;
+    struct wlr_output *wlr_output = wlr_output_layout_output_at(
+        desktop->output_layout, cursor->cursor->x, cursor->cursor->y);
+
+    wlr_output_layout_output_coords(
+        desktop->output_layout, wlr_output, &ox, &oy);
+
+    struct kiwmi_output *output = wlr_output->data;
+
+    struct wlr_surface *surface = NULL;
+    double sx;
+    double sy;
+
+    struct kiwmi_layer *layer = layer_at(
+        &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
+        &surface,
+        cursor->cursor->x,
+        cursor->cursor->y,
+        &sx,
+        &sy);
+
+    if (!layer) {
+        struct kiwmi_view *view = view_at(
+            desktop, cursor->cursor->x, cursor->cursor->y, &surface, &sx, &sy);
+
+        if (!view) {
+            wlr_xcursor_manager_set_cursor_image(
+                cursor->xcursor_manager, "left_ptr", cursor->cursor);
+        }
+    }
+
+    if (surface && surface != seat->pointer_state.focused_surface) {
+        wlr_seat_pointer_notify_enter(seat, surface, sx, sy);
+    } else if (!surface) {
+        wlr_seat_pointer_clear_focus(seat);
+    }
+
+    if (new_surface) {
+        *new_surface = surface;
+    }
+    if (cursor_sx) {
+        *cursor_sx = surface ? sx : 0;
+    }
+    if (cursor_sy) {
+        *cursor_sy = surface ? sy : 0;
+    }
 }
