@@ -36,8 +36,10 @@ process_cursor_motion(struct kiwmi_server *server, uint32_t time)
     switch (cursor->cursor_mode) {
     case KIWMI_CURSOR_MOVE: {
         struct kiwmi_view *view = cursor->grabbed.view;
-        view->x                 = cursor->cursor->x - cursor->grabbed.orig_x;
-        view->y                 = cursor->cursor->y - cursor->grabbed.orig_y;
+        view_set_pos(
+            view,
+            cursor->cursor->x - cursor->grabbed.orig_x,
+            cursor->cursor->y - cursor->grabbed.orig_y);
         return;
     }
     case KIWMI_CURSOR_RESIZE: {
@@ -72,8 +74,7 @@ process_cursor_motion(struct kiwmi_server *server, uint32_t time)
             new_geom.width += dx;
         }
 
-        view->x = new_geom.x;
-        view->y = new_geom.y;
+        view_set_pos(view, new_geom.x, new_geom.y);
         view_set_size(view, new_geom.width, new_geom.height);
 
         return;
