@@ -282,8 +282,8 @@ cursor_refresh_focus(
     struct kiwmi_desktop *desktop = &cursor->server->desktop;
     struct wlr_seat *seat         = cursor->server->input.seat->seat;
 
-    double ox                     = 0;
-    double oy                     = 0;
+    double ox                     = cursor->cursor->x;
+    double oy                     = cursor->cursor->y;
     struct wlr_output *wlr_output = wlr_output_layout_output_at(
         desktop->output_layout, cursor->cursor->x, cursor->cursor->y);
 
@@ -299,19 +299,50 @@ cursor_refresh_focus(
     struct kiwmi_layer *layer = layer_at(
         &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
         &surface,
-        cursor->cursor->x,
-        cursor->cursor->y,
+        ox,
+        oy,
         &sx,
         &sy);
+    struct kiwmi_view *view;
 
     if (!layer) {
-        struct kiwmi_view *view = view_at(
-            desktop, cursor->cursor->x, cursor->cursor->y, &surface, &sx, &sy);
+        layer = layer_at(
+            &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
+            &surface,
+            ox,
+            oy,
+            &sx,
+            &sy);
+    }
 
-        if (!view) {
-            wlr_xcursor_manager_set_cursor_image(
-                cursor->xcursor_manager, "left_ptr", cursor->cursor);
-        }
+    if (!layer) {
+        view = view_at(
+            desktop, cursor->cursor->x, cursor->cursor->y, &surface, &sx, &sy);
+    }
+
+    if (!layer) {
+        layer = layer_at(
+            &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM],
+            &surface,
+            ox,
+            oy,
+            &sx,
+            &sy);
+    }
+
+    if (!layer) {
+        layer = layer_at(
+            &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND],
+            &surface,
+            ox,
+            oy,
+            &sx,
+            &sy);
+    }
+
+    if (!layer && !view) {
+        wlr_xcursor_manager_set_cursor_image(
+            cursor->xcursor_manager, "left_ptr", cursor->cursor);
     }
 
     if (surface && surface != seat->pointer_state.focused_surface) {
