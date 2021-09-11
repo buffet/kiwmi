@@ -105,8 +105,8 @@ desktop_active_output(struct kiwmi_server *server)
             break; // get first element of list
         }
 
-        double lx = view->geom.x + view->geom.width / 2;
-        double ly = view->geom.y + view->geom.height / 2;
+        double lx = view->x + view->geom.width / 2;
+        double ly = view->y + view->geom.height / 2;
 
         struct wlr_output *wlr_output =
             wlr_output_layout_output_at(server->desktop.output_layout, lx, ly);
