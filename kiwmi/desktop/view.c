@@ -113,8 +113,13 @@ view_set_pos(struct kiwmi_view *view, uint32_t x, uint32_t y)
         }
     }
 
+    struct kiwmi_desktop *desktop = view->desktop;
+    struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
+    struct kiwmi_cursor *cursor   = server->input.cursor;
+    cursor_refresh_focus(cursor, NULL, NULL, NULL);
+
     struct kiwmi_output *output;
-    wl_list_for_each (output, &view->desktop->outputs, link) {
+    wl_list_for_each (output, &desktop->outputs, link) {
         output_damage(output);
     }
 }
