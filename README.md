@@ -11,6 +11,8 @@ kiwmi is a work-in-progress extensive user-configurable Wayland Compositor.
 kiwmi specifically does not enforce any logic, allowing for the creation of Lua-scripted behaviors, making arduous tasks such as modal window management become a breeze.
 New users should be aware of the  steep learning curve present, however this will be reduced as the project matures.
 
+Got any questions or want to discuss something? Join us in [#kiwmi on irc.libera.chat](https://web.libera.chat/gamja/?channels=#kiwmi)!
+
 
 ## Documentation
 
