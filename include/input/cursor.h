@@ -67,6 +67,12 @@ struct kiwmi_cursor_scroll_event {
     bool handled;
 };
 
+void cursor_refresh_focus(
+    struct kiwmi_cursor *cursor,
+    struct wlr_surface **new_surface,
+    double *cursor_sx,
+    double *cursor_sy);
+
 struct kiwmi_cursor *cursor_create(
     struct kiwmi_server *server,
     struct wlr_output_layout *output_layout);

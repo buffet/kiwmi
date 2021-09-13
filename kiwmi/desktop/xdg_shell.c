@@ -19,6 +19,7 @@
 #include "desktop/desktop.h"
 #include "desktop/output.h"
 #include "desktop/view.h"
+#include "input/cursor.h"
 #include "input/input.h"
 #include "input/seat.h"
 #include "server.h"
@@ -204,9 +205,14 @@ xdg_surface_commit_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_view *view = wl_container_of(listener, view, commit);
 
+    struct kiwmi_desktop *desktop = view->desktop;
+    struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
+    struct kiwmi_cursor *cursor   = server->input.cursor;
+    cursor_refresh_focus(cursor, NULL, NULL, NULL);
+
     if (pixman_region32_not_empty(&view->wlr_surface->buffer_damage)) {
         struct kiwmi_output *output;
-        wl_list_for_each (output, &view->desktop->outputs, link) {
+        wl_list_for_each (output, &desktop->outputs, link) {
             output_damage(output);
         }
     }
@@ -225,6 +231,7 @@ xdg_surface_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
     if (seat->focused_view == view) {
         seat->focused_view = NULL;
     }
+    cursor_refresh_focus(server->input.cursor, NULL, NULL, NULL);
 
     struct kiwmi_view_child *child, *tmpchild;
     wl_list_for_each_safe (child, tmpchild, &view->children, link) {
