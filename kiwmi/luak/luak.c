@@ -240,6 +240,31 @@ luaK_create(struct kiwmi_server *server)
     }
     lua_setglobal(L, "kiwmi");
 
+    char *config_path = malloc(PATH_MAX);
+    if (!config_path) {
+        wlr_log(WLR_ERROR, "Failed to allocate memory");
+        lua_close(L);
+        free(lua);
+        return NULL;
+    }
+
+    const char *config_home = getenv("XDG_CONFIG_HOME");
+    if (config_home) {
+        snprintf(config_path, PATH_MAX, "%s/kiwmi/", config_home);
+    } else {
+        snprintf(config_path, PATH_MAX, "%s/.config/kiwmi/", getenv("HOME"));
+    }
+
+    lua_pushstring(L, config_path);
+    lua_setglobal(L, "KIWMI_CONFIGDIR");
+    free(config_path);
+
+    const char *adjust_package_path =
+        "package.path = KIWMI_CONFIGDIR .. '/?.lua;' .. package.path\n"
+        "package.path = KIWMI_CONFIGDIR .. '/?/init.lua;' .. package.path\n";
+
+    luaL_dostring(L, adjust_package_path);
+
     if (!luaK_ipc_init(server, lua)) {
         wlr_log(WLR_ERROR, "Failed to initialize IPC");
         lua_close(L);
