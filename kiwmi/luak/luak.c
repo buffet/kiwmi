@@ -263,7 +263,13 @@ luaK_create(struct kiwmi_server *server)
         "package.path = KIWMI_CONFIGDIR .. '/?.lua;' .. package.path\n"
         "package.path = KIWMI_CONFIGDIR .. '/?/init.lua;' .. package.path\n";
 
-    luaL_dostring(L, adjust_package_path);
+    if (luaL_dostring(L, adjust_package_path)) {
+        // shouldn't fail
+        wlr_log(WLR_ERROR, "Error in adjust_package_path");
+        lua_close(L);
+        free(lua);
+        return NULL;
+    }
 
     if (!luaK_ipc_init(server, lua)) {
         wlr_log(WLR_ERROR, "Failed to initialize IPC");
