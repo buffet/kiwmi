@@ -59,7 +59,8 @@ process_cursor_motion(struct kiwmi_server *server, uint32_t time)
             if (new_geom.height < 1) {
                 new_geom.y += new_geom.height;
             }
-        } else if (cursor->grabbed.resize_edges & WLR_EDGE_BOTTOM) {
+        }
+        if (cursor->grabbed.resize_edges & WLR_EDGE_BOTTOM) {
             new_geom.height += dy;
         }
 
@@ -69,7 +70,8 @@ process_cursor_motion(struct kiwmi_server *server, uint32_t time)
             if (new_geom.width < 1) {
                 new_geom.x += new_geom.width;
             }
-        } else if (cursor->grabbed.resize_edges & WLR_EDGE_RIGHT) {
+        }
+        if (cursor->grabbed.resize_edges & WLR_EDGE_RIGHT) {
             new_geom.width += dx;
         }
 
