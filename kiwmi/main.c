@@ -43,7 +43,7 @@ main(int argc, char **argv)
             exit(EXIT_SUCCESS);
             break;
         case 'c':
-            config_path = strdup(optarg); // gets freed in kiwmi_fini
+            config_path = strdup(optarg); // gets freed in server_fini
             if (!config_path) {
                 fprintf(stderr, "Failed to allocate memory\n");
                 exit(EXIT_FAILURE);
