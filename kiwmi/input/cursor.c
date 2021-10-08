@@ -47,29 +47,31 @@ process_cursor_motion(struct kiwmi_server *server, uint32_t time)
         int dy                  = cursor->cursor->y - cursor->grabbed.orig_y;
 
         struct wlr_box new_geom = {
-            .x      = view->x,
-            .y      = view->y,
+            .x      = cursor->grabbed.orig_geom.x,
+            .y      = cursor->grabbed.orig_geom.y,
             .width  = cursor->grabbed.orig_geom.width,
             .height = cursor->grabbed.orig_geom.height,
         };
 
         if (cursor->grabbed.resize_edges & WLR_EDGE_TOP) {
-            new_geom.y = cursor->grabbed.orig_y + dy;
+            new_geom.y += dy;
             new_geom.height -= dy;
             if (new_geom.height < 1) {
                 new_geom.y += new_geom.height;
             }
-        } else if (cursor->grabbed.resize_edges & WLR_EDGE_BOTTOM) {
+        }
+        if (cursor->grabbed.resize_edges & WLR_EDGE_BOTTOM) {
             new_geom.height += dy;
         }
 
         if (cursor->grabbed.resize_edges & WLR_EDGE_LEFT) {
-            new_geom.x = cursor->grabbed.orig_geom.x + dx;
+            new_geom.x += dx;
             new_geom.width -= dx;
             if (new_geom.width < 1) {
                 new_geom.x += new_geom.width;
             }
-        } else if (cursor->grabbed.resize_edges & WLR_EDGE_RIGHT) {
+        }
+        if (cursor->grabbed.resize_edges & WLR_EDGE_RIGHT) {
             new_geom.width += dx;
         }
 
