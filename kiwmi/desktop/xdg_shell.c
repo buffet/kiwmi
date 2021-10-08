@@ -388,10 +388,11 @@ xdg_shell_view_get_size(
     uint32_t *width,
     uint32_t *height)
 {
-    struct wlr_box *geom = &view->xdg_surface->geometry;
+    struct wlr_box geom;
+    wlr_xdg_surface_get_geometry(view->xdg_surface, &geom);
 
-    *width  = geom->width;
-    *height = geom->height;
+    *width  = geom.width;
+    *height = geom.height;
 }
 
 static const char *
