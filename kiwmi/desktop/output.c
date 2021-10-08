@@ -160,7 +160,13 @@ output_frame_notify(struct wl_listener *listener, void *data)
     struct timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now);
 
-    if (output->damaged == 0) {
+    int buffer_age;
+    if (!wlr_output_attach_render(wlr_output, &buffer_age)) {
+        wlr_log(WLR_ERROR, "Failed to attach renderer to output");
+        return;
+    }
+
+    if (output->damaged == 0 && buffer_age > 0) {
         send_frame_done_to_layer(
             &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND], &now);
         send_frame_done_to_layer(
@@ -176,11 +182,6 @@ output_frame_notify(struct wl_listener *listener, void *data)
                 view, send_frame_done_to_surface, &now);
         }
 
-        if (!wlr_output_attach_render(wlr_output, NULL)) {
-            wlr_log(WLR_ERROR, "Failed to attach renderer to output");
-            return;
-        }
-
         if (render_cursors(wlr_output)) {
             output_damage(output);
         }
@@ -192,11 +193,6 @@ output_frame_notify(struct wl_listener *listener, void *data)
     struct wlr_output_layout *output_layout = desktop->output_layout;
     struct wlr_renderer *renderer =
         wlr_backend_get_renderer(wlr_output->backend);
-
-    if (!wlr_output_attach_render(wlr_output, NULL)) {
-        wlr_log(WLR_ERROR, "Failed to attach renderer to output");
-        return;
-    }
 
     int width;
     int height;
