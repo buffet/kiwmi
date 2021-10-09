@@ -47,9 +47,8 @@ view_get_pid(struct kiwmi_view *view)
 void
 view_get_size(struct kiwmi_view *view, uint32_t *width, uint32_t *height)
 {
-    if (view->impl->get_size) {
-        view->impl->get_size(view, width, height);
-    }
+    *width  = view->geom.width;
+    *height = view->geom.height;
 }
 
 const char *

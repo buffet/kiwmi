@@ -76,8 +76,6 @@ struct kiwmi_view_impl {
         wlr_surface_iterator_func_t callback,
         void *user_data);
     pid_t (*get_pid)(struct kiwmi_view *view);
-    void (
-        *get_size)(struct kiwmi_view *view, uint32_t *width, uint32_t *height);
     void (*set_activated)(struct kiwmi_view *view, bool activated);
     void (*set_size)(struct kiwmi_view *view, uint32_t width, uint32_t height);
     const char *(
