@@ -99,6 +99,23 @@ l_kiwmi_output_pos(lua_State *L)
 }
 
 static int
+l_kiwmi_output_redraw(lua_State *L)
+{
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_output");
+
+    if (!obj->valid) {
+        return luaL_error(L, "kiwmi_output no longer valid");
+    }
+
+    struct kiwmi_output *output = obj->object;
+
+    output_damage(output);
+
+    return 0;
+}
+
+static int
 l_kiwmi_output_size(lua_State *L)
 {
     struct kiwmi_object *obj =
@@ -151,6 +168,7 @@ static const luaL_Reg kiwmi_output_methods[] = {
     {"name", l_kiwmi_output_name},
     {"on", luaK_callback_register_dispatch},
     {"pos", l_kiwmi_output_pos},
+    {"redraw", l_kiwmi_output_redraw},
     {"size", l_kiwmi_output_size},
     {"usable_area", l_kiwmi_output_usable_area},
     {NULL, NULL},
