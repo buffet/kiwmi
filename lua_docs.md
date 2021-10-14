@@ -25,6 +25,10 @@ Returns the active `kiwmi_output`.
 
 See `request_active_output`.
 
+#### kiwmi:bg_color(color)
+
+Sets the background color (shown behind all views) to `color` (in the format #rrggbb).
+
 #### kiwmi:cursor()
 
 Returns a reference to the cursor object.
@@ -44,10 +48,6 @@ Used to register event listeners.
 #### kiwmi:quit()
 
 Quit kiwmi.
-
-#### kiwmi:bg_color(color)
-
-Sets the background color (shown behind all views) to `color` (in the format #rrggbb).
 
 #### kiwmi:schedule(delay, callback)
 
@@ -239,6 +239,10 @@ Used to register event listeners.
 
 Get the position of the output.
 Returns two parameters: `x` and `y`.
+
+#### output:redraw()
+
+Force the output to redraw. Useful e.g. when you know the view `pre_render`/`post_render` callbacks are going to change.
 
 #### output:size()
 
