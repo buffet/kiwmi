@@ -382,19 +382,6 @@ xdg_shell_view_get_pid(struct kiwmi_view *view)
     return pid;
 }
 
-static void
-xdg_shell_view_get_size(
-    struct kiwmi_view *view,
-    uint32_t *width,
-    uint32_t *height)
-{
-    struct wlr_box geom;
-    wlr_xdg_surface_get_geometry(view->xdg_surface, &geom);
-
-    *width  = geom.width;
-    *height = geom.height;
-}
-
 static const char *
 xdg_shell_view_get_string_prop(
     struct kiwmi_view *view,
@@ -446,7 +433,6 @@ static const struct kiwmi_view_impl xdg_shell_view_impl = {
     .close                   = xdg_shell_view_close,
     .for_each_mapped_surface = xdg_shell_view_for_each_mapped_surface,
     .get_pid                 = xdg_shell_view_get_pid,
-    .get_size                = xdg_shell_view_get_size,
     .get_string_prop         = xdg_shell_view_get_string_prop,
     .set_activated           = xdg_shell_view_set_activated,
     .set_size                = xdg_shell_view_set_size,
