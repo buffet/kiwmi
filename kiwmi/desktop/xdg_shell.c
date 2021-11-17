@@ -250,6 +250,8 @@ xdg_surface_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
     wl_list_remove(&view->request_move.link);
     wl_list_remove(&view->request_resize.link);
 
+    wl_list_remove(&view->events.unmap.listener_list);
+
     free(view);
 }
 

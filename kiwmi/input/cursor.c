@@ -266,11 +266,7 @@ cursor_destroy(struct kiwmi_cursor *cursor)
     wlr_cursor_destroy(cursor->cursor);
     wlr_xcursor_manager_destroy(cursor->xcursor_manager);
 
-    wl_list_remove(&cursor->cursor_motion.link);
-    wl_list_remove(&cursor->cursor_motion_absolute.link);
-    wl_list_remove(&cursor->cursor_button.link);
-    wl_list_remove(&cursor->cursor_axis.link);
-    wl_list_remove(&cursor->cursor_frame.link);
+    // The wlr_cursor is already destroyed, don't unregister listeners
 
     free(cursor);
 }

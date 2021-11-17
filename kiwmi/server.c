@@ -133,10 +133,11 @@ server_fini(struct kiwmi_server *server)
     wlr_log(WLR_DEBUG, "Shutting down Wayland server");
 
     wl_display_destroy_clients(server->wl_display);
-    wl_display_destroy(server->wl_display);
 
     desktop_fini(&server->desktop);
     input_fini(&server->input);
+
+    wl_display_destroy(server->wl_display);
 
     luaK_destroy(server->lua);
 
