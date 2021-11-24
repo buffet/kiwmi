@@ -46,6 +46,8 @@ server_init(struct kiwmi_server *server, char *config_path)
     struct wlr_renderer *renderer = wlr_backend_get_renderer(server->backend);
     wlr_renderer_init_wl_display(renderer, server->wl_display);
 
+    wl_signal_init(&server->events.destroy);
+
     if (!desktop_init(&server->desktop, renderer)) {
         wlr_log(WLR_ERROR, "Failed to initialize desktop");
         wl_display_destroy(server->wl_display);
@@ -131,6 +133,8 @@ void
 server_fini(struct kiwmi_server *server)
 {
     wlr_log(WLR_DEBUG, "Shutting down Wayland server");
+
+    wl_signal_emit(&server->events.destroy, server);
 
     wl_display_destroy_clients(server->wl_display);
 

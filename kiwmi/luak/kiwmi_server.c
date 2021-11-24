@@ -574,7 +574,8 @@ luaK_kiwmi_server_new(lua_State *L)
     struct kiwmi_lua *lua       = lua_touserdata(L, 1);
     struct kiwmi_server *server = lua_touserdata(L, 2);
 
-    struct kiwmi_object *obj = luaK_get_kiwmi_object(lua, server, NULL);
+    struct kiwmi_object *obj =
+        luaK_get_kiwmi_object(lua, server, &server->events.destroy);
 
     struct kiwmi_object **server_ud = lua_newuserdata(L, sizeof(*server_ud));
     luaL_getmetatable(L, "kiwmi_server");

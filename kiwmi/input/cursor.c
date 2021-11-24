@@ -254,6 +254,7 @@ cursor_create(
 
     wl_signal_init(&cursor->events.button_down);
     wl_signal_init(&cursor->events.button_up);
+    wl_signal_init(&cursor->events.destroy);
     wl_signal_init(&cursor->events.motion);
     wl_signal_init(&cursor->events.scroll);
 
@@ -263,6 +264,8 @@ cursor_create(
 void
 cursor_destroy(struct kiwmi_cursor *cursor)
 {
+    wl_signal_emit(&cursor->events.destroy, cursor);
+
     wlr_cursor_destroy(cursor->cursor);
     wlr_xcursor_manager_destroy(cursor->xcursor_manager);
 
