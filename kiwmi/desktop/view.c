@@ -24,13 +24,13 @@ view_close(struct kiwmi_view *view)
 }
 
 void
-view_for_each_mapped_surface(
+view_for_each_surface(
     struct kiwmi_view *view,
     wlr_surface_iterator_func_t callback,
     void *user_data)
 {
-    if (view->impl->for_each_mapped_surface) {
-        view->impl->for_each_mapped_surface(view, callback, user_data);
+    if (view->impl->for_each_surface) {
+        view->impl->for_each_surface(view, callback, user_data);
     }
 }
 
