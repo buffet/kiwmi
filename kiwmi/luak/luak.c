@@ -39,6 +39,15 @@ luaK_toudata(lua_State *L, int ud, const char *tname)
     return NULL;
 }
 
+static void
+kiwmi_object_destroy(struct kiwmi_object *obj)
+{
+    wl_list_remove(&obj->destroy.link);
+    wl_list_remove(&obj->events.destroy.listener_list);
+
+    free(obj);
+}
+
 int
 luaK_kiwmi_object_gc(lua_State *L)
 {
@@ -47,7 +56,7 @@ luaK_kiwmi_object_gc(lua_State *L)
     --obj->refcount;
 
     if (obj->refcount == 0 && wl_list_empty(&obj->callbacks)) {
-        free(obj);
+        kiwmi_object_destroy(obj);
     }
 
     return 0;
@@ -71,8 +80,6 @@ kiwmi_object_destroy_notify(struct wl_listener *listener, void *data)
         free(lc);
     }
 
-    wl_list_remove(&obj->destroy.link);
-
     lua_State *L = obj->lua->L;
 
     lua_rawgeti(L, LUA_REGISTRYINDEX, obj->lua->objects);
@@ -84,7 +91,7 @@ kiwmi_object_destroy_notify(struct wl_listener *listener, void *data)
     obj->valid = false;
 
     if (obj->refcount == 0) {
-        free(obj);
+        kiwmi_object_destroy(obj);
     }
 }
 
@@ -123,9 +130,11 @@ luaK_get_kiwmi_object(
     if (destroy) {
         obj->destroy.notify = kiwmi_object_destroy_notify;
         wl_signal_add(destroy, &obj->destroy);
-
-        wl_signal_init(&obj->events.destroy);
+    } else {
+        wl_list_init(&obj->destroy.link);
     }
+
+    wl_signal_init(&obj->events.destroy);
 
     wl_list_init(&obj->callbacks);
 

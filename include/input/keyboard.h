@@ -40,5 +40,6 @@ struct kiwmi_keyboard_key_event {
 
 struct kiwmi_keyboard *
 keyboard_create(struct kiwmi_server *server, struct wlr_input_device *device);
+void keyboard_destroy(struct kiwmi_keyboard *keyboard);
 
 #endif /* KIWMI_INPUT_KEYBOARD_H */

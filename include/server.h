@@ -22,6 +22,10 @@ struct kiwmi_server {
     struct kiwmi_lua *lua;
     struct kiwmi_desktop desktop;
     struct kiwmi_input input;
+
+    struct {
+        struct wl_signal destroy;
+    } events;
 };
 
 bool server_init(struct kiwmi_server *server, char *config_path);

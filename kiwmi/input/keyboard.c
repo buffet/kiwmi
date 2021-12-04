@@ -116,14 +116,7 @@ keyboard_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
     struct kiwmi_keyboard *keyboard =
         wl_container_of(listener, keyboard, device_destroy);
 
-    wl_list_remove(&keyboard->link);
-    wl_list_remove(&keyboard->modifiers.link);
-    wl_list_remove(&keyboard->key.link);
-    wl_list_remove(&keyboard->device_destroy.link);
-
-    wl_signal_emit(&keyboard->events.destroy, keyboard);
-
-    free(keyboard);
+    keyboard_destroy(keyboard);
 }
 
 struct kiwmi_keyboard *
@@ -166,4 +159,20 @@ keyboard_create(struct kiwmi_server *server, struct wlr_input_device *device)
     wl_signal_emit(&server->input.events.keyboard_new, keyboard);
 
     return keyboard;
+}
+
+void
+keyboard_destroy(struct kiwmi_keyboard *keyboard)
+{
+    wl_list_remove(&keyboard->modifiers.link);
+    wl_list_remove(&keyboard->key.link);
+    wl_list_remove(&keyboard->device_destroy.link);
+
+    wl_signal_emit(&keyboard->events.destroy, keyboard);
+
+    wl_list_remove(&keyboard->link);
+
+    wl_list_remove(&keyboard->events.destroy.listener_list);
+
+    free(keyboard);
 }

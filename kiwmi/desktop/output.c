@@ -264,14 +264,20 @@ output_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_output *output = wl_container_of(listener, output, destroy);
 
-    wlr_output_layout_remove(
-        output->desktop->output_layout, output->wlr_output);
+    if (output->desktop->output_layout) {
+        wlr_output_layout_remove(
+            output->desktop->output_layout, output->wlr_output);
+    }
 
     wl_signal_emit(&output->events.destroy, output);
 
     wl_list_remove(&output->link);
     wl_list_remove(&output->frame.link);
+    wl_list_remove(&output->commit.link);
     wl_list_remove(&output->destroy.link);
+    wl_list_remove(&output->mode.link);
+
+    wl_list_remove(&output->events.destroy.listener_list);
 
     free(output);
 }

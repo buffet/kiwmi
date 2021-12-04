@@ -85,6 +85,7 @@ void
 desktop_fini(struct kiwmi_desktop *desktop)
 {
     wlr_output_layout_destroy(desktop->output_layout);
+    desktop->output_layout = NULL;
 }
 
 struct kiwmi_output *
