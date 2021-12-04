@@ -239,6 +239,10 @@ xdg_surface_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
         view_child_destroy(child);
     }
 
+    if (view->decoration) {
+        view->decoration->view = NULL;
+    }
+
     wl_list_remove(&view->link);
     wl_list_remove(&view->children);
     wl_list_remove(&view->map.link);
@@ -249,6 +253,8 @@ xdg_surface_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
     wl_list_remove(&view->new_subsurface.link);
     wl_list_remove(&view->request_move.link);
     wl_list_remove(&view->request_resize.link);
+
+    wl_list_remove(&view->events.unmap.listener_list);
 
     free(view);
 }
@@ -509,7 +515,9 @@ xdg_decoration_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
     struct kiwmi_xdg_decoration *decoration =
         wl_container_of(listener, decoration, destroy);
 
-    decoration->view->decoration = NULL;
+    if (decoration->view) {
+        decoration->view->decoration = NULL;
+    }
 
     wl_list_remove(&decoration->destroy.link);
     wl_list_remove(&decoration->request_mode.link);

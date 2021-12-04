@@ -101,7 +101,7 @@ input_fini(struct kiwmi_input *input)
     struct kiwmi_keyboard *keyboard;
     struct kiwmi_keyboard *tmp;
     wl_list_for_each_safe (keyboard, tmp, &input->keyboards, link) {
-        free(keyboard);
+        keyboard_destroy(keyboard);
     }
 
     seat_destroy(input->seat);

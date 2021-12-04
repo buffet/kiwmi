@@ -43,6 +43,7 @@ struct kiwmi_cursor {
     struct {
         struct wl_signal button_down;
         struct wl_signal button_up;
+        struct wl_signal destroy;
         struct wl_signal motion;
         struct wl_signal scroll;
     } events;

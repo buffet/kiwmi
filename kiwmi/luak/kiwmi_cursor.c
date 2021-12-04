@@ -309,7 +309,8 @@ luaK_kiwmi_cursor_new(lua_State *L)
     struct kiwmi_lua *lua       = lua_touserdata(L, 1);
     struct kiwmi_cursor *cursor = lua_touserdata(L, 2);
 
-    struct kiwmi_object *obj = luaK_get_kiwmi_object(lua, cursor, NULL);
+    struct kiwmi_object *obj =
+        luaK_get_kiwmi_object(lua, cursor, &cursor->events.destroy);
 
     struct kiwmi_object **cursor_ud = lua_newuserdata(L, sizeof(*cursor_ud));
     luaL_getmetatable(L, "kiwmi_cursor");
