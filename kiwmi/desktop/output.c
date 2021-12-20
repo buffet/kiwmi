@@ -12,6 +12,7 @@
 #include <pixman.h>
 #include <wayland-server.h>
 #include <wlr/backend.h>
+#include <wlr/render/allocator.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_matrix.h>
@@ -191,8 +192,8 @@ output_frame_notify(struct wl_listener *listener, void *data)
     }
 
     struct wlr_output_layout *output_layout = desktop->output_layout;
-    struct wlr_renderer *renderer =
-        wlr_backend_get_renderer(wlr_output->backend);
+    struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
+    struct wlr_renderer *renderer = server->renderer;
 
     int width;
     int height;
@@ -334,9 +335,10 @@ new_output_notify(struct wl_listener *listener, void *data)
 
     wlr_log(WLR_DEBUG, "New output %p: %s", wlr_output, wlr_output->name);
 
-    if (!wl_list_empty(&wlr_output->modes)) {
-        struct wlr_output_mode *mode =
-            wl_container_of(wlr_output->modes.prev, mode, link);
+    wlr_output_init_render(wlr_output, server->allocator, server->renderer);
+
+    struct wlr_output_mode *mode = wlr_output_preferred_mode(wlr_output);
+    if (mode) {
         wlr_output_set_mode(wlr_output, mode);
 
         if (!wlr_output_commit(wlr_output)) {

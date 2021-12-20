@@ -11,8 +11,8 @@
 #include <stdbool.h>
 
 #include <wayland-server.h>
-#include <wlr/types/wlr_box.h>
 #include <wlr/types/wlr_surface.h>
+#include <wlr/util/box.h>
 
 #include "desktop/output.h"
 

@@ -30,11 +30,12 @@
 #include "server.h"
 
 bool
-desktop_init(struct kiwmi_desktop *desktop, struct wlr_renderer *renderer)
+desktop_init(struct kiwmi_desktop *desktop)
 {
     struct kiwmi_server *server = wl_container_of(desktop, server, desktop);
 
-    desktop->compositor = wlr_compositor_create(server->wl_display, renderer);
+    desktop->compositor =
+        wlr_compositor_create(server->wl_display, server->renderer);
     desktop->data_device_manager =
         wlr_data_device_manager_create(server->wl_display);
     desktop->output_layout = wlr_output_layout_create();

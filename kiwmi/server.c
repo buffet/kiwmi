@@ -14,6 +14,7 @@
 
 #include <wayland-server.h>
 #include <wlr/backend.h>
+#include <wlr/render/allocator.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_gamma_control_v1.h>
@@ -43,12 +44,15 @@ server_init(struct kiwmi_server *server, char *config_path)
         return false;
     }
 
-    struct wlr_renderer *renderer = wlr_backend_get_renderer(server->backend);
-    wlr_renderer_init_wl_display(renderer, server->wl_display);
+    server->renderer = wlr_renderer_autocreate(server->backend);
+    wlr_renderer_init_wl_display(server->renderer, server->wl_display);
+
+    server->allocator =
+        wlr_allocator_autocreate(server->backend, server->renderer);
 
     wl_signal_init(&server->events.destroy);
 
-    if (!desktop_init(&server->desktop, renderer)) {
+    if (!desktop_init(&server->desktop)) {
         wlr_log(WLR_ERROR, "Failed to initialize desktop");
         wl_display_destroy(server->wl_display);
         return false;
