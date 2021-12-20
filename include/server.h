@@ -17,6 +17,9 @@ struct kiwmi_server {
     struct wl_display *wl_display;
     struct wl_event_loop *wl_event_loop;
     struct wlr_backend *backend;
+    struct wlr_renderer *renderer;
+    struct wlr_allocator *allocator;
+
     const char *socket;
     char *config_path;
     struct kiwmi_lua *lua;

@@ -262,10 +262,12 @@ view_init_subsurfaces(struct kiwmi_view_child *child, struct kiwmi_view *view)
     }
 
     struct wlr_subsurface *subsurface;
-    wl_list_for_each (subsurface, &surface->subsurfaces_below, parent_link) {
+    wl_list_for_each (
+        subsurface, &surface->current.subsurfaces_below, current.link) {
         view_child_subsurface_create(child, view, subsurface);
     }
-    wl_list_for_each (subsurface, &surface->subsurfaces_above, parent_link) {
+    wl_list_for_each (
+        subsurface, &surface->current.subsurfaces_above, current.link) {
         view_child_subsurface_create(child, view, subsurface);
     }
 }

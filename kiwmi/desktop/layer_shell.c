@@ -29,8 +29,6 @@ kiwmi_layer_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
     wl_list_remove(&layer->map.link);
     wl_list_remove(&layer->unmap.link);
 
-    wlr_layer_surface_v1_close(layer->layer_surface);
-
     arrange_layers(layer->output);
 
     free(layer);
@@ -44,7 +42,9 @@ kiwmi_layer_commit_notify(struct wl_listener *listener, void *UNUSED(data))
 
     struct wlr_box old_geom = layer->geom;
 
-    arrange_layers(output);
+    if (layer->layer_surface->current.committed != 0) {
+        arrange_layers(output);
+    }
 
     bool layer_changed = layer->layer != layer->layer_surface->current.layer;
     bool geom_changed  = memcmp(&old_geom, &layer->geom, sizeof(old_geom)) != 0;
@@ -237,7 +237,7 @@ arrange_layer(
                 "Bad width/height: %d, %d",
                 arranged_area.width,
                 arranged_area.height);
-            wlr_layer_surface_v1_close(layer_surface);
+            wlr_layer_surface_v1_destroy(layer_surface);
             continue;
         }
 
@@ -404,7 +404,7 @@ layer_shell_new_surface_notify(struct wl_listener *listener, void *data)
             WLR_ERROR,
             "Bad layer surface layer '%d'",
             layer_surface->current.layer);
-        wlr_layer_surface_v1_close(layer_surface);
+        wlr_layer_surface_v1_destroy(layer_surface);
         free(layer);
         return;
     }
@@ -427,10 +427,10 @@ layer_shell_new_surface_notify(struct wl_listener *listener, void *data)
 
     wl_list_insert(&output->layers[layer->layer], &layer->link);
 
-    // Temporarily set the layer's current state to client_pending
+    // Temporarily set the layer's current state to pending
     // So that we can easily arrange it
     struct wlr_layer_surface_v1_state old_state = layer_surface->current;
-    layer_surface->current                      = layer_surface->client_pending;
+    layer_surface->current                      = layer_surface->pending;
     arrange_layers(output);
     layer_surface->current = old_state;
 }

@@ -302,7 +302,8 @@ surface_for_each_mapped_surface(
     void *user_data)
 {
     struct wlr_subsurface *subsurface;
-    wl_list_for_each (subsurface, &surface->subsurfaces_below, parent_link) {
+    wl_list_for_each (
+        subsurface, &surface->current.subsurfaces_below, current.link) {
         if (!subsurface->mapped) {
             continue;
         }
@@ -317,7 +318,8 @@ surface_for_each_mapped_surface(
 
     callback(surface, x, y, user_data);
 
-    wl_list_for_each (subsurface, &surface->subsurfaces_above, parent_link) {
+    wl_list_for_each (
+        subsurface, &surface->current.subsurfaces_above, current.link) {
         if (!subsurface->mapped) {
             continue;
         }
@@ -534,7 +536,7 @@ xdg_decoration_request_mode_notify(
         wl_container_of(listener, decoration, request_mode);
 
     enum wlr_xdg_toplevel_decoration_v1_mode mode =
-        decoration->wlr_decoration->client_pending_mode;
+        decoration->wlr_decoration->requested_mode;
     if (mode == WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_NONE) {
         mode = WLR_XDG_TOPLEVEL_DECORATION_V1_MODE_CLIENT_SIDE;
     }
