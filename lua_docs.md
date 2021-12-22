@@ -240,10 +240,6 @@ Used to register event listeners.
 Get the position of the output.
 Returns two parameters: `x` and `y`.
 
-#### output:redraw()
-
-Force the output to redraw. Useful e.g. when you know the view `pre_render`/`post_render` callbacks are going to change.
-
 #### output:size()
 
 Get the size of the output.
@@ -269,17 +265,6 @@ Callback receives a table containing the `output`, the new `width`, and the new 
 
 The usable area of this output has changed, e.g. because the output was resized or the bars around it changed.
 Callback receives a table containing the `output` and the new `x`, `y`, `width` and `height`.
-
-## kiwmi_renderer
-
-Represents a rendering context, to draw on the output.
-
-### Methods
-
-#### renderer:draw_rect(color, x, y, w, h)
-
-Draws a rect at the given position.
-Color is a string in the form #rrggbb or #rrggbbaa.
 
 ## kiwmi_view
 
@@ -373,17 +358,11 @@ Callback receives the view.
 
 #### post_render
 
-The view finished being rendered.
-Callback receives a table with the `view`, the `renderer` and the `output`.
-
-This event occurs once per output the view might be drawn on.
+This is a no-op event. Temporarily preserved only to make config migration easier.
 
 #### pre_render
 
-The view is about to be rendered.
-Callback receives a table with the `view`, the `renderer` and the `output`.
-
-This event occurs once per output the view might be drawn on.
+This is a no-op event. Temporarily preserved only to make config migration easier.
 
 #### request_move
 
