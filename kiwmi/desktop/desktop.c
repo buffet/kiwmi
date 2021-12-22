@@ -17,6 +17,7 @@
 #include <wlr/types/wlr_export_dmabuf_v1.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_output_layout.h>
+#include <wlr/types/wlr_presentation_time.h>
 #include <wlr/types/wlr_xdg_decoration_v1.h>
 #include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
@@ -66,6 +67,10 @@ desktop_init(struct kiwmi_desktop *desktop)
     }
 
     wlr_scene_attach_output_layout(desktop->scene, desktop->output_layout);
+
+    struct wlr_presentation *presentation =
+        wlr_presentation_create(server->wl_display, server->backend);
+    wlr_scene_set_presentation(desktop->scene, presentation);
 
     desktop->xdg_shell = wlr_xdg_shell_create(server->wl_display);
     desktop->xdg_shell_new_surface.notify = xdg_shell_new_surface_notify;
