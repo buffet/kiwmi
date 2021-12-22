@@ -11,16 +11,21 @@
 #include <wayland-server.h>
 #include <wlr/util/box.h>
 
+#include "desktop/stratum.h"
+
 struct kiwmi_output {
     struct wl_list link;
     struct kiwmi_desktop *desktop;
     struct wlr_output *wlr_output;
+
     struct wl_listener frame;
     struct wl_listener commit;
     struct wl_listener destroy;
     struct wl_listener mode;
 
-    struct wl_list layers[4]; // struct kiwmi_layer_surface::link
+    struct wl_list layers[4]; // struct kiwmi_layer::link
+    struct wlr_scene_tree *strata[KIWMI_STRATA_COUNT];
+
     struct wlr_box usable_area;
 
     int damaged;
@@ -42,6 +47,7 @@ struct kiwmi_render_data {
 };
 
 void new_output_notify(struct wl_listener *listener, void *data);
+void output_layout_change_notify(struct wl_listener *listener, void *data);
 
 void output_damage(struct kiwmi_output *output);
 

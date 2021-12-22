@@ -11,6 +11,7 @@
 
 #include <pixman.h>
 #include <wlr/types/wlr_output_layout.h>
+#include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_xdg_decoration_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/edges.h>
@@ -18,6 +19,7 @@
 
 #include "desktop/desktop.h"
 #include "desktop/output.h"
+#include "desktop/popup.h"
 #include "desktop/view.h"
 #include "input/cursor.h"
 #include "input/input.h"
@@ -191,6 +193,14 @@ xdg_surface_unmap_notify(struct wl_listener *listener, void *UNUSED(data))
     if (view->mapped) {
         view->mapped = false;
 
+        wlr_scene_node_set_enabled(&view->desktop_surface.tree->node, false);
+        wlr_scene_node_set_enabled(
+            &view->desktop_surface.popups_tree->node, false);
+
+        struct kiwmi_desktop *desktop = view->desktop;
+        struct kiwmi_server *server = wl_container_of(desktop, server, desktop);
+        cursor_refresh_focus(server->input.cursor, NULL, NULL, NULL);
+
         struct kiwmi_output *output;
         wl_list_for_each (output, &view->desktop->outputs, link) {
             output_damage(output);
@@ -223,7 +233,11 @@ xdg_surface_commit_notify(struct wl_listener *listener, void *UNUSED(data))
 static void
 xdg_surface_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
 {
-    struct kiwmi_view *view       = wl_container_of(listener, view, destroy);
+    struct kiwmi_view *view = wl_container_of(listener, view, destroy);
+
+    wlr_scene_node_destroy(&view->desktop_surface.tree->node);
+    wlr_scene_node_destroy(&view->desktop_surface.popups_tree->node);
+
     struct kiwmi_desktop *desktop = view->desktop;
     struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
     struct kiwmi_seat *seat       = server->input.seat;
@@ -380,6 +394,15 @@ xdg_shell_new_surface_notify(struct wl_listener *listener, void *data)
 
     if (xdg_surface->role == WLR_XDG_SURFACE_ROLE_POPUP) {
         wlr_log(WLR_DEBUG, "New xdg_shell popup");
+        struct kiwmi_desktop_surface *desktop_surface =
+            popup_get_desktop_surface(xdg_surface->popup);
+        if (desktop_surface) {
+            popup_attach(xdg_surface->popup, desktop_surface);
+
+            struct kiwmi_server *server =
+                wl_container_of(desktop, server, desktop);
+            cursor_refresh_focus(server->input.cursor, NULL, NULL, NULL);
+        }
         return;
     }
 
@@ -401,6 +424,9 @@ xdg_shell_new_surface_notify(struct wl_listener *listener, void *data)
 
     view->xdg_surface = xdg_surface;
     view->wlr_surface = xdg_surface->surface;
+
+    view->desktop_surface.surface_node = wlr_scene_xdg_surface_create(
+        &view->desktop_surface.tree->node, xdg_surface);
 
     view->map.notify = xdg_surface_map_notify;
     wl_signal_add(&xdg_surface->events.map, &view->map);
@@ -430,6 +456,8 @@ xdg_shell_new_surface_notify(struct wl_listener *listener, void *data)
         &xdg_surface->toplevel->events.request_resize, &view->request_resize);
 
     view_init_subsurfaces(NULL, view);
+
+    wlr_xdg_surface_get_geometry(view->xdg_surface, &view->geom);
 
     wl_list_insert(&desktop->views, &view->link);
 }

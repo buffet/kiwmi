@@ -17,6 +17,8 @@
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/edges.h>
 
+#include "desktop/desktop_surface.h"
+
 enum kiwmi_view_prop {
     KIWMI_VIEW_PROP_APP_ID,
     KIWMI_VIEW_PROP_TITLE,
@@ -29,6 +31,7 @@ enum kiwmi_view_type {
 struct kiwmi_view {
     struct wl_list link;
     struct wl_list children; // struct kiwmi_view_child::link
+    struct kiwmi_desktop_surface desktop_surface;
 
     struct kiwmi_desktop *desktop;
 
@@ -143,6 +146,7 @@ void view_set_activated(struct kiwmi_view *view, bool activated);
 void view_set_size(struct kiwmi_view *view, uint32_t width, uint32_t height);
 void view_set_pos(struct kiwmi_view *view, uint32_t x, uint32_t y);
 void view_set_tiled(struct kiwmi_view *view, enum wlr_edges edges);
+void view_set_hidden(struct kiwmi_view *view, bool hidden);
 struct wlr_surface *view_surface_at(
     struct kiwmi_view *view,
     double sx,

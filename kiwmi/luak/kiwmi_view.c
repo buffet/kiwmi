@@ -137,7 +137,7 @@ l_kiwmi_view_hide(lua_State *L)
 
     struct kiwmi_view *view = obj->object;
 
-    view->hidden = true;
+    view_set_hidden(view, true);
 
     return 0;
 }
@@ -315,7 +315,7 @@ l_kiwmi_view_show(lua_State *L)
 
     struct kiwmi_view *view = obj->object;
 
-    view->hidden = false;
+    view_set_hidden(view, false);
 
     return 0;
 }

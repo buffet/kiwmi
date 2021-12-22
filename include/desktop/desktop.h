@@ -9,23 +9,33 @@
 #define KIWMI_DESKTOP_DESKTOP_H
 
 #include <wayland-server.h>
+#include <wlr/types/wlr_scene.h>
+
+#include "desktop/stratum.h"
 
 struct kiwmi_desktop {
     struct wlr_compositor *compositor;
+
     struct wlr_xdg_shell *xdg_shell;
     struct wlr_xdg_decoration_manager_v1 *xdg_decoration_manager;
     struct wlr_layer_shell_v1 *layer_shell;
+
     struct wlr_data_device_manager *data_device_manager;
+
     struct wlr_output_layout *output_layout;
     struct wl_list outputs; // struct kiwmi_output::link
     struct wl_list views;   // struct kiwmi_view::link
 
     float bg_color[4];
+    struct wlr_scene *scene;
+    struct wlr_scene_rect *background_rect;
+    struct wlr_scene_tree *strata[KIWMI_STRATA_COUNT];
 
     struct wl_listener xdg_shell_new_surface;
     struct wl_listener xdg_toplevel_new_decoration;
     struct wl_listener layer_shell_new_surface;
     struct wl_listener new_output;
+    struct wl_listener output_layout_change;
 
     struct {
         struct wl_signal new_output;

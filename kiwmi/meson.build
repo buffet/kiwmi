@@ -5,6 +5,7 @@ kiwmi_sources = files(
   'desktop/desktop.c',
   'desktop/layer_shell.c',
   'desktop/output.c',
+  'desktop/popup.c',
   'desktop/stratum.c',
   'desktop/view.c',
   'desktop/xdg_shell.c',

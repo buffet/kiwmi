@@ -11,6 +11,7 @@
 #include <wlr/util/log.h>
 
 #include "desktop/output.h"
+#include "desktop/stratum.h"
 #include "input/cursor.h"
 #include "input/seat.h"
 #include "server.h"
@@ -105,6 +106,9 @@ view_set_pos(struct kiwmi_view *view, uint32_t x, uint32_t y)
     view->x = x;
     view->y = y;
 
+    wlr_scene_node_set_position(&view->desktop_surface.tree->node, x, y);
+    wlr_scene_node_set_position(&view->desktop_surface.popups_tree->node, x, y);
+
     struct kiwmi_view_child *child;
     wl_list_for_each (child, &view->children, link) {
         if (child->impl && child->impl->reconfigure) {
@@ -129,6 +133,20 @@ view_set_tiled(struct kiwmi_view *view, enum wlr_edges edges)
     if (view->impl->set_tiled) {
         view->impl->set_tiled(view, edges);
     }
+}
+
+void
+view_set_hidden(struct kiwmi_view *view, bool hidden)
+{
+    view->hidden = hidden;
+
+    if (!view->mapped) {
+        return;
+    }
+
+    wlr_scene_node_set_enabled(&view->desktop_surface.tree->node, !hidden);
+    wlr_scene_node_set_enabled(
+        &view->desktop_surface.popups_tree->node, !hidden);
 }
 
 struct wlr_surface *
@@ -296,11 +314,25 @@ view_create(
 
     wl_list_init(&view->children);
 
+    view->desktop_surface.type = KIWMI_DESKTOP_SURFACE_VIEW;
+
     wl_signal_init(&view->events.unmap);
     wl_signal_init(&view->events.request_move);
     wl_signal_init(&view->events.request_resize);
     wl_signal_init(&view->events.post_render);
     wl_signal_init(&view->events.pre_render);
+
+    view->desktop_surface.tree = wlr_scene_tree_create(
+        &view->desktop->strata[KIWMI_STRATUM_NORMAL]->node);
+    view->desktop_surface.popups_tree = wlr_scene_tree_create(
+        &view->desktop->strata[KIWMI_STRATUM_POPUPS]->node);
+
+    view_set_hidden(view, true);
+    wlr_scene_node_lower_to_bottom(&view->desktop_surface.tree->node);
+    wlr_scene_node_lower_to_bottom(&view->desktop_surface.popups_tree->node);
+
+    wlr_scene_node_set_position(&view->desktop_surface.tree->node, 0, 0);
+    wlr_scene_node_set_position(&view->desktop_surface.popups_tree->node, 0, 0);
 
     return view;
 }

@@ -276,6 +276,12 @@ output_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
         }
     }
 
+    if (output->desktop->scene) {
+        for (size_t i = 0; i < KIWMI_STRATA_COUNT; ++i) {
+            wlr_scene_node_destroy(&output->strata[i]->node);
+        }
+    }
+
     if (output->desktop->output_layout) {
         wlr_output_layout_remove(
             output->desktop->output_layout, output->wlr_output);
@@ -382,14 +388,22 @@ new_output_notify(struct wl_listener *listener, void *data)
 
     wlr_output_create_global(wlr_output);
 
-    size_t len_outputs = sizeof(output->layers) / sizeof(output->layers[0]);
-    for (size_t i = 0; i < len_outputs; ++i) {
+    size_t len_layers = sizeof(output->layers) / sizeof(output->layers[0]);
+    for (size_t i = 0; i < len_layers; ++i) {
         wl_list_init(&output->layers[i]);
+    }
+
+    for (size_t i = 0; i < KIWMI_STRATA_COUNT; ++i) {
+        output->strata[i] = wlr_scene_tree_create(&desktop->strata[i]->node);
     }
 
     wl_signal_init(&output->events.destroy);
     wl_signal_init(&output->events.resize);
     wl_signal_init(&output->events.usable_area_change);
+
+    wl_list_insert(&desktop->outputs, &output->link);
+
+    wlr_output_layout_add_auto(desktop->output_layout, wlr_output);
 
     wl_signal_emit(&desktop->events.new_output, output);
 }
@@ -399,5 +413,34 @@ output_damage(struct kiwmi_output *output)
 {
     if (output != NULL) {
         output->damaged = 2;
+    }
+}
+
+void
+output_layout_change_notify(struct wl_listener *listener, void *UNUSED(data))
+{
+    struct kiwmi_desktop *desktop =
+        wl_container_of(listener, desktop, output_layout_change);
+
+    struct wlr_box *ol_box =
+        wlr_output_layout_get_box(desktop->output_layout, NULL);
+    wlr_scene_node_set_position(
+        &desktop->background_rect->node, ol_box->x, ol_box->y);
+    wlr_scene_rect_set_size(
+        desktop->background_rect, ol_box->width, ol_box->height);
+
+    struct wlr_output_layout_output *ol_output;
+    wl_list_for_each (ol_output, &desktop->output_layout->outputs, link) {
+        struct kiwmi_output *output = ol_output->output->data;
+
+        struct wlr_box *box = wlr_output_layout_get_box(
+            desktop->output_layout, output->wlr_output);
+
+        for (size_t i = 0; i < KIWMI_STRATA_COUNT; ++i) {
+            if (output->strata[i]) {
+                wlr_scene_node_set_position(
+                    &output->strata[i]->node, box->x, box->y);
+            }
+        }
     }
 }
