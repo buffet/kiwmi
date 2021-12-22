@@ -14,10 +14,13 @@
 #include <wlr/types/wlr_surface.h>
 #include <wlr/util/box.h>
 
+#include "desktop/desktop_surface.h"
 #include "desktop/output.h"
 
 struct kiwmi_layer {
     struct wl_list link;
+    struct kiwmi_desktop_surface desktop_surface;
+
     struct wlr_layer_surface_v1 *layer_surface;
     uint32_t layer; // enum zwlr_layer_shell_v1_layer
 

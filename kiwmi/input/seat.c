@@ -83,6 +83,10 @@ seat_focus_view(struct kiwmi_seat *seat, struct kiwmi_view *view)
     // move view to front
     wl_list_remove(&view->link);
     wl_list_insert(&desktop->views, &view->link);
+
+    wlr_scene_node_raise_to_top(&view->desktop_surface.tree->node);
+    wlr_scene_node_raise_to_top(&view->desktop_surface.popups_tree->node);
+
     cursor_refresh_focus(seat->input->cursor, NULL, NULL, NULL);
 
     seat->focused_view = view;

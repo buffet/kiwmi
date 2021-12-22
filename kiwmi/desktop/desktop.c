@@ -20,9 +20,11 @@
 #include <wlr/types/wlr_xdg_decoration_v1.h>
 #include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/util/log.h>
 
 #include "desktop/layer_shell.h"
 #include "desktop/output.h"
+#include "desktop/stratum.h"
 #include "desktop/view.h"
 #include "desktop/xdg_shell.h"
 #include "input/cursor.h"
@@ -48,6 +50,25 @@ desktop_init(struct kiwmi_desktop *desktop)
     desktop->bg_color[1] = 0.1f;
     desktop->bg_color[2] = 0.1f;
     desktop->bg_color[3] = 1.0f;
+
+    desktop->scene = wlr_scene_create();
+    if (!desktop->scene) {
+        wlr_log(WLR_ERROR, "failed to create scene");
+        return false;
+    }
+
+    const float bg_color[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+    desktop->background_rect =
+        wlr_scene_rect_create(&desktop->scene->node, 0, 0, bg_color);
+    // No point in showing black
+    wlr_scene_node_set_enabled(&desktop->background_rect->node, false);
+
+    // Create a scene-graph tree for each stratum
+    for (size_t i = 0; i < KIWMI_STRATA_COUNT; ++i) {
+        desktop->strata[i] = wlr_scene_tree_create(&desktop->scene->node);
+    }
+
+    wlr_scene_attach_output_layout(desktop->scene, desktop->output_layout);
 
     desktop->xdg_shell = wlr_xdg_shell_create(server->wl_display);
     desktop->xdg_shell_new_surface.notify = xdg_shell_new_surface_notify;
@@ -75,6 +96,10 @@ desktop_init(struct kiwmi_desktop *desktop)
     desktop->new_output.notify = new_output_notify;
     wl_signal_add(&server->backend->events.new_output, &desktop->new_output);
 
+    desktop->output_layout_change.notify = output_layout_change_notify;
+    wl_signal_add(
+        &desktop->output_layout->events.change, &desktop->output_layout_change);
+
     wl_signal_init(&desktop->events.new_output);
     wl_signal_init(&desktop->events.view_map);
     wl_signal_init(&desktop->events.request_active_output);
@@ -87,6 +112,8 @@ desktop_fini(struct kiwmi_desktop *desktop)
 {
     wlr_output_layout_destroy(desktop->output_layout);
     desktop->output_layout = NULL;
+    wlr_scene_node_destroy(&desktop->scene->node);
+    desktop->scene = NULL;
 }
 
 struct kiwmi_output *

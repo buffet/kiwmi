@@ -69,6 +69,11 @@ l_kiwmi_server_bg_color(lua_State *L)
     server->desktop.bg_color[1] = color[1];
     server->desktop.bg_color[2] = color[2];
     // ignore alpha
+    color[3] = 1.0f;
+
+    wlr_scene_rect_set_color(server->desktop.background_rect, color);
+    bool black = color[0] == 0.0f && color[1] == 0.0f && color[2] == 0.0f;
+    wlr_scene_node_set_enabled(&server->desktop.background_rect->node, !black);
 
     return 0;
 }
