@@ -24,13 +24,13 @@ view_close(struct kiwmi_view *view)
 }
 
 void
-view_for_each_mapped_surface(
+view_for_each_surface(
     struct kiwmi_view *view,
     wlr_surface_iterator_func_t callback,
     void *user_data)
 {
-    if (view->impl->for_each_mapped_surface) {
-        view->impl->for_each_mapped_surface(view, callback, user_data);
+    if (view->impl->for_each_surface) {
+        view->impl->for_each_surface(view, callback, user_data);
     }
 }
 
@@ -262,10 +262,12 @@ view_init_subsurfaces(struct kiwmi_view_child *child, struct kiwmi_view *view)
     }
 
     struct wlr_subsurface *subsurface;
-    wl_list_for_each (subsurface, &surface->subsurfaces_below, parent_link) {
+    wl_list_for_each (
+        subsurface, &surface->current.subsurfaces_below, current.link) {
         view_child_subsurface_create(child, view, subsurface);
     }
-    wl_list_for_each (subsurface, &surface->subsurfaces_above, parent_link) {
+    wl_list_for_each (
+        subsurface, &surface->current.subsurfaces_above, current.link) {
         view_child_subsurface_create(child, view, subsurface);
     }
 }

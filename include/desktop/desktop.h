@@ -9,7 +9,6 @@
 #define KIWMI_DESKTOP_DESKTOP_H
 
 #include <wayland-server.h>
-#include <wlr/render/wlr_renderer.h>
 
 struct kiwmi_desktop {
     struct wlr_compositor *compositor;
@@ -35,7 +34,7 @@ struct kiwmi_desktop {
     } events;
 };
 
-bool desktop_init(struct kiwmi_desktop *desktop, struct wlr_renderer *renderer);
+bool desktop_init(struct kiwmi_desktop *desktop);
 void desktop_fini(struct kiwmi_desktop *desktop);
 
 struct kiwmi_server;
