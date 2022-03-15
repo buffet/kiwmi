@@ -31,7 +31,7 @@ $ kiwmic 'return kiwmi:focused_view():id()'
 
 The dependencies required are:
 
-- [wlroots](https://github.com/swaywm/wlroots)
+- [wlroots](https://gitlab.freedesktop.org/wlroots/wlroots)
 - lua or luajit
 - pixman
 - meson (build)

@@ -9,7 +9,7 @@
 #define KIWMI_DESKTOP_OUTPUT_H
 
 #include <wayland-server.h>
-#include <wlr/types/wlr_box.h>
+#include <wlr/util/box.h>
 
 struct kiwmi_output {
     struct wl_list link;
