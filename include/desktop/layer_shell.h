@@ -19,7 +19,7 @@
 struct kiwmi_layer {
     struct wl_list link;
     struct wlr_layer_surface_v1 *layer_surface;
-    uint32_t layer;
+    uint32_t layer; // enum zwlr_layer_shell_v1_layer
 
     struct kiwmi_output *output;
 
