@@ -323,7 +323,8 @@ Starts an interactive move.
 #### view:iresize(edges)
 
 Starts an interactive resize.
-Takes a table containing the edges, that the resize is happening on.
+Takes a table containing the name of the edges, that the resize is happening on.
+So for example to resize pulling on the bottom right corner you would pass `{"b", "r"}`.
 
 #### view:move(lx, ly)
 
