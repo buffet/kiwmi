@@ -111,6 +111,13 @@ view_set_hidden(struct kiwmi_view *view, bool hidden)
     wlr_scene_node_set_enabled(&view->desktop_surface.tree->node, !hidden);
     wlr_scene_node_set_enabled(
         &view->desktop_surface.popups_tree->node, !hidden);
+
+    struct kiwmi_server *server =
+        wl_container_of(view->desktop, server, desktop);
+    struct kiwmi_seat *seat = server->input.seat;
+    if (seat->focused_view == view) {
+        seat->focused_view = NULL;
+    }
 }
 
 struct kiwmi_view *

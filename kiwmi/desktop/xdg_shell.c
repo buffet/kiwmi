@@ -51,6 +51,11 @@ xdg_surface_unmap_notify(struct wl_listener *listener, void *UNUSED(data))
         struct kiwmi_server *server =
             wl_container_of(view->desktop, server, desktop);
         cursor_refresh_focus(server->input.cursor, NULL, NULL, NULL);
+
+        struct kiwmi_seat *seat = server->input.seat;
+        if (seat->focused_view == view) {
+            seat->focused_view = NULL;
+        }
     }
 
     wl_signal_emit(&view->events.unmap, view);
@@ -80,15 +85,6 @@ xdg_surface_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
 
     wlr_scene_node_destroy(&view->desktop_surface.tree->node);
     wlr_scene_node_destroy(&view->desktop_surface.popups_tree->node);
-
-    struct kiwmi_desktop *desktop = view->desktop;
-    struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
-    struct kiwmi_seat *seat       = server->input.seat;
-
-    if (seat->focused_view == view) {
-        seat->focused_view = NULL;
-    }
-    cursor_refresh_focus(server->input.cursor, NULL, NULL, NULL);
 
     if (view->decoration) {
         view->decoration->view = NULL;
