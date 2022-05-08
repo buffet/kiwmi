@@ -28,8 +28,6 @@ struct kiwmi_output {
 
     struct wlr_box usable_area;
 
-    int damaged;
-
     struct {
         struct wl_signal destroy;
         struct wl_signal resize;
@@ -48,7 +46,5 @@ struct kiwmi_render_data {
 
 void new_output_notify(struct wl_listener *listener, void *data);
 void output_layout_change_notify(struct wl_listener *listener, void *data);
-
-void output_damage(struct kiwmi_output *output);
 
 #endif /* KIWMI_DESKTOP_OUTPUT_H */

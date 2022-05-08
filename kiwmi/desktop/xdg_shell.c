@@ -137,10 +137,6 @@ view_child_popup_create(
     child->wlr_xdg_popup = wlr_popup;
     child->mapped        = wlr_popup->base->mapped;
 
-    if (view_child_is_mapped(child)) {
-        view_child_damage(child);
-    }
-
     wl_signal_add(&wlr_popup->base->events.map, &child->map);
     wl_signal_add(&wlr_popup->base->events.unmap, &child->unmap);
 
@@ -177,11 +173,6 @@ xdg_surface_map_notify(struct wl_listener *listener, void *UNUSED(data))
     struct kiwmi_view *view = wl_container_of(listener, view, map);
     view->mapped            = true;
 
-    struct kiwmi_output *output;
-    wl_list_for_each (output, &view->desktop->outputs, link) {
-        output_damage(output);
-    }
-
     wl_signal_emit(&view->desktop->events.view_map, view);
 }
 
@@ -201,11 +192,6 @@ xdg_surface_unmap_notify(struct wl_listener *listener, void *UNUSED(data))
         struct kiwmi_server *server = wl_container_of(desktop, server, desktop);
         cursor_refresh_focus(server->input.cursor, NULL, NULL, NULL);
 
-        struct kiwmi_output *output;
-        wl_list_for_each (output, &view->desktop->outputs, link) {
-            output_damage(output);
-        }
-
         wl_signal_emit(&view->events.unmap, view);
     }
 }
@@ -219,13 +205,6 @@ xdg_surface_commit_notify(struct wl_listener *listener, void *UNUSED(data))
     struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
     struct kiwmi_cursor *cursor   = server->input.cursor;
     cursor_refresh_focus(cursor, NULL, NULL, NULL);
-
-    if (pixman_region32_not_empty(&view->wlr_surface->buffer_damage)) {
-        struct kiwmi_output *output;
-        wl_list_for_each (output, &desktop->outputs, link) {
-            output_damage(output);
-        }
-    }
 
     wlr_xdg_surface_get_geometry(view->xdg_surface, &view->geom);
 }

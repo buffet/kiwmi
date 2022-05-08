@@ -61,7 +61,6 @@ kiwmi_layer_commit_notify(struct wl_listener *listener, void *UNUSED(data))
     }
 
     if (layer->layer_surface->current.committed != 0) {
-        output_damage(layer->output);
         arrange_layers(output);
     }
 }
@@ -75,7 +74,6 @@ kiwmi_layer_map_notify(struct wl_listener *listener, void *UNUSED(data))
     wlr_scene_node_set_enabled(&layer->desktop_surface.popups_tree->node, true);
 
     arrange_layers(layer->output);
-    output_damage(layer->output);
 }
 
 static void
@@ -88,7 +86,6 @@ kiwmi_layer_unmap_notify(struct wl_listener *listener, void *UNUSED(data))
         &layer->desktop_surface.popups_tree->node, false);
 
     arrange_layers(layer->output);
-    output_damage(layer->output);
 }
 
 static void
