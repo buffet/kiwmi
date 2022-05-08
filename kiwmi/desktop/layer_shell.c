@@ -251,14 +251,14 @@ arrange_layer(
             continue;
         }
 
-        layer->geom = arranged_area;
-
         wlr_scene_node_set_position(
-            &layer->desktop_surface.tree->node, layer->geom.x, layer->geom.y);
+            &layer->desktop_surface.tree->node,
+            arranged_area.x,
+            arranged_area.y);
         wlr_scene_node_set_position(
             &layer->desktop_surface.popups_tree->node,
-            layer->geom.x,
-            layer->geom.y);
+            arranged_area.x,
+            arranged_area.y);
 
         apply_exclusive(
             usable_area,
@@ -358,36 +358,6 @@ arrange_layers(struct kiwmi_output *output)
     struct kiwmi_seat *seat       = server->input.seat;
 
     seat_focus_layer(seat, topmost);
-}
-
-struct kiwmi_layer *
-layer_at(
-    struct wl_list *layers,
-    struct wlr_surface **surface,
-    double ox,
-    double oy,
-    double *sx,
-    double *sy)
-{
-    struct kiwmi_layer *layer;
-    wl_list_for_each_reverse (layer, layers, link) {
-        double layer_sx = ox - layer->geom.x;
-        double layer_sy = oy - layer->geom.y;
-
-        double _sx;
-        double _sy;
-        struct wlr_surface *_surface = wlr_layer_surface_v1_surface_at(
-            layer->layer_surface, layer_sx, layer_sy, &_sx, &_sy);
-
-        if (_surface) {
-            *sx      = _sx;
-            *sy      = _sy;
-            *surface = _surface;
-            return layer;
-        }
-    }
-
-    return NULL;
 }
 
 static struct kiwmi_output *

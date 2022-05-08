@@ -30,19 +30,10 @@ struct kiwmi_layer {
     struct wl_listener commit;
     struct wl_listener map;
     struct wl_listener unmap;
-
-    struct wlr_box geom;
 };
 
 void arrange_layers(struct kiwmi_output *output);
 
-struct kiwmi_layer *layer_at(
-    struct wl_list *layers,
-    struct wlr_surface **surface,
-    double ox,
-    double oy,
-    double *sx,
-    double *sy);
 void layer_shell_new_surface_notify(struct wl_listener *listener, void *data);
 
 #endif /* KIWMI_DESKTOP_LAYER_SHELL_H */
