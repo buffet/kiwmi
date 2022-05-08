@@ -14,6 +14,7 @@
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_pointer.h>
+#include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_seat.h>
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/util/log.h>
@@ -284,72 +285,24 @@ cursor_refresh_focus(
     struct kiwmi_desktop *desktop = &cursor->server->desktop;
     struct wlr_seat *seat         = cursor->server->input.seat->seat;
 
-    double ox                     = cursor->cursor->x;
-    double oy                     = cursor->cursor->y;
-    struct wlr_output *wlr_output = wlr_output_layout_output_at(
-        desktop->output_layout, cursor->cursor->x, cursor->cursor->y);
-
-    wlr_output_layout_output_coords(
-        desktop->output_layout, wlr_output, &ox, &oy);
-
-    struct kiwmi_output *output = wlr_output->data;
-
     struct wlr_surface *surface = NULL;
     double sx;
     double sy;
 
-    struct kiwmi_layer *layer = layer_at(
-        &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
-        &surface,
-        ox,
-        oy,
-        &sx,
-        &sy);
-    struct kiwmi_view *view;
+    struct wlr_scene_node *node_at = wlr_scene_node_at(
+        &desktop->scene->node, cursor->cursor->x, cursor->cursor->y, &sx, &sy);
 
-    if (!layer) {
-        layer = layer_at(
-            &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
-            &surface,
-            ox,
-            oy,
-            &sx,
-            &sy);
-    }
+    if (node_at && node_at->type == WLR_SCENE_NODE_SURFACE) {
+        struct wlr_scene_surface *scene_surface =
+            wlr_scene_surface_from_node(node_at);
+        surface = scene_surface->surface;
 
-    if (!layer) {
-        view = view_at(
-            desktop, cursor->cursor->x, cursor->cursor->y, &surface, &sx, &sy);
-    }
-
-    if (!layer) {
-        layer = layer_at(
-            &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM],
-            &surface,
-            ox,
-            oy,
-            &sx,
-            &sy);
-    }
-
-    if (!layer) {
-        layer = layer_at(
-            &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND],
-            &surface,
-            ox,
-            oy,
-            &sx,
-            &sy);
-    }
-
-    if (!layer && !view) {
+        if (surface != seat->pointer_state.focused_surface) {
+            wlr_seat_pointer_notify_enter(seat, surface, sx, sy);
+        }
+    } else {
         wlr_xcursor_manager_set_cursor_image(
             cursor->xcursor_manager, "left_ptr", cursor->cursor);
-    }
-
-    if (surface && surface != seat->pointer_state.focused_surface) {
-        wlr_seat_pointer_notify_enter(seat, surface, sx, sy);
-    } else if (!surface) {
         wlr_seat_pointer_clear_focus(seat);
     }
 

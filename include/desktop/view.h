@@ -147,21 +147,9 @@ void view_set_size(struct kiwmi_view *view, uint32_t width, uint32_t height);
 void view_set_pos(struct kiwmi_view *view, uint32_t x, uint32_t y);
 void view_set_tiled(struct kiwmi_view *view, enum wlr_edges edges);
 void view_set_hidden(struct kiwmi_view *view, bool hidden);
-struct wlr_surface *view_surface_at(
-    struct kiwmi_view *view,
-    double sx,
-    double sy,
-    double *sub_x,
-    double *sub_y);
 
 void view_focus(struct kiwmi_view *view);
-struct kiwmi_view *view_at(
-    struct kiwmi_desktop *desktop,
-    double lx,
-    double ly,
-    struct wlr_surface **surface,
-    double *sx,
-    double *sy);
+struct kiwmi_view *view_at(struct kiwmi_desktop *desktop, double lx, double ly);
 void view_move(struct kiwmi_view *view);
 void view_resize(struct kiwmi_view *view, uint32_t edges);
 struct kiwmi_view *view_create(

@@ -15,6 +15,7 @@
 #include <wlr/util/edges.h>
 #include <wlr/util/log.h>
 
+#include "desktop/desktop_surface.h"
 #include "desktop/output.h"
 #include "desktop/view.h"
 #include "desktop/xdg_shell.h"
@@ -120,7 +121,11 @@ l_kiwmi_view_hidden(lua_State *L)
 
     struct kiwmi_view *view = obj->object;
 
-    lua_pushboolean(L, view->hidden);
+    int lx, ly; // unused
+    bool enabled =
+        wlr_scene_node_coords(&view->desktop_surface.tree->node, &lx, &ly);
+
+    lua_pushboolean(L, !enabled);
 
     return 1;
 }
@@ -275,8 +280,11 @@ l_kiwmi_view_pos(lua_State *L)
 
     struct kiwmi_view *view = obj->object;
 
-    lua_pushinteger(L, view->x);
-    lua_pushinteger(L, view->y);
+    int lx, ly;
+    desktop_surface_get_pos(&view->desktop_surface, &lx, &ly);
+
+    lua_pushinteger(L, lx);
+    lua_pushinteger(L, ly);
 
     return 2;
 }

@@ -390,6 +390,18 @@ layer_at(
     return NULL;
 }
 
+static struct kiwmi_output *
+layer_desktop_surface_get_output(struct kiwmi_desktop_surface *desktop_surface)
+{
+    struct kiwmi_layer *layer =
+        wl_container_of(desktop_surface, layer, desktop_surface);
+    return layer->output;
+}
+
+static const struct kiwmi_desktop_surface_impl layer_desktop_surface_impl = {
+    .get_output = layer_desktop_surface_get_output,
+};
+
 void
 layer_shell_new_surface_notify(struct wl_listener *listener, void *data)
 {
@@ -431,6 +443,7 @@ layer_shell_new_surface_notify(struct wl_listener *listener, void *data)
     layer->layer         = layer_surface->current.layer;
 
     layer->desktop_surface.type = KIWMI_DESKTOP_SURFACE_LAYER;
+    layer->desktop_surface.impl = &layer_desktop_surface_impl;
 
     layer->destroy.notify = kiwmi_layer_destroy_notify;
     wl_signal_add(&layer_surface->events.destroy, &layer->destroy);

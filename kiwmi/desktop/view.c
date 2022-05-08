@@ -8,6 +8,7 @@
 #include "desktop/view.h"
 
 #include <wlr/types/wlr_cursor.h>
+#include <wlr/types/wlr_scene.h>
 #include <wlr/util/log.h>
 
 #include "desktop/output.h"
@@ -104,17 +105,13 @@ view_set_pos(struct kiwmi_view *view, uint32_t x, uint32_t y)
     wlr_scene_node_set_position(&view->desktop_surface.tree->node, x, y);
     wlr_scene_node_set_position(&view->desktop_surface.popups_tree->node, x, y);
 
-    struct kiwmi_view_child *child;
-    wl_list_for_each (child, &view->children, link) {
-        if (child->impl && child->impl->reconfigure) {
-            child->impl->reconfigure(child);
-        }
+    int lx, ly; // unused
+    // If it is enabled (as well as all its parents)
+    if (wlr_scene_node_coords(&view->desktop_surface.tree->node, &lx, &ly)) {
+        struct kiwmi_server *server =
+            wl_container_of(view->desktop, server, desktop);
+        cursor_refresh_focus(server->input.cursor, NULL, NULL, NULL);
     }
-
-    struct kiwmi_desktop *desktop = view->desktop;
-    struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
-    struct kiwmi_cursor *cursor   = server->input.cursor;
-    cursor_refresh_focus(cursor, NULL, NULL, NULL);
 }
 
 void
@@ -139,69 +136,20 @@ view_set_hidden(struct kiwmi_view *view, bool hidden)
         &view->desktop_surface.popups_tree->node, !hidden);
 }
 
-struct wlr_surface *
-view_surface_at(
-    struct kiwmi_view *view,
-    double sx,
-    double sy,
-    double *sub_x,
-    double *sub_y)
-{
-    if (view->impl->surface_at) {
-        return view->impl->surface_at(view, sx, sy, sub_x, sub_y);
-    }
-
-    return NULL;
-}
-
-static bool
-surface_at(
-    struct kiwmi_view *view,
-    struct wlr_surface **surface,
-    double lx,
-    double ly,
-    double *sx,
-    double *sy)
-{
-    double view_sx = lx - view->x + view->geom.x;
-    double view_sy = ly - view->y + view->geom.y;
-
-    double _sx;
-    double _sy;
-    struct wlr_surface *_surface =
-        view_surface_at(view, view_sx, view_sy, &_sx, &_sy);
-
-    if (_surface) {
-        *sx      = _sx;
-        *sy      = _sy;
-        *surface = _surface;
-        return true;
-    }
-
-    return false;
-}
-
 struct kiwmi_view *
-view_at(
-    struct kiwmi_desktop *desktop,
-    double lx,
-    double ly,
-    struct wlr_surface **surface,
-    double *sx,
-    double *sy)
+view_at(struct kiwmi_desktop *desktop, double lx, double ly)
 {
-    struct kiwmi_view *view;
-    wl_list_for_each (view, &desktop->views, link) {
-        if (view->hidden || !view->mapped) {
-            continue;
-        }
+    struct kiwmi_desktop_surface *desktop_surface =
+        desktop_surface_at(desktop, lx, ly);
 
-        if (surface_at(view, surface, lx, ly, sx, sy)) {
-            return view;
-        }
+    if (!desktop_surface
+        || desktop_surface->type != KIWMI_DESKTOP_SURFACE_VIEW) {
+        return NULL;
     }
 
-    return NULL;
+    struct kiwmi_view *view =
+        wl_container_of(desktop_surface, view, desktop_surface);
+    return view;
 }
 
 static void
@@ -228,17 +176,20 @@ view_begin_interactive(
     cursor->cursor_mode  = mode;
     cursor->grabbed.view = view;
 
+    int view_lx, view_ly;
+    desktop_surface_get_pos(&view->desktop_surface, &view_lx, &view_ly);
+
     if (mode == KIWMI_CURSOR_MOVE) {
-        cursor->grabbed.orig_x = cursor->cursor->x - view->x;
-        cursor->grabbed.orig_y = cursor->cursor->y - view->y;
+        cursor->grabbed.orig_x = cursor->cursor->x - view_lx;
+        cursor->grabbed.orig_y = cursor->cursor->y - view_ly;
     } else {
         cursor->grabbed.orig_x       = cursor->cursor->x;
         cursor->grabbed.orig_y       = cursor->cursor->y;
         cursor->grabbed.resize_edges = edges;
     }
 
-    cursor->grabbed.orig_geom.x      = view->x;
-    cursor->grabbed.orig_geom.y      = view->y;
+    cursor->grabbed.orig_geom.x      = view_lx;
+    cursor->grabbed.orig_geom.y      = view_ly;
     cursor->grabbed.orig_geom.width  = width;
     cursor->grabbed.orig_geom.height = height;
 }
@@ -280,6 +231,37 @@ view_init_subsurfaces(struct kiwmi_view_child *child, struct kiwmi_view *view)
     }
 }
 
+static struct kiwmi_output *
+view_desktop_surface_get_output(struct kiwmi_desktop_surface *desktop_surface)
+{
+    struct kiwmi_view *view =
+        wl_container_of(desktop_surface, view, desktop_surface);
+
+    int lx, ly;
+    desktop_surface_get_pos(&view->desktop_surface, &lx, &ly);
+
+    // Prefer view center
+    struct wlr_output *output = wlr_output_layout_output_at(
+        view->desktop->output_layout,
+        lx + view->geom.width / 2,
+        ly + view->geom.height / 2);
+    if (output) {
+        return (struct kiwmi_output *)output->data;
+    }
+
+    // Retry top-left corner
+    output = wlr_output_layout_output_at(view->desktop->output_layout, lx, ly);
+    if (output) {
+        return (struct kiwmi_output *)output->data;
+    }
+
+    return NULL;
+}
+
+static const struct kiwmi_desktop_surface_impl view_desktop_surface_impl = {
+    .get_output = view_desktop_surface_get_output,
+};
+
 struct kiwmi_view *
 view_create(
     struct kiwmi_desktop *desktop,
@@ -305,6 +287,7 @@ view_create(
     wl_list_init(&view->children);
 
     view->desktop_surface.type = KIWMI_DESKTOP_SURFACE_VIEW;
+    view->desktop_surface.impl = &view_desktop_surface_impl;
 
     wl_signal_init(&view->events.unmap);
     wl_signal_init(&view->events.request_move);
