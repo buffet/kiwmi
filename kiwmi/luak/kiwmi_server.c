@@ -313,12 +313,7 @@ l_kiwmi_server_view_at(lua_State *L)
     double lx = lua_tonumber(L, 2);
     double ly = lua_tonumber(L, 3);
 
-    struct wlr_surface *surface;
-    double sx;
-    double sy;
-
-    struct kiwmi_view *view =
-        view_at(&server->desktop, lx, ly, &surface, &sx, &sy);
+    struct kiwmi_view *view = view_at(&server->desktop, lx, ly);
 
     if (view) {
         lua_pushcfunction(L, luaK_kiwmi_view_new);

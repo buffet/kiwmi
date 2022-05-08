@@ -181,19 +181,20 @@ xdg_surface_unmap_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_view *view = wl_container_of(listener, view, unmap);
 
-    if (view->mapped) {
-        view->mapped = false;
+    view->mapped = false;
 
+    int lx, ly; // unused
+    if (wlr_scene_node_coords(&view->desktop_surface.tree->node, &lx, &ly)) {
         wlr_scene_node_set_enabled(&view->desktop_surface.tree->node, false);
         wlr_scene_node_set_enabled(
             &view->desktop_surface.popups_tree->node, false);
 
-        struct kiwmi_desktop *desktop = view->desktop;
-        struct kiwmi_server *server = wl_container_of(desktop, server, desktop);
+        struct kiwmi_server *server =
+            wl_container_of(view->desktop, server, desktop);
         cursor_refresh_focus(server->input.cursor, NULL, NULL, NULL);
-
-        wl_signal_emit(&view->events.unmap, view);
     }
+
+    wl_signal_emit(&view->events.unmap, view);
 }
 
 static void

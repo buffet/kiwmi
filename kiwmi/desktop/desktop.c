@@ -22,6 +22,7 @@
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/log.h>
 
+#include "desktop/desktop_surface.h"
 #include "desktop/layer_shell.h"
 #include "desktop/output.h"
 #include "desktop/stratum.h"
@@ -29,6 +30,7 @@
 #include "desktop/xdg_shell.h"
 #include "input/cursor.h"
 #include "input/input.h"
+#include "input/seat.h"
 #include "server.h"
 
 bool
@@ -127,19 +129,14 @@ desktop_active_output(struct kiwmi_server *server)
         return output;
     }
 
-    // 2. focused view center
-    if (!wl_list_empty(&server->desktop.views)) {
-        struct kiwmi_view *view;
-        wl_list_for_each (view, &server->desktop.views, link) {
-            break; // get first element of list
+    // 2. focused view
+    struct kiwmi_view *focused_view = server->input.seat->focused_view;
+    if (focused_view) {
+        output = desktop_surface_get_output(&focused_view->desktop_surface);
+
+        if (output) {
+            return output;
         }
-
-        double lx = view->x + view->geom.width / 2;
-        double ly = view->y + view->geom.height / 2;
-
-        struct wlr_output *wlr_output =
-            wlr_output_layout_output_at(server->desktop.output_layout, lx, ly);
-        return wlr_output->data;
     }
 
     // 3. cursor
