@@ -49,68 +49,11 @@ popup_extension_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
 }
 
 static void
-popup_unconstrain(struct kiwmi_view_child *popup)
-{
-    if (popup->type != KIWMI_VIEW_CHILD_XDG_POPUP) {
-        wlr_log(WLR_ERROR, "Expected an xdg_popup kiwmi_view_child");
-        return;
-    }
-
-    struct kiwmi_view *view = popup->view;
-
-    // Prefer output at view center
-    struct wlr_output *output = wlr_output_layout_output_at(
-        view->desktop->output_layout,
-        view->x + view->geom.width / 2,
-        view->y + view->geom.height / 2);
-
-    if (!output) {
-        // Retry with view top-left corner (if its center is off-screen)
-        output = wlr_output_layout_output_at(
-            view->desktop->output_layout, view->x, view->y);
-    }
-
-    if (!output) {
-        wlr_log(
-            WLR_ERROR, "View's output not found, popups may end up invisible");
-        return;
-    }
-
-    double view_ox = view->x;
-    double view_oy = view->y;
-    wlr_output_layout_output_coords(
-        view->desktop->output_layout, output, &view_ox, &view_oy);
-
-    int output_width;
-    int output_height;
-    wlr_output_effective_resolution(output, &output_width, &output_height);
-
-    // relative to the view
-    struct wlr_box output_box = {
-        .x      = -view_ox,
-        .y      = -view_oy,
-        .width  = output_width,
-        .height = output_height,
-    };
-
-    wlr_xdg_popup_unconstrain_from_box(popup->wlr_xdg_popup, &output_box);
-}
-
-static void
 popup_reconfigure(struct kiwmi_view_child *popup)
 {
     if (popup->type != KIWMI_VIEW_CHILD_XDG_POPUP) {
         wlr_log(WLR_ERROR, "Expected an xdg_popup view_child");
         return;
-    }
-
-    popup_unconstrain(popup);
-
-    struct kiwmi_view_child *subchild;
-    wl_list_for_each (subchild, &popup->children, link) {
-        if (subchild->impl && subchild->impl->reconfigure) {
-            subchild->impl->reconfigure(subchild);
-        }
     }
 }
 
@@ -145,8 +88,6 @@ view_child_popup_create(
 
     child->extension_destroy.notify = popup_extension_destroy_notify;
     wl_signal_add(&wlr_popup->base->events.destroy, &child->extension_destroy);
-
-    popup_unconstrain(child);
 
     return child;
 }
