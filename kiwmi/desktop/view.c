@@ -92,11 +92,6 @@ view_set_size(struct kiwmi_view *view, uint32_t width, uint32_t height)
                 child->impl->reconfigure(child);
             }
         }
-
-        struct kiwmi_output *output;
-        wl_list_for_each (output, &view->desktop->outputs, link) {
-            output_damage(output);
-        }
     }
 }
 
@@ -120,11 +115,6 @@ view_set_pos(struct kiwmi_view *view, uint32_t x, uint32_t y)
     struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
     struct kiwmi_cursor *cursor   = server->input.cursor;
     cursor_refresh_focus(cursor, NULL, NULL, NULL);
-
-    struct kiwmi_output *output;
-    wl_list_for_each (output, &desktop->outputs, link) {
-        output_damage(output);
-    }
 }
 
 void
@@ -356,23 +346,8 @@ view_child_is_mapped(struct kiwmi_view_child *child)
 }
 
 void
-view_child_damage(struct kiwmi_view_child *child)
-{
-    // Note for later: this is supposed to damage the child and all subchildren
-    struct kiwmi_output *output;
-    wl_list_for_each (output, &child->view->desktop->outputs, link) {
-        output_damage(output);
-    }
-}
-
-void
 view_child_destroy(struct kiwmi_view_child *child)
 {
-    bool visible = view_child_is_mapped(child) && !child->view->hidden;
-    if (visible) {
-        view_child_damage(child);
-    }
-
     wl_list_remove(&child->link);
     child->parent = NULL;
 
@@ -414,12 +389,8 @@ view_child_surface_destroy_notify(
 }
 
 static void
-view_child_commit_notify(struct wl_listener *listener, void *UNUSED(data))
+view_child_commit_notify()
 {
-    struct kiwmi_view_child *child = wl_container_of(listener, child, commit);
-    if (view_child_is_mapped(child)) {
-        view_child_damage(child);
-    }
 }
 
 static void
@@ -436,19 +407,13 @@ view_child_map_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_view_child *child = wl_container_of(listener, child, map);
     child->mapped                  = true;
-    if (view_child_is_mapped(child)) {
-        view_child_damage(child);
-    }
 }
 
 static void
 view_child_unmap_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_view_child *child = wl_container_of(listener, child, unmap);
-    if (view_child_is_mapped(child)) {
-        view_child_damage(child);
-    }
-    child->mapped = false;
+    child->mapped                  = false;
 }
 
 struct kiwmi_view_child *
@@ -519,10 +484,6 @@ view_child_subsurface_create(
 
     child->wlr_subsurface = subsurface;
     child->mapped         = subsurface->mapped;
-
-    if (view_child_is_mapped(child)) {
-        view_child_damage(child);
-    }
 
     wl_signal_add(&subsurface->events.map, &child->map);
     wl_signal_add(&subsurface->events.unmap, &child->unmap);
