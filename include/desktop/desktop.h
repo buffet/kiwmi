@@ -26,7 +26,6 @@ struct kiwmi_desktop {
     struct wl_list outputs; // struct kiwmi_output::link
     struct wl_list views;   // struct kiwmi_view::link
 
-    float bg_color[4];
     struct wlr_scene *scene;
     struct wlr_scene_rect *background_rect;
     struct wlr_scene_tree *strata[KIWMI_STRATA_COUNT];

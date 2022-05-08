@@ -48,11 +48,6 @@ desktop_init(struct kiwmi_desktop *desktop)
     wlr_xdg_output_manager_v1_create(
         server->wl_display, desktop->output_layout);
 
-    desktop->bg_color[0] = 0.1f;
-    desktop->bg_color[1] = 0.1f;
-    desktop->bg_color[2] = 0.1f;
-    desktop->bg_color[3] = 1.0f;
-
     desktop->scene = wlr_scene_create();
     if (!desktop->scene) {
         wlr_log(WLR_ERROR, "failed to create scene");

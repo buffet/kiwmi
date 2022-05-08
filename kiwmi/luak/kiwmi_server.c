@@ -65,10 +65,7 @@ l_kiwmi_server_bg_color(lua_State *L)
         return luaL_argerror(L, 2, "not a valid color");
     }
 
-    server->desktop.bg_color[0] = color[0];
-    server->desktop.bg_color[1] = color[1];
-    server->desktop.bg_color[2] = color[2];
-    // ignore alpha
+    // Ignore alpha (color channels are already premultiplied)
     color[3] = 1.0f;
 
     wlr_scene_rect_set_color(server->desktop.background_rect, color);
