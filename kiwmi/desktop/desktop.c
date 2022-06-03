@@ -112,7 +112,9 @@ desktop_active_output(struct kiwmi_server *server)
 
         struct wlr_output *wlr_output =
             wlr_output_layout_output_at(server->desktop.output_layout, lx, ly);
-        return wlr_output->data;
+        if (wlr_output) {
+            return wlr_output->data;
+        }
     }
 
     // 3. cursor
