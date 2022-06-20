@@ -373,3 +373,8 @@ Callback receives the view.
 
 The view wants to start an interactive resize.
 Callback receives a table containing the `view`, and `edges`, containing the edges.
+
+#### set_title
+
+The view's title has changed.
+Callback receives the view.

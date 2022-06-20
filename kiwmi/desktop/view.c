@@ -247,6 +247,7 @@ view_create(
     wl_signal_init(&view->events.request_resize);
     wl_signal_init(&view->events.post_render);
     wl_signal_init(&view->events.pre_render);
+    wl_signal_init(&view->events.set_title);
 
     view->desktop_surface.tree = wlr_scene_tree_create(
         &view->desktop->strata[KIWMI_STRATUM_NORMAL]->node);
