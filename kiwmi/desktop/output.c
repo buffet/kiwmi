@@ -18,6 +18,7 @@
 #include <wlr/types/wlr_matrix.h>
 #include <wlr/types/wlr_output.h>
 #include <wlr/types/wlr_output_layout.h>
+#include <wlr/types/wlr_output_management_v1.h>
 #include <wlr/types/wlr_surface.h>
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/util/log.h>
@@ -242,6 +243,31 @@ output_frame_notify(struct wl_listener *listener, void *data)
     wlr_output_commit(wlr_output);
 }
 
+void
+output_manager_update(struct kiwmi_desktop *desktop)
+{
+    struct wlr_output_configuration_v1 *configuration =
+        wlr_output_configuration_v1_create();
+
+    struct kiwmi_output *output;
+    wl_list_for_each (output, &desktop->outputs, link) {
+        struct wlr_output_configuration_head_v1 *head =
+            wlr_output_configuration_head_v1_create(
+                configuration, output->wlr_output);
+
+        struct wlr_box *area = wlr_output_layout_get_box(
+            desktop->output_layout, output->wlr_output);
+
+        if (area != NULL) {
+            head->state.x = area->x;
+            head->state.y = area->y;
+        }
+    }
+
+    wlr_output_manager_v1_set_configuration(
+        desktop->output_manager, configuration);
+}
+
 static void
 output_commit_notify(struct wl_listener *listener, void *data)
 {
@@ -264,6 +290,7 @@ output_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
     if (output->desktop->output_layout) {
         wlr_output_layout_remove(
             output->desktop->output_layout, output->wlr_output);
+        output_manager_update(output->desktop);
     }
 
     wl_signal_emit(&output->events.destroy, output);
@@ -377,6 +404,7 @@ new_output_notify(struct wl_listener *listener, void *data)
     wl_list_insert(&desktop->outputs, &output->link);
 
     wlr_output_layout_add_auto(desktop->output_layout, wlr_output);
+    output_manager_update(desktop);
 
     wlr_output_create_global(wlr_output);
 
@@ -390,6 +418,122 @@ new_output_notify(struct wl_listener *listener, void *data)
     wl_signal_init(&output->events.usable_area_change);
 
     wl_signal_emit(&desktop->events.new_output, output);
+}
+
+static void
+output_manager_configure(
+    struct kiwmi_server *server,
+    struct wlr_output_configuration_v1 *configuration,
+    bool test)
+{
+    struct wlr_output_configuration_head_v1 *head;
+    struct wlr_output_configuration_head_v1 *bad_head = NULL;
+    wl_list_for_each (head, &configuration->heads, link) {
+        struct wlr_output *wlr_output = head->state.output;
+
+        wlr_output_enable(wlr_output, head->state.enabled);
+        if (head->state.enabled) {
+            if (head->state.mode) {
+                wlr_output_set_mode(wlr_output, head->state.mode);
+            } else {
+                wlr_output_set_custom_mode(
+                    wlr_output,
+                    head->state.custom_mode.width,
+                    head->state.custom_mode.height,
+                    head->state.custom_mode.refresh);
+            }
+
+            wlr_output_set_transform(wlr_output, head->state.transform);
+            wlr_output_set_scale(wlr_output, head->state.scale);
+        }
+
+        if (!wlr_output_test(wlr_output)) {
+            bad_head = head;
+            break;
+        }
+    }
+
+    wl_list_for_each (head, &configuration->heads, link) {
+        if (bad_head != NULL || test) {
+            wlr_output_rollback(head->state.output);
+            if (head == bad_head) {
+                break;
+            } else {
+                continue;
+            }
+        }
+        struct kiwmi_output *output = head->state.output->data;
+        bool enable_changed         = WLR_OUTPUT_STATE_ENABLED
+            == (output->wlr_output->pending.committed
+                & WLR_OUTPUT_STATE_ENABLED);
+        if (head->state.enabled) {
+            if (enable_changed) {
+                wlr_output_layout_add(
+                    server->desktop.output_layout,
+                    output->wlr_output,
+                    head->state.x,
+                    head->state.y);
+                wl_signal_emit(&output->desktop->events.new_output, output);
+            } else {
+                bool moved = output->wlr_output->pending.committed
+                    & (WLR_OUTPUT_STATE_MODE | WLR_OUTPUT_STATE_SCALE
+                       | WLR_OUTPUT_STATE_TRANSFORM);
+                struct wlr_output_layout_output *layout_output =
+                    wlr_output_layout_get(
+                        server->desktop.output_layout, output->wlr_output);
+                moved |= head->state.x != layout_output->x
+                    || head->state.y != layout_output->y;
+                if (moved) {
+                    wlr_output_layout_move(
+                        server->desktop.output_layout,
+                        output->wlr_output,
+                        head->state.x,
+                        head->state.y);
+                    wl_signal_emit(&output->events.resize, output);
+                }
+            }
+        } else if (enable_changed) {
+            wl_signal_emit(&output->events.destroy, output);
+            wlr_output_layout_remove(
+                server->desktop.output_layout, output->wlr_output);
+        }
+        wlr_output_commit(head->state.output);
+    }
+
+    if (bad_head == NULL) {
+        wlr_output_configuration_v1_send_succeeded(configuration);
+        if (!test) {
+            wlr_output_manager_v1_set_configuration(
+                server->desktop.output_manager, configuration);
+        } else {
+            wlr_output_configuration_v1_destroy(configuration);
+        }
+    } else {
+        wlr_output_configuration_v1_send_failed(configuration);
+        wlr_output_configuration_v1_destroy(configuration);
+    }
+}
+
+void
+output_manager_apply_notify(struct wl_listener *listener, void *data)
+{
+    struct kiwmi_desktop *desktop =
+        wl_container_of(listener, desktop, output_manager_apply);
+    struct kiwmi_server *server = wl_container_of(desktop, server, desktop);
+    struct wlr_output_configuration_v1 *configuration = data;
+
+    output_manager_configure(server, configuration, false);
+}
+
+void
+output_manager_test_notify(struct wl_listener *listener, void *data)
+{
+    struct kiwmi_desktop *desktop =
+        wl_container_of(listener, desktop, output_manager_test);
+    struct kiwmi_server *server = wl_container_of(desktop, server, desktop);
+    struct wlr_output_configuration_v1 *configuration = data;
+
+    output_manager_configure(server, configuration, true);
 }
 
 void

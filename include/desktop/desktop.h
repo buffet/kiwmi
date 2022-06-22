@@ -17,6 +17,7 @@ struct kiwmi_desktop {
     struct wlr_layer_shell_v1 *layer_shell;
     struct wlr_data_device_manager *data_device_manager;
     struct wlr_output_layout *output_layout;
+    struct wlr_output_manager_v1 *output_manager;
     struct wl_list outputs; // struct kiwmi_output::link
     struct wl_list views;   // struct kiwmi_view::link
 
@@ -26,6 +27,8 @@ struct kiwmi_desktop {
     struct wl_listener xdg_toplevel_new_decoration;
     struct wl_listener layer_shell_new_surface;
     struct wl_listener new_output;
+    struct wl_listener output_manager_apply;
+    struct wl_listener output_manager_test;
 
     struct {
         struct wl_signal new_output;
