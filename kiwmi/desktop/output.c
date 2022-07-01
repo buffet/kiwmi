@@ -261,12 +261,25 @@ output_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_output *output = wl_container_of(listener, output, destroy);
 
+    wl_signal_emit(&output->events.destroy, output);
+
+    int n_layers = sizeof(output->layers) / sizeof(output->layers[0]);
+    for (int i = 0; i < n_layers; i++) {
+        struct kiwmi_layer *layer;
+        struct kiwmi_layer *tmp;
+        wl_list_for_each_safe (layer, tmp, &output->layers[i], link) {
+            // Set output to NULL to avoid rearranging the remaining layers.
+            // Our impl requires that we remove the layer from the list.
+            layer->output = NULL;
+            wl_list_remove(&layer->link);
+            wlr_layer_surface_v1_destroy(layer->layer_surface);
+        }
+    }
+
     if (output->desktop->output_layout) {
         wlr_output_layout_remove(
             output->desktop->output_layout, output->wlr_output);
     }
-
-    wl_signal_emit(&output->events.destroy, output);
 
     wl_list_remove(&output->link);
     wl_list_remove(&output->frame.link);
@@ -384,5 +397,7 @@ new_output_notify(struct wl_listener *listener, void *data)
 void
 output_damage(struct kiwmi_output *output)
 {
-    output->damaged = 2;
+    if (output != NULL) {
+        output->damaged = 2;
+    }
 }

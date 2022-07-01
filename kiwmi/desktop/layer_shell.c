@@ -24,12 +24,14 @@ kiwmi_layer_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_layer *layer = wl_container_of(listener, layer, destroy);
 
-    wl_list_remove(&layer->link);
     wl_list_remove(&layer->destroy.link);
     wl_list_remove(&layer->map.link);
     wl_list_remove(&layer->unmap.link);
 
-    arrange_layers(layer->output);
+    if (layer->output != NULL) {
+        wl_list_remove(&layer->link);
+        arrange_layers(layer->output);
+    }
 
     free(layer);
 }
