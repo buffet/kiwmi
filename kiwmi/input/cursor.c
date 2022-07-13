@@ -16,8 +16,8 @@
 #include <wlr/types/wlr_pointer.h>
 #include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_touch.h>
-
 #include <wlr/types/wlr_seat.h>
+#include <wlr/types/wlr_touch.h>
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/util/log.h>
 
@@ -127,8 +127,8 @@ cursor_touch_down_notify(struct wl_listener *listener, void *data)
 {
     struct kiwmi_cursor *cursor =
         wl_container_of(listener, cursor, cursor_touch_down);
-    struct kiwmi_server *server = cursor->server;
-    struct kiwmi_desktop *desktop = &server->desktop;
+    struct kiwmi_server *server        = cursor->server;
+    struct kiwmi_desktop *desktop      = &server->desktop;
     struct wlr_event_touch_down *event = data;
 
     struct kiwmi_input *input   = &server->input;
@@ -144,29 +144,24 @@ cursor_touch_down_notify(struct wl_listener *listener, void *data)
     double ly = 1440 * event->y;
     double sx, sy;
 
-    struct kiwmi_view *view = view_at(
-				      desktop,
-				      lx, ly,
-				      &surface,
-				      &sx, &sy);
+    (void)view_at(desktop, lx, ly, &surface, &sx, &sy);
 
     /* we send the event to lua with 0..1 co-ordinates, because
      * it may not be over any surface
      */
     struct kiwmi_cursor_touch_event new_event = {
-	.event = "down",
-	.id = event->touch_id,
-	.x = event->x,
-        .y = event->y,
+        .event = "down",
+        .id    = event->touch_id,
+        .x     = event->x,
+        .y     = event->y,
     };
 
     wl_signal_emit(&cursor->events.touch, &new_event);
 
-    if(!new_event.handled &&
-       surface &&
-       wlr_surface_accepts_touch(seat, surface)) {
-	wlr_seat_touch_notify_down(seat, surface, event->time_msec,
-				   event->touch_id, sx, sy);
+    if (!new_event.handled && surface
+        && wlr_surface_accepts_touch(seat, surface)) {
+        wlr_seat_touch_notify_down(
+            seat, surface, event->time_msec, event->touch_id, sx, sy);
     }
 }
 
@@ -175,19 +170,19 @@ cursor_touch_up_notify(struct wl_listener *listener, void *data)
 {
     struct kiwmi_cursor *cursor =
         wl_container_of(listener, cursor, cursor_touch_up);
-    struct kiwmi_server *server            = cursor->server;
+    struct kiwmi_server *server      = cursor->server;
     struct wlr_event_touch_up *event = data;
-    struct kiwmi_input *input   = &server->input;
-    struct wlr_seat *seat       = input->seat->seat;
+    struct kiwmi_input *input        = &server->input;
+    struct wlr_seat *seat            = input->seat->seat;
 
     struct kiwmi_cursor_touch_event new_event = {
-	.event = "up",
-	.id = event->touch_id,
+        .event = "up",
+        .id    = event->touch_id,
     };
 
     wl_signal_emit(&cursor->events.touch, &new_event);
-    if(!new_event.handled) {
-	wlr_seat_touch_notify_up(seat, event->time_msec, event->touch_id);
+    if (!new_event.handled) {
+        wlr_seat_touch_notify_up(seat, event->time_msec, event->touch_id);
     }
 }
 
@@ -196,47 +191,47 @@ cursor_touch_motion_notify(struct wl_listener *listener, void *data)
 {
     struct kiwmi_cursor *cursor =
         wl_container_of(listener, cursor, cursor_touch_motion);
-    struct kiwmi_server *server            = cursor->server;
+    struct kiwmi_server *server          = cursor->server;
     struct wlr_event_touch_motion *event = data;
-    struct kiwmi_input *input   = &server->input;
-    struct wlr_seat *seat       = input->seat->seat;
+    struct kiwmi_input *input            = &server->input;
+    struct wlr_seat *seat                = input->seat->seat;
 
     struct kiwmi_cursor_touch_event new_event = {
-	.event = "motion",
-	.id = event->touch_id,
-	.x = event->x,
-	.y = event->y,
+        .event = "motion",
+        .id    = event->touch_id,
+        .x     = event->x,
+        .y     = event->y,
     };
 
     wl_signal_emit(&cursor->events.touch, &new_event);
 
-    if(!new_event.handled) {
-	/* UNSURE: should we still send this even if the touch_down
+    if (!new_event.handled) {
+        /* UNSURE: should we still send this even if the touch_down
 	 * didn't get sent because the surface doesn't accept
 	 * touch? */
-	wlr_seat_touch_notify_motion(seat, event->time_msec,
-				     event->touch_id, event->x, event->y);
+        wlr_seat_touch_notify_motion(
+            seat, event->time_msec, event->touch_id, event->x, event->y);
     }
 }
 
 static void
-cursor_touch_frame_notify(struct wl_listener *listener, void *data)
+cursor_touch_frame_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_cursor *cursor =
         wl_container_of(listener, cursor, cursor_touch_frame);
     struct kiwmi_server *server = cursor->server;
     struct kiwmi_input *input   = &server->input;
 
-    struct wlr_seat *seat       = input->seat->seat;
+    struct wlr_seat *seat = input->seat->seat;
 
     struct kiwmi_cursor_touch_event new_event = {
-	.event = "frame",
+        .event = "frame",
     };
 
     wl_signal_emit(&cursor->events.touch, &new_event);
 
-    if(!new_event.handled) {
-	wlr_seat_touch_notify_frame(seat);
+    if (!new_event.handled) {
+        wlr_seat_touch_notify_frame(seat);
     }
 }
 
@@ -374,16 +369,19 @@ cursor_create(
     wl_signal_add(&cursor->cursor->events.frame, &cursor->cursor_frame);
 
     cursor->cursor_touch_down.notify = cursor_touch_down_notify;
-    wl_signal_add(&cursor->cursor->events.touch_down, &cursor->cursor_touch_down);
+    wl_signal_add(
+        &cursor->cursor->events.touch_down, &cursor->cursor_touch_down);
 
     cursor->cursor_touch_up.notify = cursor_touch_up_notify;
     wl_signal_add(&cursor->cursor->events.touch_up, &cursor->cursor_touch_up);
 
     cursor->cursor_touch_motion.notify = cursor_touch_motion_notify;
-    wl_signal_add(&cursor->cursor->events.touch_motion, &cursor->cursor_touch_motion);
+    wl_signal_add(
+        &cursor->cursor->events.touch_motion, &cursor->cursor_touch_motion);
 
     cursor->cursor_touch_frame.notify = cursor_touch_frame_notify;
-    wl_signal_add(&cursor->cursor->events.touch_frame, &cursor->cursor_touch_frame);
+    wl_signal_add(
+        &cursor->cursor->events.touch_frame, &cursor->cursor_touch_frame);
 
     wl_signal_init(&cursor->events.button_down);
     wl_signal_init(&cursor->events.button_up);

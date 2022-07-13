@@ -83,8 +83,8 @@ new_input_notify(struct wl_listener *listener, void *data)
     if (!wl_list_empty(&input->keyboards)) {
         caps |= WL_SEAT_CAPABILITY_KEYBOARD;
     }
-    if(input->touchpads) {
-	caps |= WL_SEAT_CAPABILITY_TOUCH;
+    if (input->touchpads) {
+        caps |= WL_SEAT_CAPABILITY_TOUCH;
     }
 
     wlr_seat_set_capabilities(input->seat->seat, caps);

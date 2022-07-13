@@ -50,7 +50,7 @@ struct kiwmi_cursor {
         struct wl_signal destroy;
         struct wl_signal motion;
         struct wl_signal scroll;
-	struct wl_signal touch;
+        struct wl_signal touch;
     } events;
 };
 
