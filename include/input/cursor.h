@@ -39,6 +39,10 @@ struct kiwmi_cursor {
     struct wl_listener cursor_button;
     struct wl_listener cursor_axis;
     struct wl_listener cursor_frame;
+    struct wl_listener cursor_touch_up;
+    struct wl_listener cursor_touch_down;
+    struct wl_listener cursor_touch_motion;
+    struct wl_listener cursor_touch_frame;
 
     struct {
         struct wl_signal button_down;
@@ -46,6 +50,7 @@ struct kiwmi_cursor {
         struct wl_signal destroy;
         struct wl_signal motion;
         struct wl_signal scroll;
+	struct wl_signal touch;
     } events;
 };
 
@@ -59,6 +64,14 @@ struct kiwmi_cursor_motion_event {
     double oldy;
     double newx;
     double newy;
+};
+
+struct kiwmi_cursor_touch_event {
+    char *event;
+    int id;
+    double x;
+    double y;
+    bool handled;
 };
 
 struct kiwmi_cursor_scroll_event {

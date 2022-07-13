@@ -157,6 +157,23 @@ The callback receives a table containing `device` with the device name, `vertica
 The callback is supposed to return `true` if the event was handled.
 The compositor will not forward it to the view under the cursor.
 
+#### touch
+
+A touchpad or toushcreen was interacted with in some way. The callback
+receives a table containing
+
+* `name`: one of `down`, `up`, `motion` or `frame`
+* `id`: a number used to indicate which finger has dome something, used on devices that support "multitouch". For example, the first finger to touch the pad may be assigned id 0 and a second finger added may be assigned 1. The id may or may not be reassigned if a finger is lifted and replaced.
+* `x`, `y`: for `down` or `motion` events, the location where the screen was touched. These each range between 0.0 and 1.0
+
+All touch events are sent to the same callback, because the
+appropriate mode of processing them is to collect messages until
+there's a `frame` event and group them together. For more information see [the Wayland book](https://wayland-book.com/seat/touch.html)
+
+The callback is supposed to return `true` if the event was handled.
+The compositor will not forward it to the view under the cursor.
+_FIXME: should use gesture cancellation instead_
+
 ## kiwmi_keyboard
 
 A handle to a keyboard.

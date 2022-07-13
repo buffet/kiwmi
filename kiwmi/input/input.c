@@ -37,6 +37,13 @@ new_pointer(struct kiwmi_input *input, struct wlr_input_device *device)
 }
 
 static void
+new_touch(struct kiwmi_input *input, struct wlr_input_device *device)
+{
+    wlr_cursor_attach_input_device(input->cursor->cursor, device);
+    input->touchpads++;
+}
+
+static void
 new_keyboard(struct kiwmi_input *input, struct wlr_input_device *device)
 {
     struct kiwmi_server *server = wl_container_of(input, server, input);
@@ -61,6 +68,9 @@ new_input_notify(struct wl_listener *listener, void *data)
     case WLR_INPUT_DEVICE_POINTER:
         new_pointer(input, device);
         break;
+    case WLR_INPUT_DEVICE_TOUCH:
+        new_touch(input, device);
+        break;
     case WLR_INPUT_DEVICE_KEYBOARD:
         new_keyboard(input, device);
         break;
@@ -72,6 +82,9 @@ new_input_notify(struct wl_listener *listener, void *data)
     uint32_t caps = WL_SEAT_CAPABILITY_POINTER;
     if (!wl_list_empty(&input->keyboards)) {
         caps |= WL_SEAT_CAPABILITY_KEYBOARD;
+    }
+    if(input->touchpads) {
+	caps |= WL_SEAT_CAPABILITY_TOUCH;
     }
 
     wlr_seat_set_capabilities(input->seat->seat, caps);
