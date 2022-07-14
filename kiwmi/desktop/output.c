@@ -27,6 +27,7 @@
 #include "desktop/view.h"
 #include "input/cursor.h"
 #include "input/input.h"
+#include "input/pointer.h"
 #include "server.h"
 
 static void
@@ -355,8 +356,16 @@ new_output_notify(struct wl_listener *listener, void *data)
     wlr_output->data = output;
 
     struct kiwmi_cursor *cursor = server->input.cursor;
-
     wlr_xcursor_manager_load(cursor->xcursor_manager, wlr_output->scale);
+
+    struct kiwmi_pointer *pointer;
+    wl_list_for_each (pointer, &server->input.pointers, link) {
+        if (pointer->device->output_name
+            && strcmp(pointer->device->output_name, wlr_output->name) == 0) {
+            wlr_cursor_map_input_to_output(
+                cursor->cursor, pointer->device, wlr_output);
+        }
+    }
 
     wl_list_insert(&desktop->outputs, &output->link);
 

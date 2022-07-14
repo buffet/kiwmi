@@ -19,13 +19,21 @@
 #include "desktop/desktop.h"
 #include "input/cursor.h"
 #include "input/keyboard.h"
+#include "input/pointer.h"
 #include "input/seat.h"
 #include "server.h"
 
 static void
 new_pointer(struct kiwmi_input *input, struct wlr_input_device *device)
 {
-    wlr_cursor_attach_input_device(input->cursor->cursor, device);
+    struct kiwmi_server *server = wl_container_of(input, server, input);
+
+    struct kiwmi_pointer *pointer = pointer_create(server, device);
+    if (!pointer) {
+        return;
+    }
+
+    wl_list_insert(&input->pointers, &pointer->link);
 }
 
 static void
@@ -86,6 +94,7 @@ input_init(struct kiwmi_input *input)
     }
 
     wl_list_init(&input->keyboards);
+    wl_list_init(&input->pointers);
 
     input->new_input.notify = new_input_notify;
     wl_signal_add(&server->backend->events.new_input, &input->new_input);
@@ -99,9 +108,15 @@ void
 input_fini(struct kiwmi_input *input)
 {
     struct kiwmi_keyboard *keyboard;
-    struct kiwmi_keyboard *tmp;
-    wl_list_for_each_safe (keyboard, tmp, &input->keyboards, link) {
+    struct kiwmi_keyboard *tmp_keyboard;
+    wl_list_for_each_safe (keyboard, tmp_keyboard, &input->keyboards, link) {
         keyboard_destroy(keyboard);
+    }
+
+    struct kiwmi_pointer *pointer;
+    struct kiwmi_pointer *tmp_pointer;
+    wl_list_for_each_safe (pointer, tmp_pointer, &input->pointers, link) {
+        pointer_destroy(pointer);
     }
 
     seat_destroy(input->seat);
