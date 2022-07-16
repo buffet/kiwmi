@@ -147,9 +147,8 @@ view_begin_interactive(
     struct kiwmi_cursor *cursor   = server->input.cursor;
     struct wlr_surface *focused_surface =
         server->input.seat->seat->pointer_state.focused_surface;
-    struct wlr_surface *wlr_surface = view->wlr_surface;
 
-    if (wlr_surface != focused_surface) {
+    if (view->wlr_surface != wlr_surface_get_root_surface(focused_surface)) {
         return;
     }
 
