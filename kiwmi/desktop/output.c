@@ -194,11 +194,7 @@ output_frame_notify(struct wl_listener *listener, void *data)
     struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
     struct wlr_renderer *renderer = server->renderer;
 
-    int width;
-    int height;
-    wlr_output_effective_resolution(wlr_output, &width, &height);
-
-    wlr_renderer_begin(renderer, width, height);
+    wlr_renderer_begin(renderer, wlr_output->width, wlr_output->height);
     wlr_renderer_clear(renderer, desktop->bg_color);
 
     double output_lx = 0;
