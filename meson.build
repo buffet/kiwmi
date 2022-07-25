@@ -36,9 +36,16 @@ else
     error('git is required to make the version string')
   endif
 
-  git_commit_hash = run_command([git.path(), 'describe', '--always', '--tags']).stdout().strip()
-  git_branch = run_command([git.path(), 'rev-parse', '--abbrev-ref', 'HEAD']).stdout().strip()
-  version = '"@0@ (" __DATE__ ", branch \'@1@\')"'.format(git_commit_hash, git_branch)
+  git_commit_hash = run_command([git.path(), 'describe', '--always', '--tags'], check: false)
+  git_branch = run_command([git.path(), 'rev-parse', '--abbrev-ref', 'HEAD'], check: false)
+  if git_commit_hash.returncode() != 0 or git_branch.returncode() != 0
+    error('need the git directory to make the version string')
+  endif
+
+  version = '"@0@ (" __DATE__ ", branch \'@1@\')"'.format(
+    git_commit_hash.stdout().strip(),
+    git_branch.stdout().strip(),
+  )
 endif
 add_project_arguments('-DKIWMI_VERSION=@0@'.format(version), language: 'c')
 
