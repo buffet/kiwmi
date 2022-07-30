@@ -65,10 +65,12 @@ l_kiwmi_server_bg_color(lua_State *L)
         return luaL_argerror(L, 2, "not a valid color");
     }
 
-    server->desktop.bg_color[0] = color[0];
-    server->desktop.bg_color[1] = color[1];
-    server->desktop.bg_color[2] = color[2];
-    // ignore alpha
+    // Ignore alpha (color channels are already premultiplied)
+    color[3] = 1.0f;
+
+    wlr_scene_rect_set_color(server->desktop.background_rect, color);
+    bool black = color[0] == 0.0f && color[1] == 0.0f && color[2] == 0.0f;
+    wlr_scene_node_set_enabled(&server->desktop.background_rect->node, !black);
 
     return 0;
 }
@@ -308,12 +310,7 @@ l_kiwmi_server_view_at(lua_State *L)
     double lx = lua_tonumber(L, 2);
     double ly = lua_tonumber(L, 3);
 
-    struct wlr_surface *surface;
-    double sx;
-    double sy;
-
-    struct kiwmi_view *view =
-        view_at(&server->desktop, lx, ly, &surface, &sx, &sy);
+    struct kiwmi_view *view = view_at(&server->desktop, lx, ly);
 
     if (view) {
         lua_pushcfunction(L, luaK_kiwmi_view_new);

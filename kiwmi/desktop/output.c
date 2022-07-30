@@ -18,6 +18,7 @@
 #include <wlr/types/wlr_matrix.h>
 #include <wlr/types/wlr_output.h>
 #include <wlr/types/wlr_output_layout.h>
+#include <wlr/types/wlr_scene.h>
 #include <wlr/types/wlr_surface.h>
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/util/log.h>
@@ -31,215 +32,23 @@
 #include "server.h"
 
 static void
-render_layer_surface(struct wlr_surface *surface, int x, int y, void *data)
-{
-    struct kiwmi_render_data *rdata = data;
-    struct wlr_output *wlr_output   = rdata->output;
-    struct wlr_box *geom            = rdata->data;
-
-    struct wlr_texture *texture = wlr_surface_get_texture(surface);
-    if (!texture) {
-        return;
-    }
-
-    int ox = x + geom->x;
-    int oy = y + geom->y;
-
-    struct wlr_box box = {
-        .x      = ox * wlr_output->scale,
-        .y      = oy * wlr_output->scale,
-        .width  = surface->current.width * wlr_output->scale,
-        .height = surface->current.height * wlr_output->scale,
-    };
-
-    float matrix[9];
-    enum wl_output_transform transform =
-        wlr_output_transform_invert(surface->current.transform);
-    wlr_matrix_project_box(
-        matrix, &box, transform, 0, wlr_output->transform_matrix);
-
-    wlr_render_texture_with_matrix(rdata->renderer, texture, matrix, 1);
-
-    wlr_surface_send_frame_done(surface, rdata->when);
-}
-
-static void
-render_layer(struct wl_list *layer, struct kiwmi_render_data *rdata)
-{
-    struct kiwmi_layer *surface;
-    wl_list_for_each (surface, layer, link) {
-        rdata->data = &surface->geom;
-
-        wlr_layer_surface_v1_for_each_surface(
-            surface->layer_surface, render_layer_surface, rdata);
-    }
-}
-
-static void
-send_frame_done_to_layer_surface(
-    struct wlr_surface *surface,
-    int UNUSED(x),
-    int UNUSED(y),
-    void *data)
-{
-    struct timespec *now = data;
-    wlr_surface_send_frame_done(surface, now);
-}
-
-static void
-send_frame_done_to_layer(struct wl_list *layer, struct timespec *now)
-{
-    struct kiwmi_layer *surface;
-    wl_list_for_each (surface, layer, link) {
-        wlr_layer_surface_v1_for_each_surface(
-            surface->layer_surface, send_frame_done_to_layer_surface, now);
-    }
-}
-
-static void
-render_surface(struct wlr_surface *surface, int sx, int sy, void *data)
-{
-    struct kiwmi_render_data *rdata = data;
-    struct kiwmi_view *view         = rdata->data;
-    struct wlr_output *wlr_output   = rdata->output;
-
-    struct wlr_texture *texture = wlr_surface_get_texture(surface);
-    if (!texture) {
-        return;
-    }
-
-    int ox = rdata->output_lx + sx + view->x - view->geom.x;
-    int oy = rdata->output_ly + sy + view->y - view->geom.y;
-
-    struct wlr_box box = {
-        .x      = ox * wlr_output->scale,
-        .y      = oy * wlr_output->scale,
-        .width  = surface->current.width * wlr_output->scale,
-        .height = surface->current.height * wlr_output->scale,
-    };
-
-    float matrix[9];
-    enum wl_output_transform transform =
-        wlr_output_transform_invert(surface->current.transform);
-    wlr_matrix_project_box(
-        matrix, &box, transform, 0, wlr_output->transform_matrix);
-
-    wlr_render_texture_with_matrix(rdata->renderer, texture, matrix, 1);
-
-    wlr_surface_send_frame_done(surface, rdata->when);
-}
-
-static void
-send_frame_done_to_surface(
-    struct wlr_surface *surface,
-    int UNUSED(sx),
-    int UNUSED(sy),
-    void *data)
-{
-    struct timespec *now = data;
-    wlr_surface_send_frame_done(surface, now);
-}
-
-static bool
-render_cursors(struct wlr_output *wlr_output)
-{
-    pixman_region32_t damage;
-    pixman_region32_init(&damage);
-    wlr_output_render_software_cursors(wlr_output, &damage);
-    bool damaged = pixman_region32_not_empty(&damage);
-    pixman_region32_fini(&damage);
-
-    return damaged;
-}
-
-static void
 output_frame_notify(struct wl_listener *listener, void *data)
 {
     struct kiwmi_output *output   = wl_container_of(listener, output, frame);
     struct wlr_output *wlr_output = data;
-    struct kiwmi_desktop *desktop = output->desktop;
+
+    struct wlr_scene_output *scene_output =
+        wlr_scene_get_scene_output(output->desktop->scene, wlr_output);
+
+    if (!scene_output) {
+        return;
+    }
+
+    wlr_scene_output_commit(scene_output);
 
     struct timespec now;
     clock_gettime(CLOCK_MONOTONIC, &now);
-
-    int buffer_age;
-    if (!wlr_output_attach_render(wlr_output, &buffer_age)) {
-        wlr_log(WLR_ERROR, "Failed to attach renderer to output");
-        return;
-    }
-
-    if (output->damaged == 0 && buffer_age > 0) {
-        send_frame_done_to_layer(
-            &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND], &now);
-        send_frame_done_to_layer(
-            &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM], &now);
-        send_frame_done_to_layer(
-            &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], &now);
-        send_frame_done_to_layer(
-            &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], &now);
-
-        struct kiwmi_view *view;
-        wl_list_for_each (view, &desktop->views, link) {
-            view_for_each_surface(view, send_frame_done_to_surface, &now);
-        }
-
-        if (render_cursors(wlr_output)) {
-            output_damage(output);
-        }
-
-        wlr_output_commit(wlr_output);
-        return;
-    }
-
-    struct wlr_output_layout *output_layout = desktop->output_layout;
-    struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
-    struct wlr_renderer *renderer = server->renderer;
-
-    wlr_renderer_begin(renderer, wlr_output->width, wlr_output->height);
-    wlr_renderer_clear(renderer, desktop->bg_color);
-
-    double output_lx = 0;
-    double output_ly = 0;
-    wlr_output_layout_output_coords(
-        output_layout, wlr_output, &output_lx, &output_ly);
-
-    struct kiwmi_render_data rdata = {
-        .output    = output->wlr_output,
-        .output_lx = output_lx,
-        .output_ly = output_ly,
-        .renderer  = renderer,
-        .when      = &now,
-    };
-
-    render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND], &rdata);
-    render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM], &rdata);
-
-    struct kiwmi_view *view;
-    wl_list_for_each_reverse (view, &desktop->views, link) {
-        if (view->hidden || !view->mapped) {
-            continue;
-        }
-
-        rdata.data = view;
-
-        wl_signal_emit(&view->events.pre_render, &rdata);
-        view_for_each_surface(view, render_surface, &rdata);
-        wl_signal_emit(&view->events.post_render, &rdata);
-    }
-
-    render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], &rdata);
-    render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], &rdata);
-
-    bool damaged = render_cursors(wlr_output);
-    wlr_renderer_end(renderer);
-
-    if (damaged) {
-        output_damage(output);
-    } else {
-        --output->damaged;
-    }
-
-    wlr_output_commit(wlr_output);
+    wlr_scene_output_send_frame_done(scene_output, &now);
 }
 
 static void
@@ -250,7 +59,6 @@ output_commit_notify(struct wl_listener *listener, void *data)
 
     if (event->committed & WLR_OUTPUT_STATE_TRANSFORM) {
         arrange_layers(output);
-        output_damage(output);
 
         wl_signal_emit(&output->events.resize, output);
     }
@@ -261,12 +69,31 @@ output_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_output *output = wl_container_of(listener, output, destroy);
 
+    wl_signal_emit(&output->events.destroy, output);
+
+    int n_layers = sizeof(output->layers) / sizeof(output->layers[0]);
+    for (int i = 0; i < n_layers; i++) {
+        struct kiwmi_layer *layer;
+        struct kiwmi_layer *tmp;
+        wl_list_for_each_safe (layer, tmp, &output->layers[i], link) {
+            // Set output to NULL to avoid rearranging the remaining layers.
+            // Our impl requires that we remove the layer from the list.
+            layer->output = NULL;
+            wl_list_remove(&layer->link);
+            wlr_layer_surface_v1_destroy(layer->layer_surface);
+        }
+    }
+
+    if (output->desktop->scene) {
+        for (size_t i = 0; i < KIWMI_STRATA_COUNT; ++i) {
+            wlr_scene_node_destroy(&output->strata[i]->node);
+        }
+    }
+
     if (output->desktop->output_layout) {
         wlr_output_layout_remove(
             output->desktop->output_layout, output->wlr_output);
     }
-
-    wl_signal_emit(&output->events.destroy, output);
 
     wl_list_remove(&output->link);
     wl_list_remove(&output->frame.link);
@@ -285,7 +112,6 @@ output_mode_notify(struct wl_listener *listener, void *UNUSED(data))
     struct kiwmi_output *output = wl_container_of(listener, output, mode);
 
     arrange_layers(output);
-    output_damage(output);
 
     wl_signal_emit(&output->events.resize, output);
 }
@@ -315,8 +141,6 @@ output_create(struct wlr_output *wlr_output, struct kiwmi_desktop *desktop)
 
     output->mode.notify = output_mode_notify;
     wl_signal_add(&wlr_output->events.mode, &output->mode);
-
-    output_damage(output);
 
     return output;
 }
@@ -369,20 +193,51 @@ new_output_notify(struct wl_listener *listener, void *data)
 
     wlr_output_create_global(wlr_output);
 
-    size_t len_outputs = sizeof(output->layers) / sizeof(output->layers[0]);
-    for (size_t i = 0; i < len_outputs; ++i) {
+    size_t len_layers = sizeof(output->layers) / sizeof(output->layers[0]);
+    for (size_t i = 0; i < len_layers; ++i) {
         wl_list_init(&output->layers[i]);
+    }
+
+    for (size_t i = 0; i < KIWMI_STRATA_COUNT; ++i) {
+        output->strata[i] = wlr_scene_tree_create(&desktop->strata[i]->node);
     }
 
     wl_signal_init(&output->events.destroy);
     wl_signal_init(&output->events.resize);
     wl_signal_init(&output->events.usable_area_change);
 
+    wl_list_insert(&desktop->outputs, &output->link);
+
+    wlr_output_layout_add_auto(desktop->output_layout, wlr_output);
+
     wl_signal_emit(&desktop->events.new_output, output);
 }
 
 void
-output_damage(struct kiwmi_output *output)
+output_layout_change_notify(struct wl_listener *listener, void *UNUSED(data))
 {
-    output->damaged = 2;
+    struct kiwmi_desktop *desktop =
+        wl_container_of(listener, desktop, output_layout_change);
+
+    struct wlr_box *ol_box =
+        wlr_output_layout_get_box(desktop->output_layout, NULL);
+    wlr_scene_node_set_position(
+        &desktop->background_rect->node, ol_box->x, ol_box->y);
+    wlr_scene_rect_set_size(
+        desktop->background_rect, ol_box->width, ol_box->height);
+
+    struct wlr_output_layout_output *ol_output;
+    wl_list_for_each (ol_output, &desktop->output_layout->outputs, link) {
+        struct kiwmi_output *output = ol_output->output->data;
+
+        struct wlr_box *box = wlr_output_layout_get_box(
+            desktop->output_layout, output->wlr_output);
+
+        for (size_t i = 0; i < KIWMI_STRATA_COUNT; ++i) {
+            if (output->strata[i]) {
+                wlr_scene_node_set_position(
+                    &output->strata[i]->node, box->x, box->y);
+            }
+        }
+    }
 }

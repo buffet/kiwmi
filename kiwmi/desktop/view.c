@@ -8,9 +8,11 @@
 #include "desktop/view.h"
 
 #include <wlr/types/wlr_cursor.h>
+#include <wlr/types/wlr_scene.h>
 #include <wlr/util/log.h>
 
 #include "desktop/output.h"
+#include "desktop/stratum.h"
 #include "input/cursor.h"
 #include "input/seat.h"
 #include "server.h"
@@ -20,17 +22,6 @@ view_close(struct kiwmi_view *view)
 {
     if (view->impl->close) {
         view->impl->close(view);
-    }
-}
-
-void
-view_for_each_surface(
-    struct kiwmi_view *view,
-    wlr_surface_iterator_func_t callback,
-    void *user_data)
-{
-    if (view->impl->for_each_surface) {
-        view->impl->for_each_surface(view, callback, user_data);
     }
 }
 
@@ -84,42 +75,21 @@ view_set_size(struct kiwmi_view *view, uint32_t width, uint32_t height)
 {
     if (view->impl->set_size) {
         view->impl->set_size(view, width, height);
-
-        struct kiwmi_view_child *child;
-        wl_list_for_each (child, &view->children, link) {
-            if (child->impl && child->impl->reconfigure) {
-                child->impl->reconfigure(child);
-            }
-        }
-
-        struct kiwmi_output *output;
-        wl_list_for_each (output, &view->desktop->outputs, link) {
-            output_damage(output);
-        }
     }
 }
 
 void
 view_set_pos(struct kiwmi_view *view, uint32_t x, uint32_t y)
 {
-    view->x = x;
-    view->y = y;
+    wlr_scene_node_set_position(&view->desktop_surface.tree->node, x, y);
+    wlr_scene_node_set_position(&view->desktop_surface.popups_tree->node, x, y);
 
-    struct kiwmi_view_child *child;
-    wl_list_for_each (child, &view->children, link) {
-        if (child->impl && child->impl->reconfigure) {
-            child->impl->reconfigure(child);
-        }
-    }
-
-    struct kiwmi_desktop *desktop = view->desktop;
-    struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
-    struct kiwmi_cursor *cursor   = server->input.cursor;
-    cursor_refresh_focus(cursor, NULL, NULL, NULL);
-
-    struct kiwmi_output *output;
-    wl_list_for_each (output, &desktop->outputs, link) {
-        output_damage(output);
+    int lx, ly; // unused
+    // If it is enabled (as well as all its parents)
+    if (wlr_scene_node_coords(&view->desktop_surface.tree->node, &lx, &ly)) {
+        struct kiwmi_server *server =
+            wl_container_of(view->desktop, server, desktop);
+        cursor_refresh_focus(server->input.cursor, NULL, NULL, NULL);
     }
 }
 
@@ -131,69 +101,39 @@ view_set_tiled(struct kiwmi_view *view, enum wlr_edges edges)
     }
 }
 
-struct wlr_surface *
-view_surface_at(
-    struct kiwmi_view *view,
-    double sx,
-    double sy,
-    double *sub_x,
-    double *sub_y)
+void
+view_set_hidden(struct kiwmi_view *view, bool hidden)
 {
-    if (view->impl->surface_at) {
-        return view->impl->surface_at(view, sx, sy, sub_x, sub_y);
+    if (!view->mapped) {
+        return;
     }
 
-    return NULL;
-}
+    wlr_scene_node_set_enabled(&view->desktop_surface.tree->node, !hidden);
+    wlr_scene_node_set_enabled(
+        &view->desktop_surface.popups_tree->node, !hidden);
 
-static bool
-surface_at(
-    struct kiwmi_view *view,
-    struct wlr_surface **surface,
-    double lx,
-    double ly,
-    double *sx,
-    double *sy)
-{
-    double view_sx = lx - view->x + view->geom.x;
-    double view_sy = ly - view->y + view->geom.y;
-
-    double _sx;
-    double _sy;
-    struct wlr_surface *_surface =
-        view_surface_at(view, view_sx, view_sy, &_sx, &_sy);
-
-    if (_surface) {
-        *sx      = _sx;
-        *sy      = _sy;
-        *surface = _surface;
-        return true;
+    struct kiwmi_server *server =
+        wl_container_of(view->desktop, server, desktop);
+    struct kiwmi_seat *seat = server->input.seat;
+    if (seat->focused_view == view) {
+        seat->focused_view = NULL;
     }
-
-    return false;
 }
 
 struct kiwmi_view *
-view_at(
-    struct kiwmi_desktop *desktop,
-    double lx,
-    double ly,
-    struct wlr_surface **surface,
-    double *sx,
-    double *sy)
+view_at(struct kiwmi_desktop *desktop, double lx, double ly)
 {
-    struct kiwmi_view *view;
-    wl_list_for_each (view, &desktop->views, link) {
-        if (view->hidden || !view->mapped) {
-            continue;
-        }
+    struct kiwmi_desktop_surface *desktop_surface =
+        desktop_surface_at(desktop, lx, ly);
 
-        if (surface_at(view, surface, lx, ly, sx, sy)) {
-            return view;
-        }
+    if (!desktop_surface
+        || desktop_surface->type != KIWMI_DESKTOP_SURFACE_VIEW) {
+        return NULL;
     }
 
-    return NULL;
+    struct kiwmi_view *view =
+        wl_container_of(desktop_surface, view, desktop_surface);
+    return view;
 }
 
 static void
@@ -220,17 +160,20 @@ view_begin_interactive(
     cursor->cursor_mode  = mode;
     cursor->grabbed.view = view;
 
+    int view_lx, view_ly;
+    desktop_surface_get_pos(&view->desktop_surface, &view_lx, &view_ly);
+
     if (mode == KIWMI_CURSOR_MOVE) {
-        cursor->grabbed.orig_x = cursor->cursor->x - view->x;
-        cursor->grabbed.orig_y = cursor->cursor->y - view->y;
+        cursor->grabbed.orig_x = cursor->cursor->x - view_lx;
+        cursor->grabbed.orig_y = cursor->cursor->y - view_ly;
     } else {
         cursor->grabbed.orig_x       = cursor->cursor->x;
         cursor->grabbed.orig_y       = cursor->cursor->y;
         cursor->grabbed.resize_edges = edges;
     }
 
-    cursor->grabbed.orig_geom.x      = view->x;
-    cursor->grabbed.orig_geom.y      = view->y;
+    cursor->grabbed.orig_geom.x      = view_lx;
+    cursor->grabbed.orig_geom.y      = view_ly;
     cursor->grabbed.orig_geom.width  = width;
     cursor->grabbed.orig_geom.height = height;
 }
@@ -247,30 +190,36 @@ view_resize(struct kiwmi_view *view, uint32_t edges)
     view_begin_interactive(view, KIWMI_CURSOR_RESIZE, edges);
 }
 
-/**
- * Creates a kiwmi_view_child for each subsurface of either the 'child' or the
- * 'view'. 'child' can be NULL, 'view' should never be.
- */
-void
-view_init_subsurfaces(struct kiwmi_view_child *child, struct kiwmi_view *view)
+static struct kiwmi_output *
+view_desktop_surface_get_output(struct kiwmi_desktop_surface *desktop_surface)
 {
-    struct wlr_surface *surface =
-        child ? child->wlr_surface : view->wlr_surface;
-    if (!surface) {
-        wlr_log(WLR_ERROR, "Attempting to init_subsurfaces without a surface");
-        return;
+    struct kiwmi_view *view =
+        wl_container_of(desktop_surface, view, desktop_surface);
+
+    int lx, ly;
+    desktop_surface_get_pos(&view->desktop_surface, &lx, &ly);
+
+    // Prefer view center
+    struct wlr_output *output = wlr_output_layout_output_at(
+        view->desktop->output_layout,
+        lx + view->geom.width / 2,
+        ly + view->geom.height / 2);
+    if (output) {
+        return (struct kiwmi_output *)output->data;
     }
 
-    struct wlr_subsurface *subsurface;
-    wl_list_for_each (
-        subsurface, &surface->current.subsurfaces_below, current.link) {
-        view_child_subsurface_create(child, view, subsurface);
+    // Retry top-left corner
+    output = wlr_output_layout_output_at(view->desktop->output_layout, lx, ly);
+    if (output) {
+        return (struct kiwmi_output *)output->data;
     }
-    wl_list_for_each (
-        subsurface, &surface->current.subsurfaces_above, current.link) {
-        view_child_subsurface_create(child, view, subsurface);
-    }
+
+    return NULL;
 }
+
+static const struct kiwmi_desktop_surface_impl view_desktop_surface_impl = {
+    .get_output = view_desktop_surface_get_output,
+};
 
 struct kiwmi_view *
 view_create(
@@ -288,13 +237,10 @@ view_create(
     view->type       = type;
     view->impl       = impl;
     view->mapped     = false;
-    view->hidden     = true;
     view->decoration = NULL;
 
-    view->x = 0;
-    view->y = 0;
-
-    wl_list_init(&view->children);
+    view->desktop_surface.type = KIWMI_DESKTOP_SURFACE_VIEW;
+    view->desktop_surface.impl = &view_desktop_surface_impl;
 
     wl_signal_init(&view->events.unmap);
     wl_signal_init(&view->events.request_move);
@@ -302,202 +248,17 @@ view_create(
     wl_signal_init(&view->events.post_render);
     wl_signal_init(&view->events.pre_render);
 
+    view->desktop_surface.tree = wlr_scene_tree_create(
+        &view->desktop->strata[KIWMI_STRATUM_NORMAL]->node);
+    view->desktop_surface.popups_tree = wlr_scene_tree_create(
+        &view->desktop->strata[KIWMI_STRATUM_POPUPS]->node);
+
+    view_set_hidden(view, true);
+    wlr_scene_node_lower_to_bottom(&view->desktop_surface.tree->node);
+    wlr_scene_node_lower_to_bottom(&view->desktop_surface.popups_tree->node);
+
+    wlr_scene_node_set_position(&view->desktop_surface.tree->node, 0, 0);
+    wlr_scene_node_set_position(&view->desktop_surface.popups_tree->node, 0, 0);
+
     return view;
-}
-
-bool
-view_child_is_mapped(struct kiwmi_view_child *child)
-{
-    if (!child->mapped) {
-        return false;
-    }
-
-    struct kiwmi_view_child *parent = child->parent;
-    while (parent) {
-        if (!parent->mapped) {
-            return false;
-        }
-        parent = parent->parent;
-    }
-
-    return child->view->mapped;
-}
-
-void
-view_child_damage(struct kiwmi_view_child *child)
-{
-    // Note for later: this is supposed to damage the child and all subchildren
-    struct kiwmi_output *output;
-    wl_list_for_each (output, &child->view->desktop->outputs, link) {
-        output_damage(output);
-    }
-}
-
-void
-view_child_destroy(struct kiwmi_view_child *child)
-{
-    bool visible = view_child_is_mapped(child) && !child->view->hidden;
-    if (visible) {
-        view_child_damage(child);
-    }
-
-    wl_list_remove(&child->link);
-    child->parent = NULL;
-
-    struct kiwmi_view_child *subchild, *tmpchild;
-    wl_list_for_each_safe (subchild, tmpchild, &child->children, link) {
-        subchild->mapped = false;
-        view_child_destroy(subchild);
-    }
-
-    wl_list_remove(&child->commit.link);
-    wl_list_remove(&child->map.link);
-    wl_list_remove(&child->unmap.link);
-    wl_list_remove(&child->new_popup.link);
-    wl_list_remove(&child->new_subsurface.link);
-    wl_list_remove(&child->surface_destroy.link);
-    wl_list_remove(&child->extension_destroy.link);
-
-    free(child);
-}
-
-static void
-view_child_subsurface_extension_destroy_notify(
-    struct wl_listener *listener,
-    void *UNUSED(data))
-{
-    struct kiwmi_view_child *child =
-        wl_container_of(listener, child, extension_destroy);
-    view_child_destroy(child);
-}
-
-static void
-view_child_surface_destroy_notify(
-    struct wl_listener *listener,
-    void *UNUSED(data))
-{
-    struct kiwmi_view_child *child =
-        wl_container_of(listener, child, surface_destroy);
-    view_child_destroy(child);
-}
-
-static void
-view_child_commit_notify(struct wl_listener *listener, void *UNUSED(data))
-{
-    struct kiwmi_view_child *child = wl_container_of(listener, child, commit);
-    if (view_child_is_mapped(child)) {
-        view_child_damage(child);
-    }
-}
-
-static void
-view_child_new_subsurface_notify(struct wl_listener *listener, void *data)
-{
-    struct kiwmi_view_child *child =
-        wl_container_of(listener, child, new_subsurface);
-    struct wlr_subsurface *subsurface = data;
-    view_child_subsurface_create(child, child->view, subsurface);
-}
-
-static void
-view_child_map_notify(struct wl_listener *listener, void *UNUSED(data))
-{
-    struct kiwmi_view_child *child = wl_container_of(listener, child, map);
-    child->mapped                  = true;
-    if (view_child_is_mapped(child)) {
-        view_child_damage(child);
-    }
-}
-
-static void
-view_child_unmap_notify(struct wl_listener *listener, void *UNUSED(data))
-{
-    struct kiwmi_view_child *child = wl_container_of(listener, child, unmap);
-    if (view_child_is_mapped(child)) {
-        view_child_damage(child);
-    }
-    child->mapped = false;
-}
-
-struct kiwmi_view_child *
-view_child_create(
-    struct kiwmi_view_child *parent,
-    struct kiwmi_view *view,
-    struct wlr_surface *wlr_surface,
-    enum kiwmi_view_child_type type,
-    const struct kiwmi_view_child_impl *impl)
-{
-    struct kiwmi_view_child *child = calloc(1, sizeof(*child));
-    if (!child) {
-        wlr_log(WLR_ERROR, "Failed to allocate view_child");
-        return NULL;
-    }
-
-    child->type        = type;
-    child->impl        = impl;
-    child->view        = view;
-    child->wlr_surface = wlr_surface;
-    child->mapped      = false;
-
-    if (parent) {
-        child->parent = parent;
-        wl_list_insert(&parent->children, &child->link);
-    } else {
-        wl_list_insert(&view->children, &child->link);
-    }
-
-    wl_list_init(&child->children);
-
-    child->commit.notify = view_child_commit_notify;
-    wl_signal_add(&wlr_surface->events.commit, &child->commit);
-
-    child->map.notify   = view_child_map_notify;
-    child->unmap.notify = view_child_unmap_notify;
-
-    // wlr_surface doesn't have these events, but its extensions usually do
-    wl_list_init(&child->map.link);
-    wl_list_init(&child->unmap.link);
-
-    child->new_subsurface.notify = view_child_new_subsurface_notify;
-    wl_signal_add(&wlr_surface->events.new_subsurface, &child->new_subsurface);
-
-    child->surface_destroy.notify = view_child_surface_destroy_notify;
-    wl_signal_add(&wlr_surface->events.destroy, &child->surface_destroy);
-
-    // Possibly unused
-    wl_list_init(&child->new_popup.link);
-    wl_list_init(&child->extension_destroy.link);
-
-    view_init_subsurfaces(child, child->view);
-
-    return child;
-}
-
-struct kiwmi_view_child *
-view_child_subsurface_create(
-    struct kiwmi_view_child *parent,
-    struct kiwmi_view *view,
-    struct wlr_subsurface *subsurface)
-{
-    struct kiwmi_view_child *child = view_child_create(
-        parent, view, subsurface->surface, KIWMI_VIEW_CHILD_SUBSURFACE, NULL);
-    if (!child) {
-        return NULL;
-    }
-
-    child->wlr_subsurface = subsurface;
-    child->mapped         = subsurface->mapped;
-
-    if (view_child_is_mapped(child)) {
-        view_child_damage(child);
-    }
-
-    wl_signal_add(&subsurface->events.map, &child->map);
-    wl_signal_add(&subsurface->events.unmap, &child->unmap);
-
-    child->extension_destroy.notify =
-        view_child_subsurface_extension_destroy_notify;
-    wl_signal_add(&subsurface->events.destroy, &child->extension_destroy);
-
-    return child;
 }

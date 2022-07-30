@@ -15,7 +15,9 @@
 #include <wlr/util/log.h>
 
 #include "desktop/desktop.h"
+#include "desktop/desktop_surface.h"
 #include "desktop/output.h"
+#include "desktop/stratum.h"
 #include "input/seat.h"
 #include "server.h"
 
@@ -24,12 +26,17 @@ kiwmi_layer_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_layer *layer = wl_container_of(listener, layer, destroy);
 
-    wl_list_remove(&layer->link);
+    wlr_scene_node_destroy(&layer->desktop_surface.tree->node);
+    wlr_scene_node_destroy(&layer->desktop_surface.popups_tree->node);
+
     wl_list_remove(&layer->destroy.link);
     wl_list_remove(&layer->map.link);
     wl_list_remove(&layer->unmap.link);
 
-    arrange_layers(layer->output);
+    if (layer->output != NULL) {
+        wl_list_remove(&layer->link);
+        arrange_layers(layer->output);
+    }
 
     free(layer);
 }
@@ -40,25 +47,21 @@ kiwmi_layer_commit_notify(struct wl_listener *listener, void *UNUSED(data))
     struct kiwmi_layer *layer   = wl_container_of(listener, layer, commit);
     struct kiwmi_output *output = layer->output;
 
-    struct wlr_box old_geom = layer->geom;
-
-    if (layer->layer_surface->current.committed != 0) {
-        arrange_layers(output);
-    }
-
-    bool layer_changed = layer->layer != layer->layer_surface->current.layer;
-    bool geom_changed  = memcmp(&old_geom, &layer->geom, sizeof(old_geom)) != 0;
-    bool buffer_changed = pixman_region32_not_empty(
-        &layer->layer_surface->surface->buffer_damage);
-
-    if (layer_changed) {
+    if (layer->layer != layer->layer_surface->current.layer) {
         wl_list_remove(&layer->link);
         layer->layer = layer->layer_surface->current.layer;
         wl_list_insert(&output->layers[layer->layer], &layer->link);
+
+        enum kiwmi_stratum new_stratum =
+            stratum_from_layer_shell_layer(layer->layer);
+
+        wlr_scene_node_reparent(
+            &layer->desktop_surface.tree->node,
+            &output->strata[new_stratum]->node);
     }
 
-    if (buffer_changed || layer_changed || geom_changed) {
-        output_damage(layer->output);
+    if (layer->layer_surface->current.committed != 0) {
+        arrange_layers(output);
     }
 }
 
@@ -67,7 +70,10 @@ kiwmi_layer_map_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_layer *layer = wl_container_of(listener, layer, map);
 
-    output_damage(layer->output);
+    wlr_scene_node_set_enabled(&layer->desktop_surface.tree->node, true);
+    wlr_scene_node_set_enabled(&layer->desktop_surface.popups_tree->node, true);
+
+    arrange_layers(layer->output);
 }
 
 static void
@@ -75,7 +81,11 @@ kiwmi_layer_unmap_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_layer *layer = wl_container_of(listener, layer, unmap);
 
-    output_damage(layer->output);
+    wlr_scene_node_set_enabled(&layer->desktop_surface.tree->node, false);
+    wlr_scene_node_set_enabled(
+        &layer->desktop_surface.popups_tree->node, false);
+
+    arrange_layers(layer->output);
 }
 
 static void
@@ -241,7 +251,14 @@ arrange_layer(
             continue;
         }
 
-        layer->geom = arranged_area;
+        wlr_scene_node_set_position(
+            &layer->desktop_surface.tree->node,
+            arranged_area.x,
+            arranged_area.y);
+        wlr_scene_node_set_position(
+            &layer->desktop_surface.popups_tree->node,
+            arranged_area.x,
+            arranged_area.y);
 
         apply_exclusive(
             usable_area,
@@ -343,35 +360,17 @@ arrange_layers(struct kiwmi_output *output)
     seat_focus_layer(seat, topmost);
 }
 
-struct kiwmi_layer *
-layer_at(
-    struct wl_list *layers,
-    struct wlr_surface **surface,
-    double ox,
-    double oy,
-    double *sx,
-    double *sy)
+static struct kiwmi_output *
+layer_desktop_surface_get_output(struct kiwmi_desktop_surface *desktop_surface)
 {
-    struct kiwmi_layer *layer;
-    wl_list_for_each_reverse (layer, layers, link) {
-        double layer_sx = ox - layer->geom.x;
-        double layer_sy = oy - layer->geom.y;
-
-        double _sx;
-        double _sy;
-        struct wlr_surface *_surface = wlr_layer_surface_v1_surface_at(
-            layer->layer_surface, layer_sx, layer_sy, &_sx, &_sy);
-
-        if (_surface) {
-            *sx      = _sx;
-            *sy      = _sy;
-            *surface = _surface;
-            return layer;
-        }
-    }
-
-    return NULL;
+    struct kiwmi_layer *layer =
+        wl_container_of(desktop_surface, layer, desktop_surface);
+    return layer->output;
 }
+
+static const struct kiwmi_desktop_surface_impl layer_desktop_surface_impl = {
+    .get_output = layer_desktop_surface_get_output,
+};
 
 void
 layer_shell_new_surface_notify(struct wl_listener *listener, void *data)
@@ -413,6 +412,9 @@ layer_shell_new_surface_notify(struct wl_listener *listener, void *data)
     layer->output        = output;
     layer->layer         = layer_surface->current.layer;
 
+    layer->desktop_surface.type = KIWMI_DESKTOP_SURFACE_LAYER;
+    layer->desktop_surface.impl = &layer_desktop_surface_impl;
+
     layer->destroy.notify = kiwmi_layer_destroy_notify;
     wl_signal_add(&layer_surface->events.destroy, &layer->destroy);
 
@@ -425,10 +427,25 @@ layer_shell_new_surface_notify(struct wl_listener *listener, void *data)
     layer->unmap.notify = kiwmi_layer_unmap_notify;
     wl_signal_add(&layer_surface->events.unmap, &layer->unmap);
 
+    layer_surface->data = layer;
+
+    enum kiwmi_stratum stratum = stratum_from_layer_shell_layer(layer->layer);
+
+    layer->desktop_surface.tree =
+        wlr_scene_tree_create(&output->strata[stratum]->node);
+    layer->desktop_surface.popups_tree =
+        wlr_scene_tree_create(&output->strata[KIWMI_STRATUM_POPUPS]->node);
+    layer->desktop_surface.surface_node = wlr_scene_subsurface_tree_create(
+        &layer->desktop_surface.tree->node, layer->layer_surface->surface);
+
+    wlr_scene_node_set_enabled(&layer->desktop_surface.tree->node, false);
+    wlr_scene_node_set_enabled(
+        &layer->desktop_surface.popups_tree->node, false);
+
     wl_list_insert(&output->layers[layer->layer], &layer->link);
 
     // Temporarily set the layer's current state to pending
-    // So that we can easily arrange it
+    // so that we can easily arrange it
     struct wlr_layer_surface_v1_state old_state = layer_surface->current;
     layer_surface->current                      = layer_surface->pending;
     arrange_layers(output);

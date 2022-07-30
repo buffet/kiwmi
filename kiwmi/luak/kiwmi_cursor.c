@@ -73,17 +73,8 @@ l_kiwmi_cursor_view_at_pos(lua_State *L)
     struct kiwmi_cursor *cursor = obj->object;
     struct kiwmi_server *server = cursor->server;
 
-    struct wlr_surface *surface;
-    double sx;
-    double sy;
-
-    struct kiwmi_view *view = view_at(
-        &server->desktop,
-        cursor->cursor->x,
-        cursor->cursor->y,
-        &surface,
-        &sx,
-        &sy);
+    struct kiwmi_view *view =
+        view_at(&server->desktop, cursor->cursor->x, cursor->cursor->y);
 
     if (view) {
         lua_pushcfunction(L, luaK_kiwmi_view_new);
