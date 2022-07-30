@@ -31,7 +31,7 @@ popup_get_desktop_surface(struct wlr_xdg_popup *popup)
             case WLR_XDG_SURFACE_ROLE_POPUP:
                 parent = xdg_surface->popup->parent;
                 break;
-            case WLR_XDG_SURFACE_ROLE_TOPLEVEL:
+            case WLR_XDG_SURFACE_ROLE_TOPLEVEL:;
                 struct kiwmi_view *view = xdg_surface->data;
                 return &view->desktop_surface;
             default:
