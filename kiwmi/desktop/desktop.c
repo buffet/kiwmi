@@ -17,6 +17,7 @@
 #include <wlr/types/wlr_export_dmabuf_v1.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_output_layout.h>
+#include <wlr/types/wlr_output_management_v1.h>
 #include <wlr/types/wlr_xdg_decoration_v1.h>
 #include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
@@ -78,6 +79,14 @@ desktop_init(struct kiwmi_desktop *desktop)
     wl_signal_init(&desktop->events.new_output);
     wl_signal_init(&desktop->events.view_map);
     wl_signal_init(&desktop->events.request_active_output);
+
+    desktop->output_manager = wlr_output_manager_v1_create(server->wl_display);
+    desktop->output_manager_apply.notify = output_manager_apply_notify;
+    wl_signal_add(
+        &desktop->output_manager->events.apply, &desktop->output_manager_apply);
+    desktop->output_manager_test.notify = output_manager_test_notify;
+    wl_signal_add(
+        &desktop->output_manager->events.test, &desktop->output_manager_test);
 
     return true;
 }
