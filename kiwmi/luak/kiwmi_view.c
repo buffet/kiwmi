@@ -561,6 +561,32 @@ kiwmi_view_on_request_resize_notify(struct wl_listener *listener, void *data)
     }
 }
 
+static void
+kiwmi_view_on_set_title_notify(struct wl_listener *listener, void *data)
+{
+    struct kiwmi_lua_callback *lc = wl_container_of(listener, lc, listener);
+    struct kiwmi_server *server   = lc->server;
+    lua_State *L                  = server->lua->L;
+    struct kiwmi_view *view       = data;
+
+    lua_rawgeti(L, LUA_REGISTRYINDEX, lc->callback_ref);
+
+    lua_pushcfunction(L, luaK_kiwmi_view_new);
+    lua_pushlightuserdata(L, server->lua);
+    lua_pushlightuserdata(L, view);
+
+    if (lua_pcall(L, 2, 1, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+        return;
+    }
+
+    if (lua_pcall(L, 1, 0, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        lua_pop(L, 1);
+    }
+}
+
 static int
 l_kiwmi_view_on_destroy(lua_State *L)
 {
@@ -665,12 +691,43 @@ l_kiwmi_view_on_request_resize(lua_State *L)
     return 0;
 }
 
+static int
+l_kiwmi_view_on_set_title(lua_State *L)
+{
+    struct kiwmi_object *obj =
+        *(struct kiwmi_object **)luaL_checkudata(L, 1, "kiwmi_view");
+    luaL_checktype(L, 2, LUA_TFUNCTION);
+
+    if (!obj->valid) {
+        return luaL_error(L, "kiwmi_view no longer valid");
+    }
+
+    struct kiwmi_view *view       = obj->object;
+    struct kiwmi_desktop *desktop = view->desktop;
+    struct kiwmi_server *server   = wl_container_of(desktop, server, desktop);
+
+    lua_pushcfunction(L, luaK_kiwmi_lua_callback_new);
+    lua_pushlightuserdata(L, server);
+    lua_pushvalue(L, 2);
+    lua_pushlightuserdata(L, kiwmi_view_on_set_title_notify);
+    lua_pushlightuserdata(L, &view->events.set_title);
+    lua_pushlightuserdata(L, obj);
+
+    if (lua_pcall(L, 5, 0, 0)) {
+        wlr_log(WLR_ERROR, "%s", lua_tostring(L, -1));
+        return 0;
+    }
+
+    return 0;
+}
+
 static const luaL_Reg kiwmi_view_events[] = {
     {"destroy", l_kiwmi_view_on_destroy},
     {"post_render", l_kiwmi_view_on_post_render},
     {"pre_render", l_kiwmi_view_on_pre_render},
     {"request_move", l_kiwmi_view_on_request_move},
     {"request_resize", l_kiwmi_view_on_request_resize},
+    {"set_title", l_kiwmi_view_on_set_title},
     {NULL, NULL},
 };
 

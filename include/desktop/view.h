@@ -51,6 +51,7 @@ struct kiwmi_view {
     struct wl_listener destroy;
     struct wl_listener request_move;
     struct wl_listener request_resize;
+    struct wl_listener set_title;
 
     bool mapped;
 
@@ -60,6 +61,7 @@ struct kiwmi_view {
         struct wl_signal request_resize;
         struct wl_signal post_render;
         struct wl_signal pre_render;
+        struct wl_signal set_title;
     } events;
 
     struct kiwmi_xdg_decoration *decoration;

@@ -128,6 +128,13 @@ xdg_toplevel_request_resize_notify(struct wl_listener *listener, void *data)
 }
 
 static void
+xdg_toplevel_set_title_notify(struct wl_listener *listener, void *UNUSED(data))
+{
+    struct kiwmi_view *view = wl_container_of(listener, view, set_title);
+    wl_signal_emit(&view->events.set_title, view);
+}
+
+static void
 xdg_shell_view_close(struct kiwmi_view *view)
 {
     struct wlr_xdg_surface *surface = view->xdg_surface;
@@ -257,6 +264,9 @@ xdg_shell_new_surface_notify(struct wl_listener *listener, void *data)
         &xdg_surface->toplevel->events.request_resize, &view->request_resize);
 
     wlr_xdg_surface_get_geometry(view->xdg_surface, &view->geom);
+
+    view->set_title.notify = xdg_toplevel_set_title_notify;
+    wl_signal_add(&xdg_surface->toplevel->events.set_title, &view->set_title);
 
     wl_list_insert(&desktop->views, &view->link);
 }
