@@ -20,6 +20,7 @@
 #include <wlr/types/wlr_gamma_control_v1.h>
 #include <wlr/types/wlr_primary_selection_v1.h>
 #include <wlr/types/wlr_screencopy_v1.h>
+#include <wlr/types/wlr_viewporter.h>
 #include <wlr/util/log.h>
 
 #include "luak/luak.h"
@@ -67,6 +68,7 @@ server_init(struct kiwmi_server *server, char *config_path)
     wlr_data_control_manager_v1_create(server->wl_display);
     wlr_gamma_control_manager_v1_create(server->wl_display);
     wlr_primary_selection_v1_device_manager_create(server->wl_display);
+    wlr_viewporter_create(server->wl_display);
 
     server->socket = wl_display_add_socket_auto(server->wl_display);
     if (!server->socket) {

@@ -83,6 +83,10 @@ seat_focus_view(struct kiwmi_seat *seat, struct kiwmi_view *view)
     // move view to front
     wl_list_remove(&view->link);
     wl_list_insert(&desktop->views, &view->link);
+
+    wlr_scene_node_raise_to_top(&view->desktop_surface.tree->node);
+    wlr_scene_node_raise_to_top(&view->desktop_surface.popups_tree->node);
+
     cursor_refresh_focus(seat->input->cursor, NULL, NULL, NULL);
 
     seat->focused_view = view;
@@ -110,14 +114,6 @@ request_set_cursor_notify(struct wl_listener *listener, void *data)
         wlr_log(
             WLR_DEBUG, "Ignoring request to set cursor on unfocused client");
         return;
-    }
-
-    struct kiwmi_input *input   = seat->input;
-    struct kiwmi_server *server = wl_container_of(input, server, input);
-
-    struct kiwmi_output *output;
-    wl_list_for_each (output, &server->desktop.outputs, link) {
-        output_damage(output);
     }
 
     wlr_cursor_set_surface(
