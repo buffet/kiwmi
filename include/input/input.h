@@ -16,6 +16,7 @@ struct kiwmi_input {
     struct wl_listener new_input;
     struct kiwmi_cursor *cursor;
     struct kiwmi_seat *seat;
+    int touchpads;
 
     struct {
         struct wl_signal keyboard_new;
