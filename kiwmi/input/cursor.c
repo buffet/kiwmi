@@ -15,7 +15,6 @@
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_pointer.h>
 #include <wlr/types/wlr_scene.h>
-#include <wlr/types/wlr_touch.h>
 #include <wlr/types/wlr_seat.h>
 #include <wlr/types/wlr_touch.h>
 #include <wlr/types/wlr_xcursor_manager.h>
@@ -144,7 +143,12 @@ cursor_touch_down_notify(struct wl_listener *listener, void *data)
     double ly = 1440 * event->y;
     double sx, sy;
 
-    (void)view_at(desktop, lx, ly, &surface, &sx, &sy);
+    struct wlr_scene_node *node_at =
+        wlr_scene_node_at(&desktop->scene->node, lx, ly, &sx, &sy);
+
+    if (node_at && node_at->type == WLR_SCENE_NODE_SURFACE) {
+        surface = wlr_scene_surface_from_node(node_at)->surface;
+    }
 
     /* we send the event to lua with 0..1 co-ordinates, because
      * it may not be over any surface
