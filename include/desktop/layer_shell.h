@@ -11,7 +11,7 @@
 #include <stdbool.h>
 
 #include <wayland-server.h>
-#include <wlr/types/wlr_surface.h>
+#include <wlr/types/wlr_compositor.h>
 #include <wlr/util/box.h>
 
 #include "desktop/desktop_surface.h"

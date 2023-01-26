@@ -102,7 +102,7 @@ cursor_motion_notify(struct wl_listener *listener, void *data)
     struct kiwmi_cursor *cursor =
         wl_container_of(listener, cursor, cursor_motion);
     struct kiwmi_server *server            = cursor->server;
-    struct wlr_event_pointer_motion *event = data;
+    struct wlr_pointer_motion_event *event = data;
 
     struct kiwmi_cursor_motion_event new_event = {
         .oldx = cursor->cursor->x,
@@ -110,7 +110,7 @@ cursor_motion_notify(struct wl_listener *listener, void *data)
     };
 
     wlr_cursor_move(
-        cursor->cursor, event->device, event->delta_x, event->delta_y);
+        cursor->cursor, &event->pointer->base, event->delta_x, event->delta_y);
 
     new_event.newx = cursor->cursor->x;
     new_event.newy = cursor->cursor->y;
@@ -126,14 +126,15 @@ cursor_motion_absolute_notify(struct wl_listener *listener, void *data)
     struct kiwmi_cursor *cursor =
         wl_container_of(listener, cursor, cursor_motion_absolute);
     struct kiwmi_server *server                     = cursor->server;
-    struct wlr_event_pointer_motion_absolute *event = data;
+    struct wlr_pointer_motion_absolute_event *event = data;
 
     struct kiwmi_cursor_motion_event new_event = {
         .oldx = cursor->cursor->x,
         .oldy = cursor->cursor->y,
     };
 
-    wlr_cursor_warp_absolute(cursor->cursor, event->device, event->x, event->y);
+    wlr_cursor_warp_absolute(
+        cursor->cursor, &event->pointer->base, event->x, event->y);
 
     new_event.newx = cursor->cursor->x;
     new_event.newy = cursor->cursor->y;
@@ -150,7 +151,7 @@ cursor_button_notify(struct wl_listener *listener, void *data)
         wl_container_of(listener, cursor, cursor_button);
     struct kiwmi_server *server            = cursor->server;
     struct kiwmi_input *input              = &server->input;
-    struct wlr_event_pointer_button *event = data;
+    struct wlr_pointer_button_event *event = data;
 
     struct kiwmi_cursor_button_event new_event = {
         .wlr_event = event,
@@ -176,10 +177,10 @@ cursor_axis_notify(struct wl_listener *listener, void *data)
         wl_container_of(listener, cursor, cursor_axis);
     struct kiwmi_server *server          = cursor->server;
     struct kiwmi_input *input            = &server->input;
-    struct wlr_event_pointer_axis *event = data;
+    struct wlr_pointer_axis_event *event = data;
 
     struct kiwmi_cursor_scroll_event new_event = {
-        .device_name = event->device->name,
+        .device_name = event->pointer->base.name,
         .is_vertical = event->orientation == WLR_AXIS_ORIENTATION_VERTICAL,
         .length      = event->delta,
         .handled     = false,
@@ -290,11 +291,21 @@ cursor_refresh_focus(
     double sy;
 
     struct wlr_scene_node *node_at = wlr_scene_node_at(
-        &desktop->scene->node, cursor->cursor->x, cursor->cursor->y, &sx, &sy);
+        &desktop->scene->tree.node,
+        cursor->cursor->x,
+        cursor->cursor->y,
+        &sx,
+        &sy);
 
-    if (node_at && node_at->type == WLR_SCENE_NODE_SURFACE) {
+    if (node_at && node_at->type == WLR_SCENE_NODE_BUFFER) {
+        struct wlr_scene_buffer *scene_buffer =
+            wlr_scene_buffer_from_node(node_at);
         struct wlr_scene_surface *scene_surface =
-            wlr_scene_surface_from_node(node_at);
+            wlr_scene_surface_from_buffer(scene_buffer);
+
+        if (!scene_surface) {
+            return;
+        }
         surface = scene_surface->surface;
 
         if (surface != seat->pointer_state.focused_surface) {

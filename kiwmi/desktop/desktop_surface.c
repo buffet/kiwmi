@@ -9,7 +9,7 @@
 
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_layer_shell_v1.h>
-#include <wlr/types/wlr_scene.h>
+#include <wlr/types/wlr_subcompositor.h>
 #include <wlr/types/wlr_xdg_shell.h>
 
 #include "desktop/desktop.h"
@@ -55,16 +55,23 @@ desktop_surface_from_wlr_surface(struct wlr_surface *surface)
 struct kiwmi_desktop_surface *
 desktop_surface_at(struct kiwmi_desktop *desktop, double lx, double ly)
 {
-    double sx, sy; // unused
+    double sx, sy;
     struct wlr_scene_node *node_at =
-        wlr_scene_node_at(&desktop->scene->node, lx, ly, &sx, &sy);
+        wlr_scene_node_at(&desktop->scene->tree.node, lx, ly, &sx, &sy);
 
-    if (!node_at || node_at->type != WLR_SCENE_NODE_SURFACE) {
+    if (!node_at || node_at->type != WLR_SCENE_NODE_BUFFER) {
         return NULL;
     }
 
-    struct wlr_surface *surface = wlr_scene_surface_from_node(node_at)->surface;
-    return desktop_surface_from_wlr_surface(surface);
+    struct wlr_scene_buffer *scene_buffer = wlr_scene_buffer_from_node(node_at);
+    struct wlr_scene_surface *scene_surface =
+        wlr_scene_surface_from_buffer(scene_buffer);
+
+    if (!scene_surface) {
+        return NULL;
+    }
+
+    return desktop_surface_from_wlr_surface(scene_surface->surface);
 }
 
 struct kiwmi_output *
