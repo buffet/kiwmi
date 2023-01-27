@@ -202,8 +202,8 @@ view_desktop_surface_get_output(struct kiwmi_desktop_surface *desktop_surface)
     // Prefer view center
     struct wlr_output *output = wlr_output_layout_output_at(
         view->desktop->output_layout,
-        lx + view->geom.width / 2,
-        ly + view->geom.height / 2);
+        lx + (float)view->geom.width / 2,
+        ly + (float)view->geom.height / 2);
     if (output) {
         return (struct kiwmi_output *)output->data;
     }
@@ -248,10 +248,10 @@ view_create(
     wl_signal_init(&view->events.post_render);
     wl_signal_init(&view->events.pre_render);
 
-    view->desktop_surface.tree = wlr_scene_tree_create(
-        &view->desktop->strata[KIWMI_STRATUM_NORMAL]->node);
-    view->desktop_surface.popups_tree = wlr_scene_tree_create(
-        &view->desktop->strata[KIWMI_STRATUM_POPUPS]->node);
+    view->desktop_surface.tree =
+        wlr_scene_tree_create(view->desktop->strata[KIWMI_STRATUM_NORMAL]);
+    view->desktop_surface.popups_tree =
+        wlr_scene_tree_create(view->desktop->strata[KIWMI_STRATUM_POPUPS]);
 
     view_set_hidden(view, true);
     wlr_scene_node_lower_to_bottom(&view->desktop_surface.tree->node);

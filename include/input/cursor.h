@@ -50,7 +50,7 @@ struct kiwmi_cursor {
 };
 
 struct kiwmi_cursor_button_event {
-    struct wlr_event_pointer_button *wlr_event;
+    struct wlr_pointer_button_event *wlr_event;
     bool handled;
 };
 

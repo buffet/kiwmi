@@ -16,7 +16,7 @@
 struct kiwmi_keyboard {
     struct wl_list link;
     struct kiwmi_server *server;
-    struct wlr_input_device *device;
+    struct wlr_keyboard *wlr_keyboard;
     struct wl_listener modifiers;
     struct wl_listener key;
     struct wl_listener device_destroy;
@@ -39,7 +39,7 @@ struct kiwmi_keyboard_key_event {
 };
 
 struct kiwmi_keyboard *
-keyboard_create(struct kiwmi_server *server, struct wlr_input_device *device);
+keyboard_create(struct kiwmi_server *server, struct wlr_keyboard *device);
 void keyboard_destroy(struct kiwmi_keyboard *keyboard);
 
 #endif /* KIWMI_INPUT_KEYBOARD_H */

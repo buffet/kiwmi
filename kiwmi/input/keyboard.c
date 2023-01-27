@@ -47,10 +47,10 @@ keyboard_modifiers_notify(struct wl_listener *listener, void *UNUSED(data))
 {
     struct kiwmi_keyboard *keyboard =
         wl_container_of(listener, keyboard, modifiers);
-    wlr_seat_set_keyboard(keyboard->server->input.seat->seat, keyboard->device);
+    wlr_seat_set_keyboard(
+        keyboard->server->input.seat->seat, keyboard->wlr_keyboard);
     wlr_seat_keyboard_notify_modifiers(
-        keyboard->server->input.seat->seat,
-        &keyboard->device->keyboard->modifiers);
+        keyboard->server->input.seat->seat, &keyboard->wlr_keyboard->modifiers);
 }
 
 static void
@@ -58,20 +58,20 @@ keyboard_key_notify(struct wl_listener *listener, void *data)
 {
     struct kiwmi_keyboard *keyboard = wl_container_of(listener, keyboard, key);
     struct kiwmi_server *server     = keyboard->server;
-    struct wlr_event_keyboard_key *event = data;
-    struct wlr_input_device *device      = keyboard->device;
+    struct wlr_keyboard_key_event *event = data;
+    struct wlr_keyboard *wlr_keyboard    = keyboard->wlr_keyboard;
 
     uint32_t keycode = event->keycode + 8;
 
     const xkb_keysym_t *raw_syms;
     xkb_layout_index_t layout_index =
-        xkb_state_key_get_layout(device->keyboard->xkb_state, keycode);
+        xkb_state_key_get_layout(wlr_keyboard->xkb_state, keycode);
     int raw_syms_len = xkb_keymap_key_get_syms_by_level(
-        device->keyboard->keymap, keycode, layout_index, 0, &raw_syms);
+        wlr_keyboard->keymap, keycode, layout_index, 0, &raw_syms);
 
     const xkb_keysym_t *translated_syms;
     int translated_syms_len = xkb_state_key_get_syms(
-        keyboard->device->keyboard->xkb_state, keycode, &translated_syms);
+        wlr_keyboard->xkb_state, keycode, &translated_syms);
 
     bool handled = false;
 
@@ -101,7 +101,7 @@ keyboard_key_notify(struct wl_listener *listener, void *data)
     }
 
     if (!handled) {
-        wlr_seat_set_keyboard(server->input.seat->seat, keyboard->device);
+        wlr_seat_set_keyboard(server->input.seat->seat, wlr_keyboard);
         wlr_seat_keyboard_notify_key(
             server->input.seat->seat,
             event->time_msec,
@@ -120,7 +120,7 @@ keyboard_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
 }
 
 struct kiwmi_keyboard *
-keyboard_create(struct kiwmi_server *server, struct wlr_input_device *device)
+keyboard_create(struct kiwmi_server *server, struct wlr_keyboard *wlr_keyboard)
 {
     wlr_log(WLR_DEBUG, "Creating keyboard");
 
@@ -129,28 +129,29 @@ keyboard_create(struct kiwmi_server *server, struct wlr_input_device *device)
         return NULL;
     }
 
-    keyboard->server = server;
-    keyboard->device = device;
+    keyboard->server       = server;
+    keyboard->wlr_keyboard = wlr_keyboard;
 
     keyboard->modifiers.notify = keyboard_modifiers_notify;
-    wl_signal_add(&device->keyboard->events.modifiers, &keyboard->modifiers);
+    wl_signal_add(&wlr_keyboard->events.modifiers, &keyboard->modifiers);
 
     keyboard->key.notify = keyboard_key_notify;
-    wl_signal_add(&device->keyboard->events.key, &keyboard->key);
+    wl_signal_add(&wlr_keyboard->events.key, &keyboard->key);
 
     keyboard->device_destroy.notify = keyboard_destroy_notify;
-    wl_signal_add(&device->events.destroy, &keyboard->device_destroy);
+    wl_signal_add(
+        &wlr_keyboard->base.events.destroy, &keyboard->device_destroy);
 
     struct xkb_rule_names rules = {0};
     struct xkb_context *context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
     struct xkb_keymap *keymap =
         xkb_map_new_from_names(context, &rules, XKB_KEYMAP_COMPILE_NO_FLAGS);
-    wlr_keyboard_set_keymap(device->keyboard, keymap);
+    wlr_keyboard_set_keymap(wlr_keyboard, keymap);
     xkb_keymap_unref(keymap);
     xkb_context_unref(context);
-    wlr_keyboard_set_repeat_info(device->keyboard, 25, 600);
+    wlr_keyboard_set_repeat_info(wlr_keyboard, 25, 600);
 
-    wlr_seat_set_keyboard(server->input.seat->seat, device);
+    wlr_seat_set_keyboard(server->input.seat->seat, wlr_keyboard);
 
     wl_signal_init(&keyboard->events.key_down);
     wl_signal_init(&keyboard->events.key_up);

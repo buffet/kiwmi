@@ -31,9 +31,10 @@ popup_get_desktop_surface(struct wlr_xdg_popup *popup)
             case WLR_XDG_SURFACE_ROLE_POPUP:
                 parent = xdg_surface->popup->parent;
                 break;
-            case WLR_XDG_SURFACE_ROLE_TOPLEVEL:
+            case WLR_XDG_SURFACE_ROLE_TOPLEVEL: {
                 struct kiwmi_view *view = xdg_surface->data;
                 return &view->desktop_surface;
+            }
             default:
                 return NULL;
             }
@@ -109,11 +110,11 @@ popup_attach(
 
     popup_unconstrain(popup, desktop_surface);
 
-    struct wlr_scene_node *node =
-        wlr_scene_xdg_surface_create(&parent_tree->node, popup->base);
-    if (!node) {
+    struct wlr_scene_tree *tree =
+        wlr_scene_xdg_surface_create(parent_tree, popup->base);
+    if (!tree) {
         wlr_log(WLR_ERROR, "failed to attach popup to scene");
         return;
     }
-    popup->base->data = node;
+    popup->base->data = tree;
 }
