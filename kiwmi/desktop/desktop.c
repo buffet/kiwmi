@@ -18,6 +18,7 @@
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_presentation_time.h>
+#include <wlr/types/wlr_subcompositor.h>
 #include <wlr/types/wlr_xdg_decoration_v1.h>
 #include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
@@ -41,6 +42,7 @@ desktop_init(struct kiwmi_desktop *desktop)
 
     desktop->compositor =
         wlr_compositor_create(server->wl_display, server->renderer);
+    desktop->wlr_subcompositor = wlr_subcompositor_create(server->wl_display);
     desktop->data_device_manager =
         wlr_data_device_manager_create(server->wl_display);
     desktop->output_layout = wlr_output_layout_create();
@@ -57,13 +59,13 @@ desktop_init(struct kiwmi_desktop *desktop)
 
     const float bg_color[4] = {0.0f, 0.0f, 0.0f, 1.0f};
     desktop->background_rect =
-        wlr_scene_rect_create(&desktop->scene->node, 0, 0, bg_color);
+        wlr_scene_rect_create(&desktop->scene->tree, 0, 0, bg_color);
     // No point in showing black
     wlr_scene_node_set_enabled(&desktop->background_rect->node, false);
 
     // Create a scene-graph tree for each stratum
     for (size_t i = 0; i < KIWMI_STRATA_COUNT; ++i) {
-        desktop->strata[i] = wlr_scene_tree_create(&desktop->scene->node);
+        desktop->strata[i] = wlr_scene_tree_create(&desktop->scene->tree);
     }
 
     wlr_scene_attach_output_layout(desktop->scene, desktop->output_layout);
@@ -72,7 +74,7 @@ desktop_init(struct kiwmi_desktop *desktop)
         wlr_presentation_create(server->wl_display, server->backend);
     wlr_scene_set_presentation(desktop->scene, presentation);
 
-    desktop->xdg_shell = wlr_xdg_shell_create(server->wl_display);
+    desktop->xdg_shell = wlr_xdg_shell_create(server->wl_display, 5);
     desktop->xdg_shell_new_surface.notify = xdg_shell_new_surface_notify;
     wl_signal_add(
         &desktop->xdg_shell->events.new_surface,
@@ -114,7 +116,7 @@ desktop_fini(struct kiwmi_desktop *desktop)
 {
     wlr_output_layout_destroy(desktop->output_layout);
     desktop->output_layout = NULL;
-    wlr_scene_node_destroy(&desktop->scene->node);
+    wlr_scene_node_destroy(&desktop->scene->tree.node);
     desktop->scene = NULL;
 }
 

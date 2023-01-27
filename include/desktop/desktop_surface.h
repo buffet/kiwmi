@@ -20,7 +20,7 @@ struct kiwmi_desktop_surface {
     // The tree is where the config is supposed to put custom decorations (it
     // also contains the surface_node)
     struct wlr_scene_tree *tree;
-    struct wlr_scene_node *surface_node;
+    struct wlr_scene_tree *surface_tree;
 
     struct wlr_scene_tree *popups_tree;
 

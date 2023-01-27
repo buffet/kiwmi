@@ -15,6 +15,7 @@
 
 struct kiwmi_desktop {
     struct wlr_compositor *compositor;
+    struct wlr_subcompositor *wlr_subcompositor;
 
     struct wlr_xdg_shell *xdg_shell;
     struct wlr_xdg_decoration_manager_v1 *xdg_decoration_manager;

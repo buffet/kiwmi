@@ -9,7 +9,7 @@
 #define KIWMI_INPUT_SEAT_H
 
 #include <wayland-server.h>
-#include <wlr/types/wlr_surface.h>
+#include <wlr/types/wlr_compositor.h>
 
 #include "desktop/layer_shell.h"
 #include "desktop/view.h"

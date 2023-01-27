@@ -114,8 +114,7 @@ server_init(struct kiwmi_server *server, char *config_path)
 bool
 server_run(struct kiwmi_server *server)
 {
-    wlr_log(
-        WLR_DEBUG, "Running Wayland server on display '%s'", server->socket);
+    wlr_log(WLR_INFO, "Running Wayland server on display '%s'", server->socket);
 
     setenv("WAYLAND_DISPLAY", server->socket, true);
 

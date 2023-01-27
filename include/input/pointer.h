@@ -9,19 +9,19 @@
 #define KIWMI_INPUT_POINTER_H
 
 #include <wayland-server.h>
-#include <wlr/types/wlr_input_device.h>
+#include <wlr/types/wlr_pointer.h>
 
 #include "server.h"
 
 struct kiwmi_pointer {
-    struct wlr_input_device *device;
+    struct wlr_pointer *pointer;
     struct wl_list link;
 
     struct wl_listener device_destroy;
 };
 
 struct kiwmi_pointer *
-pointer_create(struct kiwmi_server *server, struct wlr_input_device *device);
+pointer_create(struct kiwmi_server *server, struct wlr_pointer *pointer);
 void pointer_destroy(struct kiwmi_pointer *pointer);
 
 #endif /* KIWMI_INPUT_POINTER_H */

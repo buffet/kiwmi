@@ -56,8 +56,7 @@ kiwmi_layer_commit_notify(struct wl_listener *listener, void *UNUSED(data))
             stratum_from_layer_shell_layer(layer->layer);
 
         wlr_scene_node_reparent(
-            &layer->desktop_surface.tree->node,
-            &output->strata[new_stratum]->node);
+            &layer->desktop_surface.tree->node, output->strata[new_stratum]);
     }
 
     if (layer->layer_surface->current.committed != 0) {
@@ -432,11 +431,11 @@ layer_shell_new_surface_notify(struct wl_listener *listener, void *data)
     enum kiwmi_stratum stratum = stratum_from_layer_shell_layer(layer->layer);
 
     layer->desktop_surface.tree =
-        wlr_scene_tree_create(&output->strata[stratum]->node);
+        wlr_scene_tree_create(output->strata[stratum]);
     layer->desktop_surface.popups_tree =
-        wlr_scene_tree_create(&output->strata[KIWMI_STRATUM_POPUPS]->node);
-    layer->desktop_surface.surface_node = wlr_scene_subsurface_tree_create(
-        &layer->desktop_surface.tree->node, layer->layer_surface->surface);
+        wlr_scene_tree_create(output->strata[KIWMI_STRATUM_POPUPS]);
+    layer->desktop_surface.surface_tree = wlr_scene_subsurface_tree_create(
+        layer->desktop_surface.tree, layer->layer_surface->surface);
 
     wlr_scene_node_set_enabled(&layer->desktop_surface.tree->node, false);
     wlr_scene_node_set_enabled(

@@ -29,26 +29,29 @@ pointer_destroy_notify(struct wl_listener *listener, void *UNUSED(data))
 }
 
 struct kiwmi_pointer *
-pointer_create(struct kiwmi_server *server, struct wlr_input_device *device)
+pointer_create(struct kiwmi_server *server, struct wlr_pointer *device)
 {
-    wlr_cursor_attach_input_device(server->input.cursor->cursor, device);
+    wlr_cursor_attach_input_device(server->input.cursor->cursor, &device->base);
 
     struct kiwmi_pointer *pointer = malloc(sizeof(*pointer));
     if (!pointer) {
         return NULL;
     }
 
-    pointer->device = device;
+    pointer->pointer = device;
 
     pointer->device_destroy.notify = pointer_destroy_notify;
-    wl_signal_add(&device->events.destroy, &pointer->device_destroy);
+    wl_signal_add(&device->base.events.destroy, &pointer->device_destroy);
 
+    // FIXME: `wlr_input_device` doesn't contain `output_name`
     if (device->output_name) {
         struct kiwmi_output *output;
         wl_list_for_each (output, &server->desktop.outputs, link) {
             if (strcmp(device->output_name, output->wlr_output->name) == 0) {
                 wlr_cursor_map_input_to_output(
-                    server->input.cursor->cursor, device, output->wlr_output);
+                    server->input.cursor->cursor,
+                    &device->base,
+                    output->wlr_output);
                 break;
             }
         }
