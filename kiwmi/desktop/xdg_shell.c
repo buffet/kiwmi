@@ -133,7 +133,7 @@ xdg_shell_view_close(struct kiwmi_view *view)
     struct wlr_xdg_surface *surface = view->xdg_surface;
 
     if (surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL && surface->toplevel) {
-        wlr_xdg_toplevel_send_close(surface);
+        wlr_xdg_toplevel_send_close(surface->toplevel);
     }
 }
 
@@ -166,7 +166,7 @@ xdg_shell_view_get_string_prop(
 static void
 xdg_shell_view_set_activated(struct kiwmi_view *view, bool activated)
 {
-    wlr_xdg_toplevel_set_activated(view->xdg_surface, activated);
+    wlr_xdg_toplevel_set_activated(view->xdg_surface->toplevel, activated);
 }
 
 static void
@@ -175,13 +175,13 @@ xdg_shell_view_set_size(
     uint32_t width,
     uint32_t height)
 {
-    wlr_xdg_toplevel_set_size(view->xdg_surface, width, height);
+    wlr_xdg_toplevel_set_size(view->xdg_surface->toplevel, width, height);
 }
 
 static void
 xdg_shell_view_set_tiled(struct kiwmi_view *view, enum wlr_edges edges)
 {
-    wlr_xdg_toplevel_set_tiled(view->xdg_surface, edges);
+    wlr_xdg_toplevel_set_tiled(view->xdg_surface->toplevel, edges);
 }
 
 static const struct kiwmi_view_impl xdg_shell_view_impl = {
@@ -233,8 +233,8 @@ xdg_shell_new_surface_notify(struct wl_listener *listener, void *data)
     view->xdg_surface = xdg_surface;
     view->wlr_surface = xdg_surface->surface;
 
-    view->desktop_surface.surface_node = wlr_scene_xdg_surface_create(
-        &view->desktop_surface.tree->node, xdg_surface);
+    view->desktop_surface.surface_tree =
+        wlr_scene_xdg_surface_create(view->desktop_surface.tree, xdg_surface);
 
     view->map.notify = xdg_surface_map_notify;
     wl_signal_add(&xdg_surface->events.map, &view->map);

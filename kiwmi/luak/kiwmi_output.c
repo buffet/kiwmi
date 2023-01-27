@@ -89,11 +89,11 @@ l_kiwmi_output_pos(lua_State *L)
     struct kiwmi_output *output             = obj->object;
     struct wlr_output_layout *output_layout = output->desktop->output_layout;
 
-    struct wlr_box *box =
-        wlr_output_layout_get_box(output_layout, output->wlr_output);
+    struct wlr_box box;
+    wlr_output_layout_get_box(output_layout, output->wlr_output, &box);
 
-    lua_pushinteger(L, box->x);
-    lua_pushinteger(L, box->y);
+    lua_pushinteger(L, box.x);
+    lua_pushinteger(L, box.y);
 
     return 2;
 }

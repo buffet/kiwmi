@@ -24,7 +24,7 @@
 #include "server.h"
 
 static void
-new_pointer(struct kiwmi_input *input, struct wlr_input_device *device)
+new_pointer(struct kiwmi_input *input, struct wlr_pointer *device)
 {
     struct kiwmi_server *server = wl_container_of(input, server, input);
 
@@ -37,7 +37,7 @@ new_pointer(struct kiwmi_input *input, struct wlr_input_device *device)
 }
 
 static void
-new_keyboard(struct kiwmi_input *input, struct wlr_input_device *device)
+new_keyboard(struct kiwmi_input *input, struct wlr_keyboard *device)
 {
     struct kiwmi_server *server = wl_container_of(input, server, input);
 
@@ -58,12 +58,16 @@ new_input_notify(struct wl_listener *listener, void *data)
     wlr_log(WLR_DEBUG, "New input %p: %s", device, device->name);
 
     switch (device->type) {
-    case WLR_INPUT_DEVICE_POINTER:
-        new_pointer(input, device);
+    case WLR_INPUT_DEVICE_POINTER: {
+        struct wlr_pointer *pointer = wlr_pointer_from_input_device(device);
+        new_pointer(input, pointer);
         break;
-    case WLR_INPUT_DEVICE_KEYBOARD:
-        new_keyboard(input, device);
+    }
+    case WLR_INPUT_DEVICE_KEYBOARD: {
+        struct wlr_keyboard *keyboard = wlr_keyboard_from_input_device(device);
+        new_keyboard(input, keyboard);
         break;
+    }
     default:
         // NOT HANDLED
         break;

@@ -63,7 +63,7 @@ l_kiwmi_keyboard_keymap(lua_State *L)
     struct xkb_keymap *keymap   = xkb_keymap_new_from_names(
         context, &settings, XKB_KEYMAP_COMPILE_NO_FLAGS);
 
-    wlr_keyboard_set_keymap(keyboard->device->keyboard, keymap);
+    wlr_keyboard_set_keymap(keyboard->wlr_keyboard, keymap);
 
     xkb_keymap_unref(keymap);
     xkb_context_unref(context);
@@ -83,7 +83,7 @@ l_kiwmi_keyboard_modifiers(lua_State *L)
 
     struct kiwmi_keyboard *keyboard = obj->object;
 
-    uint32_t modifiers = wlr_keyboard_get_modifiers(keyboard->device->keyboard);
+    uint32_t modifiers = wlr_keyboard_get_modifiers(keyboard->wlr_keyboard);
 
     lua_newtable(L);
 
