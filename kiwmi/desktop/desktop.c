@@ -18,6 +18,7 @@
 #include <wlr/types/wlr_layer_shell_v1.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_presentation_time.h>
+#include <wlr/types/wlr_subcompositor.h>
 #include <wlr/types/wlr_xdg_decoration_v1.h>
 #include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
@@ -41,6 +42,7 @@ desktop_init(struct kiwmi_desktop *desktop)
 
     desktop->compositor =
         wlr_compositor_create(server->wl_display, server->renderer);
+    desktop->wlr_subcompositor = wlr_subcompositor_create(server->wl_display);
     desktop->data_device_manager =
         wlr_data_device_manager_create(server->wl_display);
     desktop->output_layout = wlr_output_layout_create();
