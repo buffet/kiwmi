@@ -18,7 +18,6 @@
 
 #include "input/keyboard.h"
 #include "luak/kiwmi_lua_callback.h"
-#include "luak/lua_compat.h"
 
 static int
 l_kiwmi_keyboard_keymap(lua_State *L)
@@ -354,9 +353,9 @@ luaK_kiwmi_keyboard_register(lua_State *L)
 
     lua_pushvalue(L, -1);
     lua_setfield(L, -2, "__index");
-    luaC_setfuncs(L, kiwmi_keyboard_methods, 0);
+    luaL_setfuncs(L, kiwmi_keyboard_methods, 0);
 
-    luaC_newlib(L, kiwmi_keyboard_events);
+    luaL_newlib(L, kiwmi_keyboard_events);
     lua_setfield(L, -2, "__events");
 
     lua_pushcfunction(L, luaK_usertype_ref_equal);

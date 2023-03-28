@@ -22,7 +22,6 @@ kiwmi_sources = files(
   'luak/kiwmi_output.c',
   'luak/kiwmi_server.c',
   'luak/kiwmi_view.c',
-  'luak/lua_compat.c',
   'luak/luak.c',
 )
 
