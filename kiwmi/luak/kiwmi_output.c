@@ -54,7 +54,7 @@ l_kiwmi_output_move(lua_State *L)
     int lx = lua_tonumber(L, 2);
     int ly = lua_tonumber(L, 3);
 
-    wlr_output_layout_move(output_layout, output->wlr_output, lx, ly);
+    wlr_output_layout_add(output_layout, output->wlr_output, lx, ly);
 
     return 0;
 }
