@@ -206,8 +206,6 @@ new_output_notify(struct wl_listener *listener, void *data)
     wl_signal_init(&output->events.resize);
     wl_signal_init(&output->events.usable_area_change);
 
-    wl_list_insert(&desktop->outputs, &output->link);
-
     wlr_output_layout_add_auto(desktop->output_layout, wlr_output);
 
     wl_signal_emit(&desktop->events.new_output, output);
