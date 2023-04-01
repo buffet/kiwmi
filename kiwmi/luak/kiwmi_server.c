@@ -27,7 +27,6 @@
 #include "luak/kiwmi_lua_callback.h"
 #include "luak/kiwmi_output.h"
 #include "luak/kiwmi_view.h"
-#include "luak/lua_compat.h"
 #include "server.h"
 
 static int
@@ -590,9 +589,9 @@ luaK_kiwmi_server_register(lua_State *L)
 
     lua_pushvalue(L, -1);
     lua_setfield(L, -2, "__index");
-    luaC_setfuncs(L, kiwmi_server_methods, 0);
+    luaL_setfuncs(L, kiwmi_server_methods, 0);
 
-    luaC_newlib(L, kiwmi_server_events);
+    luaL_newlib(L, kiwmi_server_events);
     lua_setfield(L, -2, "__events");
 
     lua_pushcfunction(L, luaK_usertype_ref_equal);
