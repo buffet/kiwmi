@@ -87,6 +87,9 @@ kiwmi_object_destroy_notify(struct wl_listener *listener, void *data)
     lua_settable(L, -3);
     lua_pop(L, 1);
 
+    wl_list_remove(&obj->destroy.link);
+    wl_list_init(&obj->destroy.link);
+
     obj->valid = false;
 
     if (obj->refcount == 0) {
