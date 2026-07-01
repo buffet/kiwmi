@@ -81,7 +81,7 @@ server_init(struct kiwmi_server *server, char *config_path)
         // default config path
         config_path = realloc(config_path, PATH_MAX);
         if (!config_path) {
-            wlr_log(WLR_ERROR, "Falied to allocate memory");
+            wlr_log(WLR_ERROR, "Failed to allocate memory");
             wl_display_destroy(server->wl_display);
             return false;
         }
